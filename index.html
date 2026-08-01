@@ -339,7 +339,7 @@
 
   // --- FUNGSI JEMBATAN API (MENGGANTIKAN google.script.run) ---
   async function apiCall(action, payload = {}) {
-    if (SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec") {
+    if (SCRIPT_URL === "/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec") {
        throw new Error("Anda belum memasukkan URL API Google Apps Script di kode HTML.");
     }
     try {
