@@ -705,12 +705,63 @@
     } 
   }
 
+  // ==========================================
+  // PWA INSTANT HANDLER (DIJAMIN RESPONSIF)
+  // ==========================================
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Mencegah banner bawaan Chrome muncul otomatis
+    e.preventDefault();
+    // Simpan event agar bisa dipanggil saat tombol diklik
+    deferredPrompt = e;
+  });
+
   function promptInstallPWA() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; const isAndroid = /android/i.test(navigator.userAgent); let instruksi = "";
-    if (isIOS) instruksi = `<div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300"><p>Untuk menginstal di <b>iPhone/iPad</b>:</p><ol class="list-decimal pl-5 space-y-3"><li>Ketuk <b>Share</b> <i class="fas fa-share-square text-blue-500"></i> di Safari.</li><li>Ketuk <b>"Add to Home Screen"</b> <i class="far fa-plus-square"></i>.</li><li>Ketuk <b>"Add"</b>.</li></ol></div>`;
-    else if (isAndroid) instruksi = `<div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300"><p>Untuk menginstal di <b>Android</b>:</p><ol class="list-decimal pl-5 space-y-3"><li>Ketuk <b>Menu (Tiga Titik)</b> <i class="fas fa-ellipsis-v"></i>.</li><li>Pilih <b>"Add to Home Screen"</b>.</li><li>Ketuk <b>"Install"</b>.</li></ol></div>`;
-    else instruksi = `<div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300"><p>Untuk menginstal di <b>Laptop</b>:</p><ol class="list-decimal pl-5 space-y-3"><li>Klik ikon <b>Install</b> di bilah URL, ATAU</li><li>Klik <b>Menu (Tiga Titik)</b> Chrome lalu pilih <b>"Save and Share"</b> > <b>"Install page as app"</b>.</li></ol></div>`;
-    Swal.fire({ title: 'Install Aplikasi', html: instruksi, confirmButtonText: 'Saya Mengerti', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]' } });
+    // Jika browser (Android/PC) mendukung instalasi otomatis
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('Pengguna menerima instalasi PWA');
+        }
+        deferredPrompt = null;
+      });
+    } else {
+      // Jika di iPhone (iOS) atau browser yang tidak mendukung prompt otomatis
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      let instruksi = "";
+
+      if (isIOS) {
+        instruksi = `
+          <div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <p>Untuk menginstal di <b>iPhone/iPad</b>:</p>
+            <ol class="list-decimal pl-5 space-y-3">
+              <li>Ketuk ikon <b>Share</b> <i class="fas fa-share-square text-blue-500 text-lg"></i> di bagian bawah Safari.</li>
+              <li>Gulir ke bawah dan ketuk <b>"Add to Home Screen"</b> <i class="far fa-plus-square"></i>.</li>
+              <li>Ketuk <b>"Add"</b> (Tambah) di pojok kanan atas.</li>
+            </ol>
+          </div>`;
+      } else {
+        instruksi = `
+          <div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <p>Cara Pintar Menginstal Aplikasi:</p>
+            <ol class="list-decimal pl-5 space-y-3">
+              <li>Ketuk <b>Menu (Tiga Titik)</b> <i class="fas fa-ellipsis-v"></i> di pojok kanan atas browser Chrome Anda.</li>
+              <li>Pilih opsi <b>"Install aplikasi"</b> atau <b>"Tambahkan ke Layar Utama"</b>.</li>
+              <li>Ikuti petunjuk singkat di layar.</li>
+            </ol>
+          </div>`;
+      }
+
+      Swal.fire({
+        title: 'Install Aplikasi',
+        html: instruksi,
+        confirmButtonText: 'Saya Mengerti',
+        confirmButtonColor: '#10b981',
+        customClass: { popup: 'rounded-[2rem]' }
+      });
+    }
   }
 </script>
 </body>
