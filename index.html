@@ -339,9 +339,6 @@
 
   // --- FUNGSI JEMBATAN API (MENGGANTIKAN google.script.run) ---
   async function apiCall(action, payload = {}) {
-    if (SCRIPT_URL === "/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec") {
-       throw new Error("Anda belum memasukkan URL API Google Apps Script di kode HTML.");
-    }
     try {
       const response = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -351,7 +348,7 @@
       });
       return await response.json();
     } catch (error) {
-      throw new Error("Gagal terhubung ke Server API Database.");
+      throw new Error("Gagal terhubung ke Server API Database: " + error.message);
     }
   }
 
