@@ -704,7 +704,7 @@
     });
   }
 
-function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
+  function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
     let lat = parseFloat(curLat) || 2.9614; 
     let lng = parseFloat(curLng) || 99.0655;
 
@@ -778,7 +778,7 @@ function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLa
           }).catch(err => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; console.error(err); });
   }
 
-function bukaPreviewCetakData() {
+  function bukaPreviewCetakData() {
     const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
     const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
     const isGereja = !document.getElementById('kontenGereja').classList.contains('hidden');
