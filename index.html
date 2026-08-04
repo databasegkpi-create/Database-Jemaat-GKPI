@@ -184,7 +184,10 @@
           </div>
           
           <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div class="relative w-full md:w-[400px]"><i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="searchTerm" oninput="filterTabel()" placeholder="Ketik pencarian..." class="w-full py-3.5 pl-11 pr-4 bg-white rounded-2xl border border-slate-200 soft-shadow outline-none text-sm font-medium focus:ring-2 focus:ring-indigo-500 transition-all"></div>
+            <div class="relative w-full md:w-[400px]">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchTerm" placeholder="Ketik pencarian..." class="w-full py-3.5 pl-11 pr-4 bg-white rounded-2xl border border-slate-200 soft-shadow outline-none text-sm font-medium focus:ring-2 focus:ring-indigo-500 transition-all">
+            </div>
             <div class="flex gap-3 w-full md:w-auto overflow-x-auto">
               <input type="file" id="inputExcelImport" accept=".xlsx, .xls" class="hidden" onchange="prosesImportExcel(event)">
               <button onclick="klikImportExcel()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import</button>
@@ -488,6 +491,13 @@
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
+  // 1. FITUR DEBOUNCE UNTUK PENCARIAN (BIAR TIDAK NGE-LAG)
+  let searchTimeout;
+  document.getElementById('searchTerm').addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(filterTabel, 300); 
+  });
+
   function filterTabel() {
     const w = document.getElementById('filterWilayah').value.trim().toLowerCase(); const r = document.getElementById('filterResort').value.trim().toLowerCase(); const g = document.getElementById('filterGereja').value.trim().toLowerCase(); 
     const j = document.getElementById('filterJabatan').value.trim().toLowerCase(); const s = document.getElementById('searchTerm').value.trim().toLowerCase(); const modeSort = document.getElementById('sortData').value;
@@ -601,7 +611,6 @@
       const namaG = g.Nama_Gereja || g['Nama Gereja'] || '-'; const res = g.Induk_Resort || g.Resort || 'Jemaat Khusus'; const wil = g.Wilayah || '-'; 
       const rt = parseInt(g.Total_RT) || 0; const jiwa = parseInt(g.Total_Jiwa) || 0; const statusGrj = g.Status_Gereja || g['Status Gereja'] || g.Tipe_Gereja || g['Tipe Gereja'] || 'Pagaran';
       
-      // Ambil Koordinat untuk dimasukkan ke tombol Edit
       let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.');
       let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
 
@@ -646,21 +655,14 @@
   function closeModal() { document.getElementById('modalForm').classList.add('hidden'); document.getElementById('formInput').reset(); EDIT_MODE_ID = null; document.getElementById('modalTitle').innerText = "Formulir Data"; document.getElementById('btnSubmit').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan ke Database'; cekJabatan(); }
   function cekJabatan() { const jabatanSelect = document.getElementById('formJabatan'); const jabatanText = jabatanSelect.options[jabatanSelect.selectedIndex]?.text.toLowerCase() || ''; const wadahGereja = document.getElementById('wadahGereja'); const inputGereja = document.getElementById('formGereja'); if (jabatanText.includes('pendeta') || jabatanText.includes('pemimpin jemaat')) { wadahGereja.classList.add('hidden'); inputGereja.required = false; inputGereja.value = ""; } else { wadahGereja.classList.remove('hidden'); inputGereja.required = true; } }
 
-  // API JEMBATAN UNTUK SIMPAN DATA MAJELIS DENGAN CEK DUPLIKAT
   function handleSimpan(e) {
     e.preventDefault(); 
-    const btn = document.getElementById('btnSubmit');
-    const fr = document.getElementById('formResort');
-    const fg = document.getElementById('formGereja');
+    const btn = document.getElementById('btnSubmit'); const fr = document.getElementById('formResort'); const fg = document.getElementById('formGereja');
     const tipe = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
     
-    btn.disabled = true; 
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MENGUNGGAH...'; 
-    fg.disabled = false; 
-    
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MENGUNGGAH...'; fg.disabled = false; 
     const payload = Object.fromEntries(new FormData(e.target)); 
 
-    // === FITUR CEK DUPLIKASI NAMA MAJELIS ===
     const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
     const isDuplicate = DATA_MASTER.majelis.some(m => {
         const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase();
@@ -673,7 +675,6 @@
         btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan ke Database';
         return; 
     }
-    // ===============================================
 
     if (tipe === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
     if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
@@ -704,7 +705,6 @@
   }
 
 function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
-    // Tentukan titik awal peta. Jika data Excel kosong, default ke wilayah Siantar
     let lat = parseFloat(curLat) || 2.9614; 
     let lng = parseFloat(curLng) || 99.0655;
 
@@ -737,65 +737,54 @@ function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLa
         </div>`, 
       showCancelButton: true, confirmButtonText: 'Simpan Data', confirmButtonColor: '#4f46e5',
       didOpen: () => {
-         // Nyalakan Mini Peta di dalam pop-up
          window.miniMapInst = L.map('miniMapEdit').setView([lat, lng], curLat ? 16 : 8);
          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.miniMapInst);
-         
          window.miniPin = L.marker([lat, lng], { draggable: true }).addTo(window.miniMapInst);
 
-         // Jika pin digeser manual
          window.miniPin.on('dragend', function(e) {
-             const pos = window.miniPin.getLatLng();
-             document.getElementById('inputLat').value = pos.lat.toFixed(6);
-             document.getElementById('inputLng').value = pos.lng.toFixed(6);
+             const pos = window.miniPin.getLatLng(); document.getElementById('inputLat').value = pos.lat.toFixed(6); document.getElementById('inputLng').value = pos.lng.toFixed(6);
          });
 
-         // Jika peta diklik, pin pindah
          window.miniMapInst.on('click', function(e) {
-             window.miniPin.setLatLng(e.latlng);
-             document.getElementById('inputLat').value = e.latlng.lat.toFixed(6);
-             document.getElementById('inputLng').value = e.latlng.lng.toFixed(6);
+             window.miniPin.setLatLng(e.latlng); document.getElementById('inputLat').value = e.latlng.lat.toFixed(6); document.getElementById('inputLng').value = e.latlng.lng.toFixed(6);
          });
-
-         // Paksa peta menyesuaikan layout di dalam modal
          setTimeout(() => { window.miniMapInst.invalidateSize(); }, 300);
       },
       preConfirm: () => { 
-          return { 
-             Nama_Gereja: namaGereja, 
-             Total_RT: document.getElementById('inputRT').value, 
-             Total_Jiwa: document.getElementById('inputJiwa').value, 
-             Status_Gereja: document.getElementById('inputStatusGrj').value,
-             Latitude: document.getElementById('inputLat').value,
-             Longitude: document.getElementById('inputLng').value 
-          } 
+          return { Nama_Gereja: namaGereja, Total_RT: document.getElementById('inputRT').value, Total_Jiwa: document.getElementById('inputJiwa').value, Status_Gereja: document.getElementById('inputStatusGrj').value, Latitude: document.getElementById('inputLat').value, Longitude: document.getElementById('inputLng').value } 
       }
     }).then((result) => { 
       if (result.isConfirmed) { 
         Swal.fire({ title: 'Menyimpan API...', didOpen: () => { Swal.showLoading() } }); 
         apiCall('updateDataGereja', {obj: result.value, userRole: USER_NOW.role})
-          .then(res => { 
-             if(res.status==='success'){
-                 Swal.fire('Berhasil!', res.message, 'success'); 
-                 loadData(); 
-                 setTimeout(() => { switchDataTab('gereja'); }, 1000);
-             } else {
-                 Swal.fire('Gagal', res.message, 'error');
-             } 
-          });
+          .then(res => { if(res.status==='success'){ Swal.fire('Berhasil!', res.message, 'success'); loadData(); setTimeout(() => { switchDataTab('gereja'); }, 1000); } else { Swal.fire('Gagal', res.message, 'error'); } });
       } 
     });
   }
+
+  function cariLokasiPeta() {
+      const query = document.getElementById('searchMapInput').value; if (!query) return;
+      const btn = document.querySelector('#searchMapInput + button'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+              btn.innerHTML = '<i class="fas fa-search"></i> Cari';
+              if (data && data.length > 0) {
+                  const lat = parseFloat(data[0].lat); const lng = parseFloat(data[0].lon);
+                  window.miniMapInst.setView([lat, lng], 15); window.miniPin.setLatLng([lat, lng]);
+                  document.getElementById('inputLat').value = lat.toFixed(6); document.getElementById('inputLng').value = lng.toFixed(6);
+              } else { Swal.showValidationMessage('Lokasi tidak ditemukan! Coba ketik nama kota.'); }
+          }).catch(err => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; console.error(err); });
+  }
+
 function bukaPreviewCetakData() {
-    // 1. Deteksi Tab mana yang sedang aktif
     const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
     const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
     const isGereja = !document.getElementById('kontenGereja').classList.contains('hidden');
 
-    // 2. Ambil data sesuai tab (yang sudah ter-filter otomatis)
     const dataList = (isMajelis || isIndividu) ? window.currentFilteredList : window.currentFilteredGereja;
     
-    // 3. Tentukan Judul Laporan
     let judul = "Data Jemaat & Unit Gereja";
     if (isMajelis) judul = "Struktur Majelis Per Gereja";
     if (isIndividu) judul = "Direktori Personil Majelis";
@@ -812,7 +801,6 @@ function bukaPreviewCetakData() {
     const thead = document.getElementById('headTabelCetak'); const tbody = document.getElementById('bodyTabelCetak');
 
     if (isMajelis) { 
-      // CETAK TAB 1: STRUKTUR MAJELIS (DIKELOMPOKKAN PER GEREJA)
       thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`;
       const g_filter = document.getElementById('filterGereja').value.trim().toLowerCase(); const grouped = {};
       dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (!isPimpinan) { let gereja = m.Nama_Gereja || 'Tingkat Resort'; if (!grouped[gereja]) grouped[gereja] = { resort: m.Resort, majelis: [] }; grouped[gereja].majelis.push(m); } });
@@ -822,24 +810,12 @@ function bukaPreviewCetakData() {
       tbody.innerHTML = groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join('');
     
     } else if (isIndividu) {
-      // CETAK TAB 2: DIREKTORI PERSONIL (DAFTAR FLAT / LURUS)
       thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`;
-      
       tbody.innerHTML = dataList.map((m, i) => {
-        let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT';
-        let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS';
-        return `<tr style="page-break-inside: avoid;">
-           <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td>
-           <td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td>
-           <td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td>
-           <td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td>
-           <td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td>
-           <td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td>
-         </tr>`;
+        let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS';
+        return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td></tr>`;
       }).join('');
-
     } else { 
-      // CETAK TAB 3: DATA JEMAAT & GEREJA
       thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Unit Gereja</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Induk Resort / JK</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total RT</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total Jiwa</th></tr>`;
       let totRT = 0, totJiwa = 0;
       tbody.innerHTML = dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`;
@@ -850,12 +826,10 @@ function bukaPreviewCetakData() {
   function tutupPreviewCetakData() { document.getElementById('modalCetakData').classList.add('hidden'); }
   
   function eksekusiCetakPDF() {
-    // Tentukan nama file secara otomatis berdasarkan tab
     const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
     const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
     let namaFile = 'Laporan_Data_Jemaat_GKPI.pdf';
-    if (isMajelis) namaFile = 'Laporan_Struktur_Majelis_GKPI.pdf';
-    if (isIndividu) namaFile = 'Laporan_Direktori_Personil_GKPI.pdf';
+    if (isMajelis) namaFile = 'Laporan_Struktur_Majelis_GKPI.pdf'; if (isIndividu) namaFile = 'Laporan_Direktori_Personil_GKPI.pdf';
 
     const isDark = document.documentElement.classList.contains('dark'); if (isDark) document.documentElement.classList.remove('dark');
     Swal.fire({ title: 'Menyusun PDF...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
@@ -879,15 +853,13 @@ function bukaPreviewCetakData() {
     html2pdf().set({ margin: 0.4, filename: 'Statistik_GKPI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdfDocumentArea')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); closePdfPreview(); Swal.fire('Berhasil!', 'File PDF telah terunduh.', 'success'); });
   }
 
-  // --- API UNTUK ADMIN ---
   function loadListPetugas() {
     const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>';
     apiCall('getListPetugas')
       .then(res => {
         if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; }
         container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join('');
-      })
-      .catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; });
+      }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; });
   }
   
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg, 'success'); e.target.reset(); loadListPetugas(); }); }
