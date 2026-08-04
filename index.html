@@ -887,8 +887,53 @@
   function klikImportExcel() { const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; if (!role.includes('admin') && !role.includes('editor')) return Swal.fire('Akses Ditolak', 'Hanya Admin & Editor yang bisa import.', 'error'); Swal.fire({ title: 'Import Data Massal', text: "Pastikan format Excel sesuai template.", icon: 'info', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#10b981', confirmButtonText: 'Ya, Pilih File', cancelButtonText: 'Download Template' }).then((result) => { if (result.isConfirmed) { document.getElementById('inputExcelImport').click(); } else if (result.dismiss === Swal.DismissReason.cancel) { downloadTemplateImport(); } }); }
   
   function prosesImportExcel(event) { const file = event.target.files[0]; if (!file) return; Swal.fire({ title: 'Membaca Excel...', didOpen: () => { Swal.showLoading() } }); const reader = new FileReader(); reader.onload = function(e) { try { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); const firstSheet = workbook.SheetNames[0]; const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]); if(excelData.length === 0) return Swal.fire('Kosong', 'Excel kosong.', 'warning'); Swal.fire({ title: 'Menyuntikkan Data API...', didOpen: () => { Swal.showLoading() } }); apiCall('importMajelisMassal', {excelData: excelData, userRole: USER_NOW.role}).then(res => { document.getElementById('inputExcelImport').value = ""; if (res.status === 'success') { Swal.fire('Import Selesai!', `<b>${res.added}</b> ditambah.<br><b>${res.skipped}</b> dilewati.`, 'success'); loadData(); } else { Swal.fire('Gagal API', res.message, 'error'); } }).catch(err => { Swal.fire('Gagal Jaringan', String(err), 'error') }); } catch(error) { document.getElementById('inputExcelImport').value = ""; Swal.fire('Error', 'Gagal membaca format Excel.', 'error'); } }; reader.readAsArrayBuffer(file); }
-  function exportToExcel() { Swal.fire({ icon: 'success', title: 'Mengunduh', timer: 1500, showConfirmButton: false }); const wb = XLSX.utils.table_to_book(document.getElementById("tableMajelis"), { sheet: "DataMajelis" }); XLSX.writeFile(wb, "Data_Majelis_GKPI.xlsx"); }
-  
+  function exportToExcel() {
+    const isGereja = !document.getElementById('kontenGereja').classList.contains('hidden');
+    // Ambil data murni (JSON) sesuai tab yang sedang aktif & ter-filter
+    const dataToExport = isGereja ? window.currentFilteredGereja : window.currentFilteredList;
+    
+    if (!dataToExport || dataToExport.length === 0) return Swal.fire('Data Kosong', 'Tidak ada data untuk diekspor.', 'info');
+    
+    Swal.fire({ icon: 'success', title: 'Menyusun Excel', timer: 1500, showConfirmButton: false });
+    
+    // Ubah JSON langsung ke Excel (Lebih rapi daripada mengambil elemen HTML)
+    const ws = XLSX.utils.json_to_sheet(dataToExport); 
+    const wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "Data_Export"); 
+    
+    const namaFile = isGereja ? "Data_Gereja_GKPI.xlsx" : "Data_Majelis_GKPI.xlsx";
+    XLSX.writeFile(wb, namaFile); 
+  }  function bukaProfil(id) {
+    const m = DATA_MASTER.majelis.find(x => x.ID_Majelis === id);
+    if(!m) return;
+    
+    document.getElementById('profNama').innerText = m.Nama_Lengkap || '-';
+    document.getElementById('profJabatan').innerText = m.Jabatan || '-';
+    document.getElementById('profGereja').innerText = m.Nama_Gereja || 'Tingkat Resort';
+    document.getElementById('profWilayah').innerText = m.Resort ? `${m.Resort} (W-${m.Wilayah||'-'})` : `Wilayah ${m.Wilayah||'-'}`;
+    
+    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '-';
+    document.getElementById('profWA').innerText = hp;
+    document.getElementById('profID').innerText = id;
+
+    let hpClean = String(hp).replace(/\D/g, ''); 
+    if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); 
+    if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
+    
+    const btnChat = document.getElementById('btnChatProf');
+    if(hpClean.length >= 9) {
+        btnChat.href = "https://wa.me/" + hpClean;
+        btnChat.style.display = "flex";
+    } else {
+        btnChat.style.display = "none";
+    }
+
+    document.getElementById('modalProfil').classList.remove('hidden');
+  }
+
+  function tutupProfil() {
+    document.getElementById('modalProfil').classList.add('hidden');
+  }
   function openBlastModal() { if(!window.currentFilteredList || window.currentFilteredList.length === 0) return Swal.fire('Data Kosong', 'Pilih minimal satu personil.', 'info'); document.getElementById('countPenerima').innerText = window.currentFilteredList.length; document.getElementById('modalBlastFonte').classList.remove('hidden'); }
   function closeBlastModal() { document.getElementById('modalBlastFonte').classList.add('hidden'); }
   
