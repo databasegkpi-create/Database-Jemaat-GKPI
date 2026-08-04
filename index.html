@@ -574,9 +574,45 @@
 
   // API JEMBATAN UNTUK SIMPAN DATA MAJELIS
   function handleSimpan(e) {
-    e.preventDefault(); const btn = document.getElementById('btnSubmit'), fr = document.getElementById('formResort'), fg = document.getElementById('formGereja'), tipe = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MENGUNGGAH...'; fg.disabled = false; 
-    const payload = Object.fromEntries(new FormData(e.target)); if (tipe === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
+    e.preventDefault(); 
+    const btn = document.getElementById('btnSubmit');
+    const fr = document.getElementById('formResort');
+    const fg = document.getElementById('formGereja');
+    const tipe = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
+    
+    btn.disabled = true; 
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MENGUNGGAH...'; 
+    fg.disabled = false; 
+    
+    const payload = Object.fromEntries(new FormData(e.target)); 
+
+    // === FITUR BARU: CEK DUPLIKASI NAMA MAJELIS ===
+    const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+    const isDuplicate = DATA_MASTER.majelis.some(m => {
+        const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase();
+        // Jika sedang Mode Edit, izinkan jika itu adalah namanya sendiri
+        if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) {
+            return false;
+        }
+        return existingNama === inputNama;
+    });
+
+    if (isDuplicate) {
+        Swal.fire({ 
+            icon: 'warning', 
+            title: 'Data Ganda!', 
+            text: 'Personil dengan nama "' + payload.Nama_Lengkap.trim() + '" sudah terdaftar di sistem. Mohon cek kembali!', 
+            confirmButtonColor: '#f59e0b' 
+        });
+        btn.disabled = false; 
+        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan ke Database';
+        return; // Hentikan eksekusi pengunggahan data
+    }
+    // ===============================================
+
+    if (tipe === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
+    if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
+    
     const action = EDIT_MODE_ID ? 'updateMajelis' : 'simpanMajelis';
     Swal.fire({ title: 'Menyimpan Data...', html: 'Mengirim JSON ke Server API', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
     
