@@ -713,16 +713,33 @@
     });
   }
 
-  function bukaPreviewCetakData() {
-    const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden'); const dataList = isMajelis ? window.currentFilteredList : window.currentFilteredGereja;
+function bukaPreviewCetakData() {
+    // 1. Deteksi Tab mana yang sedang aktif
+    const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
+    const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
+    const isGereja = !document.getElementById('kontenGereja').classList.contains('hidden');
+
+    // 2. Ambil data sesuai tab (yang sudah ter-filter otomatis)
+    const dataList = (isMajelis || isIndividu) ? window.currentFilteredList : window.currentFilteredGereja;
+    
+    // 3. Tentukan Judul Laporan
+    let judul = "Data Jemaat & Unit Gereja";
+    if (isMajelis) judul = "Struktur Majelis Per Gereja";
+    if (isIndividu) judul = "Direktori Personil Majelis";
+
     if (!dataList || dataList.length === 0) { return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak.', 'info'); }
-    document.getElementById('judulCetakPdf').innerText = isMajelis ? "Daftar Personil Majelis" : "Data Jemaat & Unit Gereja";
+
+    document.getElementById('judulCetakPdf').innerText = judul;
     document.getElementById('tglCetakPdf').innerText = "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
     const fw = document.getElementById('filterWilayah'); const fr = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); const fj = document.getElementById('filterJabatan');
-    document.getElementById('infoFilterCetak').innerHTML = `<div><b>Wilayah:</b> ${fw.options[fw.selectedIndex].text}</div><div><b>Resort / JK:</b> ${fr.options[fr.selectedIndex].text}</div><div><b>Unit Gereja:</b> ${fg.options[fg.selectedIndex].text}</div>${isMajelis ? `<div><b>Jabatan:</b> ${fj.options[fj.selectedIndex].text}</div>` : ''}`;
+    document.getElementById('infoFilterCetak').innerHTML = `<div><b>Wilayah:</b> ${fw.options[fw.selectedIndex].text}</div><div><b>Resort / JK:</b> ${fr.options[fr.selectedIndex].text}</div><div><b>Unit Gereja:</b> ${fg.options[fg.selectedIndex].text}</div>${(isMajelis || isIndividu) ? `<div><b>Jabatan:</b> ${fj.options[fj.selectedIndex].text}</div>` : ''}`;
+
+    document.querySelector('#areaCetakDokumen table').style.fontSize = "9px";
     const thead = document.getElementById('headTabelCetak'); const tbody = document.getElementById('bodyTabelCetak');
 
     if (isMajelis) { 
+      // CETAK TAB 1: STRUKTUR MAJELIS (DIKELOMPOKKAN PER GEREJA)
       thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`;
       const g_filter = document.getElementById('filterGereja').value.trim().toLowerCase(); const grouped = {};
       dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (!isPimpinan) { let gereja = m.Nama_Gereja || 'Tingkat Resort'; if (!grouped[gereja]) grouped[gereja] = { resort: m.Resort, majelis: [] }; grouped[gereja].majelis.push(m); } });
@@ -730,7 +747,26 @@
       Object.keys(grouped).forEach(k => { grouped[k].majelis.sort((a, b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff!==0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); });
       const groupArray = Object.keys(grouped).map(k => ({ namaGereja: k, ...grouped[k] })).sort((a, b) => a.namaGereja.localeCompare(b.namaGereja));
       tbody.innerHTML = groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join('');
+    
+    } else if (isIndividu) {
+      // CETAK TAB 2: DIREKTORI PERSONIL (DAFTAR FLAT / LURUS)
+      thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`;
+      
+      tbody.innerHTML = dataList.map((m, i) => {
+        let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT';
+        let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS';
+        return `<tr style="page-break-inside: avoid;">
+           <td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td>
+           <td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td>
+           <td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td>
+           <td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td>
+           <td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td>
+           <td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td>
+         </tr>`;
+      }).join('');
+
     } else { 
+      // CETAK TAB 3: DATA JEMAAT & GEREJA
       thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Unit Gereja</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Induk Resort / JK</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total RT</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total Jiwa</th></tr>`;
       let totRT = 0, totJiwa = 0;
       tbody.innerHTML = dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`;
@@ -739,10 +775,18 @@
   }
   
   function tutupPreviewCetakData() { document.getElementById('modalCetakData').classList.add('hidden'); }
+  
   function eksekusiCetakPDF() {
+    // Tentukan nama file secara otomatis berdasarkan tab
+    const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
+    const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
+    let namaFile = 'Laporan_Data_Jemaat_GKPI.pdf';
+    if (isMajelis) namaFile = 'Laporan_Struktur_Majelis_GKPI.pdf';
+    if (isIndividu) namaFile = 'Laporan_Direktori_Personil_GKPI.pdf';
+
     const isDark = document.documentElement.classList.contains('dark'); if (isDark) document.documentElement.classList.remove('dark');
     Swal.fire({ title: 'Menyusun PDF...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-    html2pdf().set({ margin: [0.4, 0.3, 0.4, 0.3], filename: 'Laporan_GKPI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'avoid-all', avoid: 'tr' } }).from(document.getElementById('areaCetakDokumen')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); tutupPreviewCetakData(); Swal.fire('Berhasil!', 'File PDF siap dicetak!', 'success'); });
+    html2pdf().set({ margin: [0.4, 0.3, 0.4, 0.3], filename: namaFile, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'avoid-all', avoid: 'tr' } }).from(document.getElementById('areaCetakDokumen')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); tutupPreviewCetakData(); Swal.fire('Berhasil!', 'File PDF siap dicetak!', 'success'); });
   }
 
   function openPdfPreview() {
