@@ -703,7 +703,7 @@
     });
   }
 
- function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
+function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
     // Tentukan titik awal peta. Jika data Excel kosong, default ke wilayah Siantar
     let lat = parseFloat(curLat) || 2.9614; 
     let lng = parseFloat(curLng) || 99.0655;
@@ -786,37 +786,6 @@
       } 
     });
   }
-
-  // Fungsi Mesin Pencari Koordinat (Tanpa API Key Google)
-  function cariLokasiPeta() {
-      const query = document.getElementById('searchMapInput').value;
-      if (!query) return;
-      const btn = document.querySelector('#searchMapInput + button');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-      // Menggunakan OpenStreetMap Nominatim API (Gratis & Cepat)
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-          .then(res => res.json())
-          .then(data => {
-              btn.innerHTML = '<i class="fas fa-search"></i> Cari';
-              if (data && data.length > 0) {
-                  const lat = parseFloat(data[0].lat);
-                  const lng = parseFloat(data[0].lon);
-                  // Lompat ke lokasi baru
-                  window.miniMapInst.setView([lat, lng], 15);
-                  window.miniPin.setLatLng([lat, lng]);
-                  document.getElementById('inputLat').value = lat.toFixed(6);
-                  document.getElementById('inputLng').value = lng.toFixed(6);
-              } else {
-                  Swal.showValidationMessage('Lokasi tidak ditemukan! Coba ketik nama kota.');
-              }
-          })
-          .catch(err => {
-              btn.innerHTML = '<i class="fas fa-search"></i> Cari';
-              console.error(err);
-          });
-  }
-
 function bukaPreviewCetakData() {
     // 1. Deteksi Tab mana yang sedang aktif
     const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
