@@ -592,7 +592,7 @@
     renderPaginationUI(data.length, currentPageIndividu, 'paginationIndividu', 'individu', itemsPerPage);
   }
 
-  function renderTabelGereja(dataGereja, resetPage = true) {
+ function renderTabelGereja(dataGereja, resetPage = true) {
     if (resetPage) currentPageGereja = 1; const paginatedData = dataGereja.slice((currentPageGereja - 1) * itemsPerPage, ((currentPageGereja - 1) * itemsPerPage) + itemsPerPage);
     const body = document.getElementById('gerejaTableBody'); const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
     let filterRT = 0; let filterJiwa = 0; dataGereja.forEach(g => { filterRT += parseInt(g.Total_RT) || 0; filterJiwa += parseInt(g.Total_Jiwa) || 0; });
@@ -600,6 +600,11 @@
     body.innerHTML = paginatedData.length ? paginatedData.map(g => {
       const namaG = g.Nama_Gereja || g['Nama Gereja'] || '-'; const res = g.Induk_Resort || g.Resort || 'Jemaat Khusus'; const wil = g.Wilayah || '-'; 
       const rt = parseInt(g.Total_RT) || 0; const jiwa = parseInt(g.Total_Jiwa) || 0; const statusGrj = g.Status_Gereja || g['Status Gereja'] || g.Tipe_Gereja || g['Tipe Gereja'] || 'Pagaran';
+      
+      // Ambil Koordinat untuk dimasukkan ke tombol Edit
+      let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.');
+      let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
+
       let pdt = DATA_MASTER.majelis.find(m => String(m.Resort).trim() === String(res).trim() && (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')));
       let gr = DATA_MASTER.majelis.find(m => String(m.Nama_Gereja).trim() === String(namaG).trim() && String(m.Jabatan).toLowerCase().includes('guru'));
       
@@ -607,7 +612,7 @@
       if (String(statusGrj).toLowerCase().includes('jemaat khusus') || String(res).toLowerCase() === 'jemaat khusus') { badgeText = "JEMAAT KHUSUS"; badgeColor = "bg-purple-100 text-purple-700"; } 
       else if (String(statusGrj).toLowerCase().includes('sabungan') || String(statusGrj).toLowerCase().includes('resort')) { badgeText = "SABUNGAN / RESORT"; badgeColor = "bg-indigo-100 text-indigo-700"; }
       
-      let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataJemaat('${namaG}', ${rt}, ${jiwa}, '${badgeText}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all"><i class="fas fa-edit"></i></button>` : '';
+      let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataJemaat('${namaG}', ${rt}, ${jiwa}, '${badgeText}', '${rawLat}', '${rawLng}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all"><i class="fas fa-edit"></i></button>` : '';
       return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5"><div class="font-bold text-slate-800 text-sm flex items-center">${namaG} <span class="${badgeColor} px-2 py-0.5 rounded text-[9px] font-bold uppercase ml-2">${badgeText}</span></div><div class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase mt-1">${res} • Wilayah ${wil}</div></td><td class="p-5"><div class="text-[11px] text-slate-700 mb-1"><i class="fas fa-user-tie text-indigo-400 w-4"></i> <span class="font-bold text-indigo-600">Pendeta:</span> ${pdt?pdt.Nama_Lengkap:'-'}</div><div class="text-[11px] text-slate-700"><i class="fas fa-chalkboard-teacher text-emerald-400 w-4"></i> <span class="font-bold text-emerald-600">Guru Jmt:</span> ${gr?gr.Nama_Lengkap:'-'}</div></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">${rt} RT</span></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${jiwa} Jiwa</span></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnEdit}</div></td></tr>`;
     }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400">Data Gereja Tidak Ditemukan</td></tr>`;
     
@@ -698,19 +703,118 @@
     });
   }
 
-  function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus) {
+ function editDataJemaat(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng) {
+    // Tentukan titik awal peta. Jika data Excel kosong, default ke wilayah Siantar
+    let lat = parseFloat(curLat) || 2.9614; 
+    let lng = parseFloat(curLng) || 99.0655;
+
     Swal.fire({
-      title: 'Update Data Jemaat', 
-      html: `<div class="text-left space-y-4 mt-2"><p class="text-sm font-bold text-indigo-600 border-b pb-2"><i class="fas fa-church"></i> ${namaGereja}</p><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Status Unit</label><select id="inputStatusGrj" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 outline-none"><option value="Sabungan" ${currentStatus.includes('SABUNGAN') || currentStatus.includes('RESORT') ? 'selected' : ''}>Sabungan / Resort</option><option value="Pagaran" ${currentStatus.includes('PAGARAN') ? 'selected' : ''}>Pagaran</option><option value="Jemaat Khusus" ${currentStatus.includes('JEMAAT KHUSUS') ? 'selected' : ''}>Jemaat Khusus</option></select></div><div class="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-slate-100"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total RT</label><input id="inputRT" type="number" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 outline-none" value="${currentRT}"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total Jiwa</label><input id="inputJiwa" type="number" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 outline-none" value="${currentJiwa}"></div></div></div>`, 
-      showCancelButton: true, confirmButtonText: 'Simpan', confirmButtonColor: '#4f46e5',
-      preConfirm: () => { return { Nama_Gereja: namaGereja, Total_RT: document.getElementById('inputRT').value, Total_Jiwa: document.getElementById('inputJiwa').value, Status_Gereja: document.getElementById('inputStatusGrj').value } }
+      title: 'Update Data & Lokasi Unit', 
+      width: '600px',
+      html: `
+        <div class="text-left space-y-4 mt-2">
+          <p class="text-sm font-bold text-indigo-600 border-b pb-2"><i class="fas fa-church"></i> ${namaGereja}</p>
+          
+          <div class="grid grid-cols-3 gap-3">
+             <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Status</label><select id="inputStatusGrj" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs"><option value="Sabungan" ${currentStatus.includes('SABUNGAN') || currentStatus.includes('RESORT') ? 'selected' : ''}>Sabungan</option><option value="Pagaran" ${currentStatus.includes('PAGARAN') ? 'selected' : ''}>Pagaran</option><option value="Jemaat Khusus" ${currentStatus.includes('JEMAAT KHUSUS') ? 'selected' : ''}>Jemaat Khusus</option></select></div>
+             <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total RT</label><input id="inputRT" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-amber-700 font-bold" value="${currentRT}"></div>
+             <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total Jiwa</label><input id="inputJiwa" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-emerald-700 font-bold" value="${currentJiwa}"></div>
+          </div>
+          
+          <div class="space-y-2 pt-3 border-t border-slate-100">
+             <label class="text-[10px] font-bold text-slate-500 uppercase">Titik Peta (Digunakan di Dashboard)</label>
+             <div class="flex gap-2">
+                 <input id="searchMapInput" type="text" placeholder="Cari nama jalan atau daerah..." class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:border-indigo-500 transition-colors">
+                 <button onclick="cariLokasiPeta()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-900 transition"><i class="fas fa-search"></i> Cari</button>
+             </div>
+             <div id="miniMapEdit" class="w-full h-[200px] rounded-xl border border-slate-300 z-0"></div>
+             <div class="flex gap-2">
+                 <input id="inputLat" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLat}" placeholder="Latitude" readonly>
+                 <input id="inputLng" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLng}" placeholder="Longitude" readonly>
+             </div>
+             <p class="text-[9px] text-slate-400 leading-tight"><i class="fas fa-info-circle"></i> Geser jarum merah di peta untuk mengubah titik koordinat secara akurat.</p>
+          </div>
+        </div>`, 
+      showCancelButton: true, confirmButtonText: 'Simpan Data', confirmButtonColor: '#4f46e5',
+      didOpen: () => {
+         // Nyalakan Mini Peta di dalam pop-up
+         window.miniMapInst = L.map('miniMapEdit').setView([lat, lng], curLat ? 16 : 8);
+         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.miniMapInst);
+         
+         window.miniPin = L.marker([lat, lng], { draggable: true }).addTo(window.miniMapInst);
+
+         // Jika pin digeser manual
+         window.miniPin.on('dragend', function(e) {
+             const pos = window.miniPin.getLatLng();
+             document.getElementById('inputLat').value = pos.lat.toFixed(6);
+             document.getElementById('inputLng').value = pos.lng.toFixed(6);
+         });
+
+         // Jika peta diklik, pin pindah
+         window.miniMapInst.on('click', function(e) {
+             window.miniPin.setLatLng(e.latlng);
+             document.getElementById('inputLat').value = e.latlng.lat.toFixed(6);
+             document.getElementById('inputLng').value = e.latlng.lng.toFixed(6);
+         });
+
+         // Paksa peta menyesuaikan layout di dalam modal
+         setTimeout(() => { window.miniMapInst.invalidateSize(); }, 300);
+      },
+      preConfirm: () => { 
+          return { 
+             Nama_Gereja: namaGereja, 
+             Total_RT: document.getElementById('inputRT').value, 
+             Total_Jiwa: document.getElementById('inputJiwa').value, 
+             Status_Gereja: document.getElementById('inputStatusGrj').value,
+             Latitude: document.getElementById('inputLat').value,
+             Longitude: document.getElementById('inputLng').value 
+          } 
+      }
     }).then((result) => { 
       if (result.isConfirmed) { 
         Swal.fire({ title: 'Menyimpan API...', didOpen: () => { Swal.showLoading() } }); 
         apiCall('updateDataGereja', {obj: result.value, userRole: USER_NOW.role})
-          .then(res => { if(res.status==='success'){Swal.fire('Berhasil!', res.message, 'success'); loadData();} else{Swal.fire('Gagal', res.message, 'error');} });
+          .then(res => { 
+             if(res.status==='success'){
+                 Swal.fire('Berhasil!', res.message, 'success'); 
+                 loadData(); 
+                 setTimeout(() => { switchDataTab('gereja'); }, 1000);
+             } else {
+                 Swal.fire('Gagal', res.message, 'error');
+             } 
+          });
       } 
     });
+  }
+
+  // Fungsi Mesin Pencari Koordinat (Tanpa API Key Google)
+  function cariLokasiPeta() {
+      const query = document.getElementById('searchMapInput').value;
+      if (!query) return;
+      const btn = document.querySelector('#searchMapInput + button');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      // Menggunakan OpenStreetMap Nominatim API (Gratis & Cepat)
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+              btn.innerHTML = '<i class="fas fa-search"></i> Cari';
+              if (data && data.length > 0) {
+                  const lat = parseFloat(data[0].lat);
+                  const lng = parseFloat(data[0].lon);
+                  // Lompat ke lokasi baru
+                  window.miniMapInst.setView([lat, lng], 15);
+                  window.miniPin.setLatLng([lat, lng]);
+                  document.getElementById('inputLat').value = lat.toFixed(6);
+                  document.getElementById('inputLng').value = lng.toFixed(6);
+              } else {
+                  Swal.showValidationMessage('Lokasi tidak ditemukan! Coba ketik nama kota.');
+              }
+          })
+          .catch(err => {
+              btn.innerHTML = '<i class="fas fa-search"></i> Cari';
+              console.error(err);
+          });
   }
 
 function bukaPreviewCetakData() {
