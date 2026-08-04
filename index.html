@@ -97,8 +97,11 @@
 <body class="antialiased">
 
 <!-- MENU LOGIN -->
-<div id="loginPage" class="h-screen w-full flex items-center justify-center p-6 bg-gradient-to-br from-indigo-50 to-slate-100">
-  <div class="w-full max-w-md glass-card rounded-[2rem] p-10 soft-shadow animate-zoom">
+<div id="loginPage" class="h-screen w-full flex items-center justify-center p-6 bg-cover bg-center bg-no-repeat relative" style="background-image: url('https://images.pexels.com/photos/11951543/pexels-photo-11951543.jpeg?auto=compress&cs=tinysrgb&w=1920');">
+  <!-- Layar gelap & blur tipis agar form login lebih fokus dan elegan -->
+  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"></div>
+  
+  <div class="w-full max-w-md glass-card rounded-[2rem] p-10 soft-shadow animate-zoom relative z-10">
     <div class="text-center mb-8">
       <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-28 h-28 object-contain mx-auto mb-6 drop-shadow-xl" onerror="this.outerHTML='<div class=\\'inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl mb-6 shadow-lg text-white transform -rotate-3\\'><i class=\\'fas fa-church text-3xl\\'></i></div>'">
       <h2 class="text-3xl font-extrabold tracking-tight text-slate-800">GKPI Data Hub</h2>
