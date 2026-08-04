@@ -388,8 +388,8 @@
       const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
     }
 
-    const saved = localStorage.getItem('si_majelis_user');
-    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { localStorage.removeItem('si_majelis_user'); } }
+    const saved = sessionStorage.getItem('si_majelis_user');
+    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
   });
 
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
@@ -401,7 +401,13 @@
     
     apiCall('checkLogin', {username: u, password: p})
       .then(res => { 
-        if (res.status === 'success') { USER_NOW = res; localStorage.setItem('si_majelis_user', JSON.stringify(res)); showMainApp(); loadData(); } 
+        if (res.status === 'success') { 
+            USER_NOW = res; 
+            // UBAH: Simpan sesi login ke sessionStorage
+            sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
+            showMainApp(); 
+            loadData(); 
+        } 
         else { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; btn.innerHTML = 'MASUK SISTEM'; } 
       })
       .catch(err => { Swal.fire('Error Server', String(err), 'error'); btn.disabled = false; btn.innerHTML = 'MASUK SISTEM'; });
@@ -409,7 +415,18 @@
 
   function handleLogout() {
     Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Keluar!' }).then((result) => {
-      if (result.isConfirmed) { localStorage.removeItem('si_majelis_user'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('loginPage').classList.remove('hidden'); document.getElementById('user').value = ''; document.getElementById('pass').value = ''; document.getElementById('btnLogin').innerText = 'MASUK SISTEM'; document.getElementById('btnLogin').disabled = false; USER_NOW = null; Swal.fire({icon: 'success', title: 'Berhasil Keluar', timer: 1200, showConfirmButton: false}); }
+      if (result.isConfirmed) { 
+          // UBAH: Hapus memori dari sessionStorage
+          sessionStorage.removeItem('si_majelis_user'); 
+          document.getElementById('mainApp').classList.add('hidden'); 
+          document.getElementById('loginPage').classList.remove('hidden'); 
+          document.getElementById('user').value = ''; 
+          document.getElementById('pass').value = ''; 
+          document.getElementById('btnLogin').innerText = 'MASUK SISTEM'; 
+          document.getElementById('btnLogin').disabled = false; 
+          USER_NOW = null; 
+          Swal.fire({icon: 'success', title: 'Berhasil Keluar', timer: 1200, showConfirmButton: false}); 
+      }
     });
   }
 
