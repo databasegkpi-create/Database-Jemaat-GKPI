@@ -9,7 +9,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -39,17 +41,17 @@
   <main class="max-w-xl mx-auto px-4 -mt-10 relative z-20">
     
     <!-- TAB NAVIGATION -->
-    <div class="glass-card rounded-2xl p-2 mb-6 flex gap-2 overflow-x-auto">
-      <button onclick="pindahTab('individu')" id="btnTabIndividu" class="tab-btn active flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-user-plus"></i> Individu</button>
-      <button onclick="pindahTab('massal')" id="btnTabMassal" class="tab-btn inactive flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-file-excel"></i> Massal</button>
-      <button onclick="pindahTab('riwayat'); loadRiwayat();" id="btnTabRiwayat" class="tab-btn inactive flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-history"></i> Riwayat & Edit</button>
+    <div class="glass-card rounded-2xl p-2 mb-6 flex gap-2 overflow-x-auto no-scrollbar">
+      <button onclick="pindahTab('individu')" id="btnTabIndividu" class="tab-btn active flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-user-check"></i> Input Satuan</button>
+      <button onclick="pindahTab('multi')" id="btnTabMulti" class="tab-btn inactive flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-users-cog"></i> Input Sekaligus</button>
+      <button onclick="pindahTab('riwayat'); loadRiwayat();" id="btnTabRiwayat" class="tab-btn inactive flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2"><i class="fas fa-history"></i> Edit & Riwayat</button>
     </div>
 
     <!-- TAB 1: INPUT INDIVIDU (1 per 1) -->
     <div id="tabIndividu" class="glass-card rounded-[2rem] p-6 md:p-8 animate-zoom block">
       <div class="mb-6 border-b border-slate-100 pb-4">
         <h2 class="text-lg font-extrabold text-slate-800"><i class="fas fa-user-edit text-indigo-500 mr-2"></i>Input Personil (Satuan)</h2>
-        <p class="text-xs text-slate-500 mt-1">Isi formulir ini untuk menambahkan personil satu per satu.</p>
+        <p class="text-xs text-slate-500 mt-1">Gunakan formulir ini untuk menambahkan personil satu per satu.</p>
       </div>
 
       <form id="formMajelis" onsubmit="simpanDataMajelis(event)" class="space-y-5">
@@ -70,31 +72,33 @@
       </form>
     </div>
 
-    <!-- TAB 2: INPUT MASSAL (EXCEL) -->
-    <div id="tabMassal" class="glass-card rounded-[2rem] p-6 md:p-8 animate-zoom hidden">
+    <!-- TAB 2: INPUT MULTI PERSONIL (SEKALIGUS) -->
+    <div id="tabMulti" class="glass-card rounded-[2rem] p-6 md:p-8 animate-zoom hidden">
       <div class="mb-6 border-b border-slate-100 pb-4">
-        <h2 class="text-lg font-extrabold text-slate-800"><i class="fas fa-file-excel text-emerald-500 mr-2"></i>Input Massal (Excel)</h2>
-        <p class="text-xs text-slate-500 mt-1">Cara cepat menginput seluruh struktur majelis gereja Anda sekaligus.</p>
+        <h2 class="text-lg font-extrabold text-slate-800"><i class="fas fa-users-cog text-emerald-500 mr-2"></i>Input Banyak Personil</h2>
+        <p class="text-xs text-slate-500 mt-1">Pilih lokasi gereja 1 kali, lalu tambahkan banyak personil sekaligus di bawahnya.</p>
       </div>
 
-      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <h4 class="text-sm font-bold text-blue-700 mb-2">Langkah Pengisian:</h4>
-        <ol class="list-decimal pl-4 text-xs text-blue-600 space-y-2 font-medium">
-          <li>Unduh template Excel resmi di bawah ini.</li>
-          <li>Isi data seluruh majelis (Dilarang mengubah judul kolom).</li>
-          <li>Upload kembali file Excel yang sudah diisi ke sini.</li>
-        </ol>
-        <button onclick="downloadTemplateDaerah()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-md"><i class="fas fa-download mr-2"></i> 1. Download Template Excel</button>
-      </div>
+      <form id="formMulti" onsubmit="simpanMultiMajelis(event)" class="space-y-5">
+        <!-- HEADER: LOKASI GEREJA (DIPILIH SEKALI SAJA) -->
+        <div class="bg-indigo-50 p-5 rounded-2xl border border-indigo-100 shadow-inner">
+            <h3 class="text-xs font-bold text-indigo-800 uppercase tracking-widest border-b border-indigo-200 pb-2 mb-4"><i class="fas fa-map-marker-alt mr-1"></i> Penempatan Unit</h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="mul_wilayah" onchange="syncResort('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Wilayah</option></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="mul_resort" onchange="syncGereja('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Resort</option></select></div>
+            </div>
+            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Gereja</label><select id="mul_gereja" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Gereja</option></select></div>
+        </div>
 
-      <div class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer" onclick="document.getElementById('fileUploadMassal').click()">
-         <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-file-upload"></i></div>
-         <h4 class="font-bold text-slate-700">2. Pilih File Excel / Klik Disini</h4>
-         <p class="text-xs text-slate-400 mt-1" id="namaFilePilihan">Format: .xlsx atau .xls</p>
-         <input type="file" id="fileUploadMassal" accept=".xlsx, .xls" class="hidden" onchange="tangkapFileMassal(event)">
-      </div>
+        <!-- CONTAINER DINAMIS UNTUK DERETAN PERSONIL -->
+        <div id="wadahPersonilMulti" class="space-y-4">
+           <!-- Javascript akan men-generate baris input di sini -->
+        </div>
 
-      <button id="btnProsesMassal" onclick="prosesUploadMassal()" disabled class="w-full bg-slate-300 text-slate-500 py-4 rounded-xl font-bold text-sm uppercase tracking-widest mt-6 transition-all cursor-not-allowed"><i class="fas fa-rocket mr-2"></i> 3. Proses Upload Massal</button>
+        <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-slate-50 text-indigo-600 border-2 border-dashed border-indigo-300 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-50 active:scale-95 transition-all flex justify-center items-center gap-2"><i class="fas fa-user-plus text-lg"></i> Tambah Personil Lain</button>
+
+        <button type="submit" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all mt-6"><i class="fas fa-cloud-upload-alt mr-2"></i>Simpan Semua Personil</button>
+      </form>
     </div>
 
     <!-- TAB 3: RIWAYAT & EDIT -->
@@ -150,7 +154,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
     
     let DATA_MASTER = { gereja: [], jabatan: [], majelis: [] };
-    let fileMassalTerpilih = null;
+    let barisPersonilCount = 0;
 
     // FUNGSI JEMBATAN API
     async function apiCall(action, payload = {}) {
@@ -169,20 +173,21 @@
          if(res.status === 'error') throw new Error(res.message);
          DATA_MASTER = res;
          siapkanDropdowns();
+         tambahBarisPersonil(); // Panggil 1 baris kosong untuk form Multi
          Swal.close();
       }).catch(err => { Swal.fire('Koneksi Gagal', 'Pastikan sinyal internet Anda stabil.', 'error'); });
     };
 
     function pindahTab(tab) {
       document.getElementById('tabIndividu').classList.toggle('hidden', tab !== 'individu');
-      document.getElementById('tabMassal').classList.toggle('hidden', tab !== 'massal');
+      document.getElementById('tabMulti').classList.toggle('hidden', tab !== 'multi');
       document.getElementById('tabRiwayat').classList.toggle('hidden', tab !== 'riwayat');
       
       const activeClass = "tab-btn active flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2";
       const inactiveClass = "tab-btn inactive flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap px-4 flex justify-center items-center gap-2";
       
       document.getElementById('btnTabIndividu').className = tab === 'individu' ? activeClass : inactiveClass;
-      document.getElementById('btnTabMassal').className = tab === 'massal' ? activeClass : inactiveClass;
+      document.getElementById('btnTabMulti').className = tab === 'multi' ? activeClass : inactiveClass;
       document.getElementById('btnTabRiwayat').className = tab === 'riwayat' ? activeClass : inactiveClass;
     }
 
@@ -190,6 +195,7 @@
     function siapkanDropdowns() {
       const wHtml = '<option value="">Pilih Wilayah</option>' + Array.from({length:12}, (_,i)=>`<option value="${i+1}">WILAYAH ${i+1}</option>`).join('');
       document.getElementById('m_wilayah').innerHTML = wHtml;
+      document.getElementById('mul_wilayah').innerHTML = wHtml;
       document.getElementById('e_wilayah').innerHTML = wHtml;
 
       let jHtml = '<option value="">Pilih Jabatan</option>';
@@ -244,9 +250,8 @@
     // --- RIWAYAT & LOCAL STORAGE LOGIC ---
     function tambahKeRiwayat(nama, gereja) {
         let riwayat = JSON.parse(localStorage.getItem('gkpi_riwayat_daerah')) || [];
-        // Cek agar tidak ganda di history lokal
         if(!riwayat.some(r => r.nama === nama && r.gereja === gereja)) {
-            riwayat.unshift({ idTemp: Date.now(), nama: nama, gereja: gereja, waktu: new Date().toLocaleString('id-ID') });
+            riwayat.unshift({ idTemp: Date.now() + Math.floor(Math.random()*100), nama: nama, gereja: gereja, waktu: new Date().toLocaleString('id-ID') });
             localStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat));
         }
     }
@@ -265,9 +270,7 @@
     function renderRiwayatList(riwayat) {
        const wadah = document.getElementById('wadahRiwayat'); wadah.innerHTML = '';
        riwayat.forEach(item => {
-           // Cari ID Majelis aslinya dari DATA MASTER (Pusat)
            let majelisData = DATA_MASTER.majelis.find(m => String(m.Nama_Lengkap).trim().toLowerCase() === String(item.nama).trim().toLowerCase() && (String(m.Nama_Gereja).trim() === String(item.gereja).trim() || String(m.Resort).trim() === String(item.gereja).trim()));
-           
            let btnHtml = ""; let statusHtml = "";
            if(majelisData) {
                statusHtml = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold rounded uppercase">Tersimpan</span>`;
@@ -307,58 +310,111 @@
       const fr = document.getElementById('m_resort');
       if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { payload.Nama_Gereja = payload.Resort; payload.Resort = ""; }
 
-      apiCall('simpanMajelis', payload)
-        .then(res => {
+      apiCall('simpanMajelis', payload).then(res => {
             if(res === true || res.status === 'success' || res) {
                 tambahKeRiwayat(payload.Nama_Lengkap, payload.Nama_Gereja || payload.Resort);
                 Swal.fire('Pendaftaran Berhasil!', 'Data telah masuk ke sistem pusat.', 'success');
                 document.getElementById('formMajelis').reset();
             } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
-        });
+      });
     }
 
-    // --- LOGIC MASSAL (EXCEL) ---
-    function downloadTemplateDaerah() {
-      const templateData = [{"Nama_Lengkap": "Pdt. Budi Santoso", "Jenis_Kelamin": "Laki-laki", "Jabatan": "Pendeta", "Status_Aktif": "Aktif", "Tgl_Tahbisan": "12/05/2010", "Wilayah": "1", "Resort": "Medan", "Nama_Gereja": "Tingkat Resort", "No_HP": "081234567890"}]; 
-      const ws = XLSX.utils.json_to_sheet(templateData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template_Import"); XLSX.writeFile(wb, "Template_Data_Majelis_GKPI.xlsx"); 
+    // --- LOGIC INPUT MULTI PERSONIL (PENGGANTI EXCEL) ---
+    function tambahBarisPersonil() {
+        barisPersonilCount++;
+        const wadah = document.getElementById('wadahPersonilMulti');
+        const rowId = 'personil_row_' + barisPersonilCount;
+        
+        let jHtml = '<option value="">Pilih Jabatan</option>';
+        DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
+        const div = document.createElement('div');
+        div.id = rowId;
+        div.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative pt-8 animate-zoom";
+        
+        let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}')" class="absolute top-3 right-3 text-rose-400 hover:text-rose-600 transition-colors" title="Hapus Baris"><i class="fas fa-times-circle text-lg"></i></button>` : '';
+
+        div.innerHTML = `
+            <span class="absolute top-0 left-0 bg-slate-800 text-white text-[9px] font-bold px-3 py-1 rounded-br-lg rounded-tl-2xl label-personil">Personil #${barisPersonilCount}</span>
+            ${btnHapus}
+            <div class="space-y-3">
+                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap & Gelar</label><input type="text" name="mul_nama[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Contoh: Pdt. Budi, S.Th"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select name="mul_jabatan[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500">${jHtml}</select></div>
+                    <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA <span class="font-normal lowercase">(Opsional)</span></label><input type="number" name="mul_hp[]" class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Mulai 08 / 62"></div>
+                </div>
+            </div>
+        `;
+        wadah.appendChild(div);
+        updateLabelPersonil();
     }
 
-    function tangkapFileMassal(e) {
-       fileMassalTerpilih = e.target.files[0];
-       const btn = document.getElementById('btnProsesMassal');
-       const label = document.getElementById('namaFilePilihan');
-       if(fileMassalTerpilih) {
-           label.innerHTML = `<span class="text-emerald-500 font-bold"><i class="fas fa-check-circle"></i> ${fileMassalTerpilih.name} siap diproses.</span>`;
-           btn.disabled = false; btn.className = "w-full bg-emerald-500 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg hover:bg-emerald-600 mt-6 transition-all active:scale-95 cursor-pointer";
-       }
+    function hapusBarisPersonil(rowId) {
+        document.getElementById(rowId).remove();
+        updateLabelPersonil();
     }
 
-    function prosesUploadMassal() {
-       if(!fileMassalTerpilih) return;
-       Swal.fire({ title: 'Membaca Excel...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } }); 
-       const reader = new FileReader(); 
-       reader.onload = function(e) { 
-           try { 
-               const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); 
-               const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
-               if(excelData.length === 0) return Swal.fire('Kosong', 'Tabel Excel Anda kosong.', 'warning'); 
-               
-               Swal.fire({ title: 'Mengirim Massal...', html: 'Menginjeksi ke Database Pusat', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } }); 
-               // BYPASS ROLE EDITOR AGAR BISA UPLOAD MASSAL DARI LUAR
-               apiCall('importMajelisMassal', {excelData: excelData, userRole: "Editor"}).then(res => { 
-                   if (res.status === 'success') { 
-                       excelData.forEach(row => { 
-                           let nm = row.Nama_Lengkap || row['Nama Lengkap']; let gr = row.Nama_Gereja || row['Nama Gereja'] || row.Resort;
-                           if(nm) tambahKeRiwayat(nm, gr); 
-                       });
-                       Swal.fire('Import Selesai!', `<b>${res.added}</b> data ditambahkan.<br>Buka tab Riwayat untuk memastikan.`, 'success'); 
-                       document.getElementById('fileUploadMassal').value = ""; fileMassalTerpilih = null;
-                       document.getElementById('namaFilePilihan').innerText = "Format: .xlsx atau .xls";
-                       document.getElementById('btnProsesMassal').disabled = true; document.getElementById('btnProsesMassal').className = "w-full bg-slate-300 text-slate-500 py-4 rounded-xl font-bold text-sm uppercase tracking-widest mt-6 transition-all cursor-not-allowed";
-                   } else { Swal.fire('Gagal API', res.message, 'error'); } 
-               }).catch(err => Swal.fire('Gagal Jaringan', String(err), 'error')); 
-           } catch(error) { Swal.fire('Error', 'Gagal membaca format Excel.', 'error'); } 
-       }; reader.readAsArrayBuffer(fileMassalTerpilih); 
+    function updateLabelPersonil() {
+        const rows = document.getElementById('wadahPersonilMulti').children;
+        for(let i=0; i<rows.length; i++) {
+            const badge = rows[i].querySelector('.label-personil');
+            if(badge) badge.innerText = "Personil #" + (i+1);
+        }
+    }
+
+    function simpanMultiMajelis(e) {
+        e.preventDefault();
+        
+        const wilayah = document.getElementById('mul_wilayah').value;
+        let resort = document.getElementById('mul_resort').value;
+        let gereja = document.getElementById('mul_gereja').value;
+        
+        const fr = document.getElementById('mul_resort');
+        if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+
+        const namaInputs = document.getElementsByName('mul_nama[]');
+        const jabatanInputs = document.getElementsByName('mul_jabatan[]');
+        const hpInputs = document.getElementsByName('mul_hp[]');
+        
+        let arrData = [];
+        for(let i=0; i<namaInputs.length; i++) {
+            let jbt = jabatanInputs[i].value;
+            let grjRow = gereja;
+            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort sesuai rule
+            if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
+                grjRow = "Tingkat Resort"; 
+            }
+            
+            arrData.push({
+                "Nama_Lengkap": namaInputs[i].value,
+                "Jabatan": jbt,
+                "Wilayah": wilayah,
+                "Resort": resort,
+                "Nama_Gereja": grjRow,
+                "No_HP": hpInputs[i].value
+            });
+        }
+
+        if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
+
+        Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim batch data ke server pusat', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+        // Menggunakan API import massal (dengan Bypass Editor)
+        apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor"}).then(res => {
+            if (res.status === 'success') {
+                // Catat di riwayat perangkat
+                arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); });
+                
+                Swal.fire('Berhasil!', `<b>${res.added}</b> personil berhasil didaftarkan sekaligus.`, 'success');
+                
+                // Reset Ulang
+                document.getElementById('formMulti').reset();
+                document.getElementById('wadahPersonilMulti').innerHTML = '';
+                barisPersonilCount = 0;
+                tambahBarisPersonil(); 
+                syncResort('mul'); 
+            } else { Swal.fire('Gagal', res.message, 'error'); }
+        }).catch(err => Swal.fire('Error Jaringan', String(err), 'error'));
     }
 
     // --- LOGIC EDIT DARI PERANGKAT ---
@@ -405,15 +461,14 @@
 
        apiCall('updateMajelis', payload).then(res => {
           if(res) {
-             // Update Local Storage Name & Gereja in case they changed it
              let riwayat = JSON.parse(localStorage.getItem('gkpi_riwayat_daerah')) || [];
-             const idTemp = parseInt(document.getElementById('e_id_temp').value);
-             let idx = riwayat.findIndex(r => r.idTemp === idTemp);
+             const idTemp = document.getElementById('e_id_temp').value;
+             let idx = riwayat.findIndex(r => String(r.idTemp) === String(idTemp));
              if(idx !== -1) { riwayat[idx].nama = payload.Nama_Lengkap; riwayat[idx].gereja = payload.Nama_Gereja || payload.Resort; localStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat)); }
              
              tutupEdit();
              Swal.fire({ title: 'Selesai!', text: 'Perbaikan berhasil dikirim.', icon: 'success', timer: 1500, showConfirmButton: false});
-             loadRiwayat(true); // Paksa sync untuk update UI belakang
+             loadRiwayat(true); 
           } else { Swal.fire('Gagal', 'Terjadi kesalahan.', 'error'); }
        });
     }
