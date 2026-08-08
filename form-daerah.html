@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <title>Portal GKPI Daerah</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: #f8fafc; color: #0f172a; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
+    .tab-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+    .tab-btn.inactive { background-color: #f1f5f9; color: #64748b; }
+    input, select { -webkit-appearance: none; appearance: none; }
+  </style>
+</head>
+<body class="antialiased pb-10">
+
+  <!-- HEADER HERO -->
+  <header class="bg-gradient-to-br from-indigo-600 to-blue-600 text-white pt-12 pb-20 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
+    <div class="absolute -top-10 -right-10 opacity-10 text-9xl"><i class="fas fa-church"></i></div>
+    <div class="max-w-xl mx-auto relative z-10 text-center">
+      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo" class="w-20 h-20 mx-auto mb-4 drop-shadow-md">
+      <h1 class="text-2xl font-extrabold tracking-tight">Portal GKPI Daerah</h1>
+      <p class="text-indigo-100 text-sm mt-1 font-medium">Pembaruan Data Jemaat & Personil Majelis</p>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 -mt-10 relative z-20">
+    
+    <!-- TAB NAVIGATION -->
+    <div class="glass-card rounded-2xl p-2 mb-6 flex gap-2">
+      <button id="btnTabGereja" onclick="pindahTab('gereja')" class="tab-btn active w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2"><i class="fas fa-church"></i> Info Unit</button>
+      <button id="btnTabMajelis" onclick="pindahTab('majelis')" class="tab-btn inactive w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2"><i class="fas fa-users"></i> Personil</button>
+    </div>
+
+    <!-- TAB 1: UPDATE DATA GEREJA -->
+    <div id="tabGereja" class="glass-card rounded-[2rem] p-6 md:p-8 animate-fade block">
+      <div class="mb-6 border-b border-slate-100 pb-4">
+        <h2 class="text-lg font-extrabold text-slate-800"><i class="fas fa-chart-line text-indigo-500 mr-2"></i>Laporan Statistik Jemaat</h2>
+        <p class="text-xs text-slate-500 mt-1">Perbarui jumlah RT, Jiwa, dan letak Peta (GPS) gereja Anda.</p>
+      </div>
+
+      <form id="formGereja" onsubmit="simpanDataGereja(event)" class="space-y-5">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="g_wilayah" onchange="syncResort('g')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Memuat...</option></select></div>
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="g_resort" onchange="syncGereja('g')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Resort</option></select></div>
+        </div>
+        
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Unit Gereja</label><select id="g_nama" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Gereja</option></select></div>
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Status Gereja</label><select id="g_status" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="Sabungan">Sabungan</option><option value="Pagaran" selected>Pagaran</option><option value="Jemaat Khusus">Jemaat Khusus</option></select></div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-amber-600 uppercase">Total RT</label><div class="relative"><i class="fas fa-users-cog absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"></i><input type="number" id="g_rt" required class="w-full py-3.5 pl-10 pr-4 rounded-xl bg-amber-50/50 border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-amber-700" placeholder="0"></div></div>
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-emerald-600 uppercase">Total Jiwa</label><div class="relative"><i class="fas fa-user-friends absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500"></i><input type="number" id="g_jiwa" required class="w-full py-3.5 pl-10 pr-4 rounded-xl bg-emerald-50/50 border border-emerald-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-emerald-700" placeholder="0"></div></div>
+        </div>
+
+        <div class="space-y-2 pt-4 border-t border-slate-100">
+          <label class="text-[10px] font-bold text-slate-500 uppercase"><i class="fas fa-map-marker-alt text-rose-500"></i> Titik Lokasi Peta (GPS)</label>
+          <div class="flex gap-2">
+            <input type="text" id="mapSearch" placeholder="Ketik nama jalan/desa..." class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+            <button type="button" onclick="cariLokasiPeta()" class="bg-slate-800 text-white px-5 py-3 rounded-xl text-xs font-bold active:scale-95 transition-transform"><i class="fas fa-search"></i></button>
+          </div>
+          <div id="petaGereja" class="w-full h-[220px] rounded-xl border border-slate-300 z-0"></div>
+          <div class="flex gap-2">
+            <input type="text" id="g_lat" class="w-1/2 p-2 rounded-lg bg-slate-100 border border-slate-200 text-[10px] text-slate-500 text-center font-mono" placeholder="Latitude" readonly>
+            <input type="text" id="g_lng" class="w-1/2 p-2 rounded-lg bg-slate-100 border border-slate-200 text-[10px] text-slate-500 text-center font-mono" placeholder="Longitude" readonly>
+          </div>
+          <p class="text-[10px] text-slate-400 italic">Geser jarum merah di atas agar tepat berada di gedung gereja Anda.</p>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all mt-4"><i class="fas fa-cloud-upload-alt mr-2"></i>Kirim Laporan Jemaat</button>
+      </form>
+    </div>
+
+    <!-- TAB 2: INPUT MAJELIS -->
+    <div id="tabMajelis" class="glass-card rounded-[2rem] p-6 md:p-8 animate-fade hidden">
+      <div class="mb-6 border-b border-slate-100 pb-4">
+        <h2 class="text-lg font-extrabold text-slate-800"><i class="fas fa-user-plus text-indigo-500 mr-2"></i>Tambah Personil Majelis</h2>
+        <p class="text-xs text-slate-500 mt-1">Daftarkan data Pendeta, Guru Jemaat, atau Sintua ke dalam database Sinode.</p>
+      </div>
+
+      <form id="formMajelis" onsubmit="simpanDataMajelis(event)" class="space-y-5">
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap beserta Gelar</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="m_nama" required class="w-full py-3.5 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700" placeholder="Contoh: Pdt. Budi Santoso, S.Th"></div></div>
+        
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select id="m_jabatan" required onchange="cekJabatan()" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Memuat...</option></select></div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="m_wilayah" onchange="syncResort('m')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih</option></select></div>
+          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="m_resort" onchange="syncGereja('m')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Resort</option></select></div>
+        </div>
+        
+        <div class="space-y-1.5" id="wadahGerejaMajelis"><label class="text-[10px] font-bold text-slate-500 uppercase">Penempatan Unit Gereja</label><select id="m_gereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih Gereja</option></select></div>
+
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WhatsApp Aktif</label><div class="relative"><i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i><input type="number" id="m_hp" required class="w-full py-3.5 pl-10 pr-4 rounded-xl bg-emerald-50/50 border border-emerald-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700" placeholder="Mulai dengan 08 / 62"></div></div>
+
+        <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all mt-4"><i class="fas fa-user-check mr-2"></i>Daftarkan Personil</button>
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    // ==========================================
+    // PASTE URL SCRIPT ANDA DI BAWAH INI
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
+    
+    let DATA_MASTER = { gereja: [], jabatan: [] };
+    let mapInstance = null, mapMarker = null;
+
+    window.onload = () => {
+      Swal.fire({ title: 'Menghubungkan ke Server...', html: 'Mengambil data GKPI pusat.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAppData' }) })
+        .then(r => r.json())
+        .then(res => {
+           if(res.status === 'error') throw new Error(res.message);
+           DATA_MASTER = res;
+           siapkanDropdowns();
+           initMap();
+           Swal.close();
+        }).catch(err => {
+           Swal.fire('Koneksi Gagal', 'Pastikan sinyal internet Anda stabil.', 'error');
+        });
+    };
+
+    function pindahTab(tab) {
+      document.getElementById('tabGereja').classList.toggle('hidden', tab !== 'gereja');
+      document.getElementById('tabMajelis').classList.toggle('hidden', tab !== 'majelis');
+      document.getElementById('btnTabGereja').className = tab === 'gereja' ? 'tab-btn active w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2' : 'tab-btn inactive w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2';
+      document.getElementById('btnTabMajelis').className = tab === 'majelis' ? 'tab-btn active w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2' : 'tab-btn inactive w-1/2 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex justify-center items-center gap-2';
+      
+      if(tab === 'gereja' && mapInstance) { setTimeout(() => { mapInstance.invalidateSize(); }, 300); }
+    }
+
+    // --- LOGIC MAPS ---
+    function initMap() {
+      mapInstance = L.map('petaGereja').setView([2.9614, 99.0655], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+      mapMarker = L.marker([2.9614, 99.0655], { draggable: true }).addTo(mapInstance);
+
+      mapMarker.on('dragend', function(e) {
+          const pos = mapMarker.getLatLng();
+          document.getElementById('g_lat').value = pos.lat.toFixed(6);
+          document.getElementById('g_lng').value = pos.lng.toFixed(6);
+      });
+
+      mapInstance.on('click', function(e) {
+          mapMarker.setLatLng(e.latlng);
+          document.getElementById('g_lat').value = e.latlng.lat.toFixed(6);
+          document.getElementById('g_lng').value = e.latlng.lng.toFixed(6);
+      });
+    }
+
+    function cariLokasiPeta() {
+      const query = document.getElementById('mapSearch').value;
+      if (!query) return;
+      
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+              if (data && data.length > 0) {
+                  const lat = parseFloat(data[0].lat); const lng = parseFloat(data[0].lon);
+                  mapInstance.setView([lat, lng], 15); mapMarker.setLatLng([lat, lng]);
+                  document.getElementById('g_lat').value = lat.toFixed(6); document.getElementById('g_lng').value = lng.toFixed(6);
+              } else { Swal.fire('Tidak Ditemukan', 'Coba ketik nama kota/kecamatan yang lebih jelas.', 'info'); }
+          });
+    }
+
+    // --- LOGIC DROPDOWNS ---
+    function siapkanDropdowns() {
+      const wHtml = '<option value="">Pilih Wilayah</option>' + Array.from({length:12}, (_,i)=>`<option value="${i+1}">WILAYAH ${i+1}</option>`).join('');
+      document.getElementById('g_wilayah').innerHTML = wHtml;
+      document.getElementById('m_wilayah').innerHTML = wHtml;
+
+      let jHtml = '<option value="">Pilih Jabatan</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+      document.getElementById('m_jabatan').innerHTML = jHtml;
+    }
+
+    function syncResort(prefix) {
+      const w = document.getElementById(prefix + '_wilayah').value;
+      const fr = document.getElementById(prefix + '_resort');
+      fr.innerHTML = '<option value="">Pilih Resort / JK</option>';
+      
+      const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); 
+      const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+      
+      resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); 
+      khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+      syncGereja(prefix);
+    }
+
+    function syncGereja(prefix) {
+      const resSelect = document.getElementById(prefix + '_resort');
+      const fg = document.getElementById(prefix + '_gereja') || document.getElementById('g_nama');
+      const val = resSelect.value;
+      const tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe');
+      
+      fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
+      if (tipe === "RESORT") { 
+          DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { 
+              const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
+          }); 
+          fg.disabled = false; 
+      } else if (tipe === "JK") { 
+          const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = true; 
+      } else { 
+          fg.disabled = false; 
+      }
+
+      // Jika di Tab Gereja dan memilih gereja, otomatis isi data yg ada
+      if(prefix === 'g' && val !== "") {
+          fg.onchange = () => {
+             const gerejaData = DATA_MASTER.gereja.find(x => x.Nama_Gereja === fg.value);
+             if(gerejaData) {
+                 document.getElementById('g_rt').value = gerejaData.Total_RT || 0;
+                 document.getElementById('g_jiwa').value = gerejaData.Total_Jiwa || 0;
+                 if(gerejaData.Latitude && gerejaData.Longitude) {
+                     const lat = parseFloat(gerejaData.Latitude.replace(',', '.'));
+                     const lng = parseFloat(gerejaData.Longitude.replace(',', '.'));
+                     if(!isNaN(lat) && !isNaN(lng)) {
+                        mapInstance.setView([lat, lng], 15); mapMarker.setLatLng([lat, lng]);
+                        document.getElementById('g_lat').value = lat.toFixed(6); document.getElementById('g_lng').value = lng.toFixed(6);
+                     }
+                 }
+             }
+          }
+      }
+    }
+
+    function cekJabatan() { 
+      const j = document.getElementById('m_jabatan').value.toLowerCase();
+      const wadah = document.getElementById('wadahGerejaMajelis');
+      const g = document.getElementById('m_gereja');
+      if (j.includes('pendeta') || j.includes('pemimpin jemaat')) { 
+          wadah.classList.add('hidden'); g.required = false; g.value = ""; 
+      } else { 
+          wadah.classList.remove('hidden'); g.required = true; 
+      } 
+    }
+
+    // --- LOGIC KIRIM KE SERVER ---
+    function simpanDataGereja(e) {
+      e.preventDefault();
+      const nama = document.getElementById('g_nama').value;
+      if(!nama) return Swal.fire('Peringatan', 'Silakan pilih nama gereja terlebih dahulu.', 'warning');
+
+      Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      
+      const payload = {
+        obj: {
+           Nama_Gereja: nama,
+           Total_RT: document.getElementById('g_rt').value,
+           Total_Jiwa: document.getElementById('g_jiwa').value,
+           Status_Gereja: document.getElementById('g_status').value,
+           Latitude: document.getElementById('g_lat').value,
+           Longitude: document.getElementById('g_lng').value
+        },
+        userRole: "Editor" // Bypass izin admin khusus untuk public form
+      };
+
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateDataGereja', payload: payload }) })
+        .then(r => r.json())
+        .then(res => {
+            if(res.status === 'success') {
+                Swal.fire('Berhasil!', 'Data jemaat gereja telah diupdate ke pusat.', 'success');
+                document.getElementById('formGereja').reset();
+            } else { Swal.fire('Gagal', res.message, 'error'); }
+        });
+    }
+
+    function simpanDataMajelis(e) {
+      e.preventDefault();
+      Swal.fire({ title: 'Mendaftarkan Personil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      
+      const payload = {
+          Nama_Lengkap: document.getElementById('m_nama').value,
+          Jabatan: document.getElementById('m_jabatan').value,
+          Wilayah: document.getElementById('m_wilayah').value,
+          Resort: document.getElementById('m_resort').value,
+          Nama_Gereja: document.getElementById('m_gereja').value,
+          No_HP: document.getElementById('m_hp').value
+      };
+
+      // Jika Resort tipenya JK, Nama Gereja diisi nama Resort
+      const fr = document.getElementById('m_resort');
+      if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') {
+          payload.Nama_Gereja = payload.Resort; payload.Resort = "";
+      }
+
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'simpanMajelis', payload: payload }) })
+        .then(r => r.json())
+        .then(res => {
+            if(res === true || res.status === 'success' || res) {
+                Swal.fire('Pendaftaran Berhasil!', 'Data personil majelis telah masuk ke sistem pusat.', 'success');
+                document.getElementById('formMajelis').reset();
+            } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
+        });
+    }
+  </script>
+</body>
+</html>
