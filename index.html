@@ -97,27 +97,37 @@
 <body class="antialiased">
 
 <!-- MENU LOGIN -->
-<div id="loginPage" class="h-screen w-full flex items-center justify-center p-6 bg-cover bg-center bg-no-repeat relative" style="background-image: url('https://images.pexels.com/photos/11951543/pexels-photo-11951543.jpeg?auto=compress&cs=tinysrgb&w=1920');">
+<div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 md:p-6 bg-cover bg-center bg-no-repeat relative" style="background-image: url('https://images.pexels.com/photos/11951543/pexels-photo-11951543.jpeg?auto=compress&cs=tinysrgb&w=1920');">
   <!-- Layar gelap & blur tipis agar form login lebih fokus dan elegan -->
   <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"></div>
   
-  <div class="w-full max-w-md glass-card rounded-[2rem] p-10 soft-shadow animate-zoom relative z-10">
-    <div class="text-center mb-8">
-      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-28 h-28 object-contain mx-auto mb-6 drop-shadow-xl" onerror="this.outerHTML='<div class=\\'inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl mb-6 shadow-lg text-white transform -rotate-3\\'><i class=\\'fas fa-church text-3xl\\'></i></div>'">
-      <h2 class="text-3xl font-extrabold tracking-tight text-slate-800">GKPI Data Hub</h2>
-      <p class="text-slate-500 font-medium text-sm mt-2">Sistem Informasi Majelis Pusat</p>
+  <!-- Padding dikurangi untuk mobile (p-6) agar lebih fit di layar HP -->
+  <div class="w-full max-w-md glass-card rounded-[2rem] p-6 md:p-10 soft-shadow animate-zoom relative z-10">
+    
+    <div class="text-center mb-6 md:mb-8">
+      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-20 h-20 md:w-24 md:h-24 object-contain mx-auto mb-4 md:mb-5 drop-shadow-xl" onerror="this.outerHTML='<div class=\\'inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-2xl mb-6 shadow-lg text-white transform -rotate-3\\'><i class=\\'fas fa-church text-3xl\\'></i></div>'">
+      <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800">GKPI Data Hub</h2>
+      <p class="text-slate-500 font-medium text-xs md:text-sm mt-1 md:mt-2">Sistem Informasi Majelis Pusat</p>
     </div>
-    <form onsubmit="handleLogin(event)" class="space-y-5">
-      <div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Username</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="text" id="user" required class="w-full py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700"></div></div>
-      <div class="space-y-1"><label class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Password</label><div class="relative"><i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="password" id="pass" required class="w-full py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700"></div></div>
-      <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all mt-4">MASUK SISTEM</button>
+
+    <form onsubmit="handleLogin(event)" class="space-y-4 md:space-y-5">
+      <div class="space-y-1"><label class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Username</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="text" id="user" required class="w-full py-3 md:py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700 text-sm"></div></div>
+      <div class="space-y-1"><label class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Password</label><div class="relative"><i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="password" id="pass" required class="w-full py-3 md:py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700 text-sm"></div></div>
+      <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3.5 md:py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all mt-2">MASUK SISTEM</button>
     </form>
     
-    <!-- TOMBOL PINTASAN KE PORTAL DAERAH -->
-    <div class="mt-8 pt-6 border-t border-slate-200/20 text-center">
-      <p class="text-[10px] text-slate-300 font-semibold mb-3 tracking-widest uppercase">Petugas Daerah / Sekretaris Jemaat?</p>
-      <a href="form-daerah.html" class="w-full flex justify-center items-center gap-2 bg-white/10 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest border border-white/20 backdrop-blur-md transition-all active:scale-95 shadow-lg">
-        <i class="fas fa-edit text-emerald-400"></i> Portal Input Data
+    <!-- TOMBOL PINTASAN KE PORTAL DAERAH (WARNA DIPERBAIKI) -->
+    <div class="mt-6 pt-5 border-t border-slate-200 text-center">
+      <p class="text-[9px] md:text-[10px] text-slate-500 font-bold mb-2.5 tracking-widest uppercase">Petugas Daerah / Sekretaris Jemaat?</p>
+      <a href="form-daerah.html" class="w-full flex justify-center items-center gap-2 bg-emerald-50 hover:bg-emerald-500 text-emerald-600 hover:text-white py-3 md:py-3.5 rounded-xl font-bold text-xs md:text-sm uppercase tracking-widest border border-emerald-200 transition-all active:scale-95 shadow-sm">
+        <i class="fas fa-edit"></i> Portal Input Data
+      </a>
+    </div>
+
+    <!-- TOMBOL CS WHATSAPP -->
+    <div class="mt-4 md:mt-5 text-center">
+      <a href="https://wa.me/6282162721282" target="_blank" class="text-[10px] md:text-xs font-bold text-slate-400 hover:text-emerald-600 transition-colors inline-flex items-center gap-1.5">
+        <i class="fab fa-whatsapp text-emerald-500 text-sm"></i> Bantuan CS Staff Infokom
       </a>
     </div>
 
