@@ -554,20 +554,31 @@
   }
 
   function renderHomeStats() {
-    document.getElementById('statTotalGereja').innerText = DATA_MASTER.gereja.length; document.getElementById('statTotalMajelis').innerText = DATA_MASTER.majelis.length;
+    // 1. Update Angka di Dashboard
+    document.getElementById('statTotalGereja').innerText = DATA_MASTER.gereja.length; 
+    document.getElementById('statTotalMajelis').innerText = DATA_MASTER.majelis.length;
     let totKK = 0; DATA_MASTER.jemaat.forEach(j => { if(String(j.Status_Keluarga).toLowerCase() === 'kepala keluarga') totKK++; });
-    document.getElementById('statTotalRT').innerText = totKK.toLocaleString('id-ID'); document.getElementById('statTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
+    document.getElementById('statTotalRT').innerText = totKK.toLocaleString('id-ID'); 
+    document.getElementById('statTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
     
-    // Sinkronkan ke modal PDF
-    document.getElementById('pdfTotalGereja').innerText = DATA_MASTER.gereja.length; document.getElementById('pdfTotalMajelis').innerText = DATA_MASTER.majelis.length;
-    document.getElementById('pdfTotalRT').innerText = totKK.toLocaleString('id-ID'); document.getElementById('pdfTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
-    document.getElementById('previewDate').innerText = "Diperbarui pada: " + new Date().toLocaleString('id-ID');
+    // 2. Sinkronkan ke modal PDF (Dengan Pengaman ID)
+    if(document.getElementById('prevTotalGereja')) document.getElementById('prevTotalGereja').innerText = DATA_MASTER.gereja.length; 
+    if(document.getElementById('prevTotalMajelis')) document.getElementById('prevTotalMajelis').innerText = DATA_MASTER.majelis.length;
+    if(document.getElementById('prevTotalRT')) document.getElementById('prevTotalRT').innerText = totKK.toLocaleString('id-ID'); 
+    if(document.getElementById('prevTotalJiwa')) document.getElementById('prevTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
+    if(document.getElementById('previewDate')) document.getElementById('previewDate').innerText = "Diperbarui pada: " + new Date().toLocaleString('id-ID');
 
-    const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
-    document.getElementById('jobStatsGrid').innerHTML = Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join('');
+    // 3. Render Grafik Jabatan
+    const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); 
+    DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
+    if(document.getElementById('jobStatsGrid')) {
+      document.getElementById('jobStatsGrid').innerHTML = Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join('');
+    }
     
+    // 4. Render Grafik Wilayah & Peta (Sekarang pasti tereksekusi)
     const statsW = Array(12).fill(0); DATA_MASTER.majelis.forEach(m => { const w = parseInt(m.Wilayah); if(w >= 1 && w <= 12) statsW[w-1]++; });
-    initCharts(statsW, statsJ); renderMap();
+    initCharts(statsW, statsJ); 
+    renderMap();
   }
 
   function initCharts(dataW, statsJ) {
