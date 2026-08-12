@@ -228,13 +228,40 @@
   let chartWilayahInstance = null, chartJabatanInstance = null; let leafletMap = null;
   let currentPageMajelis = 1; let currentPageGereja = 1; let currentPageJemaat = 1; const itemsPerPage = 20;
 
-  async function apiCall(action, payload = {}) {
+ async function apiCall(action, payload = {}) {
     try {
-      const response = await fetch(SCRIPT_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: action, payload: payload }) }); 
-      return await response.json();
-    } catch (error) { throw new Error(error.message); }
-  }
+      // Jalur Utama (POST)
+      let response = await fetch(SCRIPT_URL, { 
+        method: 'POST', 
+        redirect: 'follow', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: JSON.stringify({ action: action, payload: payload }) 
+      }); 
+      
+      let textResult = await response.text();
 
+      // Jika Google mencegat dan mengirim halaman Web (HTML) yang berawalan '<'
+      if (textResult.trim().startsWith('<')) {
+         console.warn("Jalur POST diblokir Google, mengalihkan ke Jalur Darurat (GET)...");
+         
+         // Gunakan Jalur Darurat (GET) yang sudah kita buat di Kode.gs
+         const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+         const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+         
+         response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
+         textResult = await response.text();
+         
+         // Jika masih diblokir juga, berarti murni masalah hak akses Deploy
+         if (textResult.trim().startsWith('<')) {
+            throw new Error("Akses API Terkunci! Pastikan di pengaturan Deploy, 'Who has access' diatur ke 'Anyone' (Siapa Saja).");
+         }
+      }
+
+      return JSON.parse(textResult);
+    } catch (error) { 
+      throw new Error(error.message); 
+    }
+  }
   document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
     const saved = sessionStorage.getItem('si_majelis_user');
