@@ -764,17 +764,19 @@
     else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
   }
 
-  function setupFilters() { 
+ function setupFilters() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
     document.getElementById('filterWilayah').innerHTML = htmlW; 
-    document.getElementById('m_wilayah').innerHTML = htmlJW; document.getElementById('j_wilayah').innerHTML = htmlJW;
+    document.getElementById('m_wilayah').innerHTML = htmlJW; 
+    document.getElementById('j_wilayah').innerHTML = htmlJW;
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
-    document.getElementById('filterJabatan').innerHTML = htmlJ; document.getElementById('formJabatan').innerHTML = formJ; 
+    document.getElementById('filterJabatan').innerHTML = htmlJ; 
+    document.getElementById('m_jabatan').innerHTML = formJ; 
     
-    syncFilterResort(); syncFormResort('m'); syncFormResortJemaat();
+    syncFilterResort(); syncFormResort('m'); syncFormResort('j');
   }
 
   function syncFilterResort() { const w = document.getElementById('filterWilayah').value, fr = document.getElementById('filterResort'); fr.innerHTML = '<option value="">Semua Resort / JK</option>'; const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); resorts.forEach(r => fr.innerHTML += `<option value="${r}" data-tipe="RESORT">${r}</option>`); khusus.forEach(k => fr.innerHTML += `<option value="${k}" data-tipe="JK">JK - ${k}</option>`); syncFilterGereja(); }
@@ -788,22 +790,16 @@
   function syncFormResortJemaat() { const w = document.getElementById('j_wilayah').value, fr = document.getElementById('j_resort'); fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); syncFormGerejaJemaat(); }
   function syncFormGerejaJemaat() { const resSelect = document.getElementById('j_resort'), fg = document.getElementById('j_gereja'), val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; if (tipe === "RESORT") { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; } else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = true; } else { fg.disabled = false; } }
 
-  // TOMBOL PINTAS (SMART BUTTON)
-  function openModal() {
+ function openModal() {
     const isJemaat = !document.getElementById('kontenJemaat').classList.contains('hidden');
     if(isJemaat) { 
         document.getElementById('formInputJemaat').reset(); 
         document.getElementById('j_id').value = ""; 
-        document.getElementById('modalTitleJemaat').innerHTML = '<i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat';
-        document.getElementById('btnSubmitJemaat').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Data Jemaat';
         document.getElementById('modalFormJemaat').classList.remove('hidden'); 
-    }
-    else { 
-        document.getElementById('formInput').reset(); 
+    } else { 
+        document.getElementById('formInputMajelis').reset(); 
         document.getElementById('m_id').value = ""; 
         EDIT_MODE_ID = null;
-        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis';
-        document.getElementById('btnSubmit').innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Simpan ke Database';
         document.getElementById('modalForm').classList.remove('hidden'); 
         cekJabatan(); 
     }
@@ -811,25 +807,41 @@
   function closeModal(modalId = 'modalForm') { document.getElementById(modalId).classList.add('hidden'); }
 
   // SIMPAN MAJELIS
-  function handleSimpan(e) {
+ function handleSimpan(e, tipe) {
     e.preventDefault(); 
-    const btn = document.getElementById('btnSubmit'); const fr = document.getElementById('formResort'); const fg = document.getElementById('formGereja');
-    const tipe = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MENGUNGGAH...'; fg.disabled = false; 
     const payload = Object.fromEntries(new FormData(e.target)); 
-
-    const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
-    const isDuplicate = DATA_MASTER.majelis.some(m => { const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; return existingNama === inputNama; });
-    if (isDuplicate) { Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama "' + payload.Nama_Lengkap.trim() + '" sudah terdaftar di sistem. Mohon cek kembali!', confirmButtonColor: '#f59e0b' }); btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Simpan ke Database'; return; }
-
-    if (tipe === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
-    if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
-    const action = EDIT_MODE_ID ? 'updateMajelis' : 'simpanMajelis';
-    Swal.fire({ title: 'Menyimpan Data...', html: 'Mengirim JSON ke Server API', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
     
+    let fr = tipe === 'jemaat' ? document.getElementById('j_resort') : document.getElementById('m_resort');
+    let tipeGereja = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
+    if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
+    
+    let action = 'simpanMajelis';
+    if(tipe === 'jemaat') { 
+       action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat'; 
+    } else { 
+       const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+       const isDuplicate = DATA_MASTER.majelis.some(m => { const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; return existingNama === inputNama; });
+       if (isDuplicate) { Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama tersebut sudah terdaftar!', confirmButtonColor: '#f59e0b' }); btn.disabled = false; btn.innerHTML = originalText; return; }
+       
+       if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
+       action = payload.ID_Majelis ? 'updateMajelis' : 'simpanMajelis'; 
+    }
+    
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
     apiCall(action, payload)
-      .then(res => { closeModal('modalForm'); btn.disabled = false; loadData(); })
-      .catch(err => { Swal.fire({ icon: 'error', title: 'Error Server API', text: err }); btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i> Simpan ke Database'; });
+      .then(res => { 
+        closeModal(tipe === 'jemaat' ? 'modalFormJemaat' : 'modalForm'); 
+        Swal.fire('Sukses', 'Data tersimpan.', 'success'); 
+        btn.disabled = false; btn.innerHTML = originalText;
+        loadData(); 
+      })
+      .catch(err => { 
+        Swal.fire('Error', String(err), 'error'); 
+        btn.disabled = false; btn.innerHTML = originalText;
+      });
   }
 
   // SIMPAN JEMAAT
@@ -847,13 +859,16 @@
   }
 
   // EDIT MAJELIS
-  function editData(id) {
+ function editData(id) {
     const m = DATA_MASTER.majelis.find(i => i.ID_Majelis == id); if (!m) return; 
     EDIT_MODE_ID = id; document.getElementById('m_id').value = id;
-    document.querySelector('[name="Nama_Lengkap"]').value = m.Nama_Lengkap || ''; document.querySelector('[name="Jabatan"]').value = m.Jabatan || ''; cekJabatan(); 
-    document.querySelector('[name="Wilayah"]').value = m.Wilayah || ''; syncFormResort(); document.querySelector('[name="Resort"]').value = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim(); syncFormGereja(); document.querySelector('[name="Nama_Gereja"]').value = String(m.Nama_Gereja || '').trim(); 
-    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; document.querySelector('[name="No_HP"]').value = hp;
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-id-badge text-amber-500 mr-2"></i> Edit Personil'; document.getElementById('btnSubmit').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Perubahan'; openModal();
+    document.querySelector('#formInputMajelis [name="Nama_Lengkap"]').value = m.Nama_Lengkap || ''; 
+    document.getElementById('m_jabatan').value = m.Jabatan || ''; cekJabatan(); 
+    document.getElementById('m_wilayah').value = m.Wilayah || ''; syncFormResort('m'); 
+    document.getElementById('m_resort').value = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim(); syncFormGereja('m'); 
+    document.getElementById('m_gereja').value = String(m.Nama_Gereja || '').trim(); 
+    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; document.querySelector('#formInputMajelis [name="No_HP"]').value = hp;
+    document.getElementById('modalForm').classList.remove('hidden');
   }
 
   // EDIT JEMAAT
@@ -879,8 +894,17 @@
   function konfirmasiHapus(id) { Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => { Swal.showLoading() } }); apiCall('hapusMajelis', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } }); }
   function konfirmasiHapusJemaat(id) { Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => { Swal.showLoading() } }); apiCall('hapusJemaat', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data jemaat dihapus.', 'success'); loadData(); }); } }); }
 
-  function cekJabatan() { const jabatanSelect = document.getElementById('formJabatan'); const jabatanText = jabatanSelect.options[jabatanSelect.selectedIndex]?.text.toLowerCase() || ''; const wadahGereja = document.getElementById('wadahGereja'); const inputGereja = document.getElementById('formGereja'); if (jabatanText.includes('pendeta') || jabatanText.includes('pemimpin jemaat')) { wadahGereja.classList.add('hidden'); inputGereja.required = false; inputGereja.value = ""; } else { wadahGereja.classList.remove('hidden'); inputGereja.required = true; } }
-
+  function cekJabatan() { 
+    const j = document.getElementById('m_jabatan'); 
+    const val = j.options[j.selectedIndex]?.text.toLowerCase() || ''; 
+    const g = document.getElementById('m_gereja'); 
+    if (val.includes('pendeta') || val.includes('pemimpin jemaat')) { 
+      g.parentElement.classList.add('hidden'); g.required = false; g.value = ""; 
+    } else { 
+      g.parentElement.classList.remove('hidden'); g.required = true; 
+    } 
+  }
+  
   // IMPORT SMART SYSTEM & DOWNLOAD TEMPLATE
   function downloadTemplateImport() { 
       const isJemaat = !document.getElementById('kontenJemaat').classList.contains('hidden');
