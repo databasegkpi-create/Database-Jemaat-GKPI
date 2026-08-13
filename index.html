@@ -412,10 +412,8 @@
   </div>
 </div>
 
-<!-- ================= AREA SCRIPT (REST API & LOGIC) ================= -->
 <script>
   // -------------------------------------------------------------
-  // PERHATIAN SANGAT PENTING! 
   // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
   // -------------------------------------------------------------
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
@@ -428,38 +426,51 @@
   let currentPageMajelis = 1; let currentPageGereja = 1; let currentPageIndividu = 1; let currentPageJemaat = 1; 
   const itemsPerPage = 20;
 
-  // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
+  // --- FUNGSI PENGAMAN DOM (ANTI ERROR NULL) ---
+  function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
+  function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+  function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+  // --- FUNGSI JEMBATAN API (SUPER FAST & ANTI BADAI) ---
   async function apiCall(action, payload = {}) {
     try {
-      let response = await fetch(SCRIPT_URL, {
-        method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, payload: payload })
-      });
-      let textResult = await response.text();
-
-      // Cek apakah Google mencegat dengan Login HTML atau membelokkan POST menjadi GET
-      if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+      const isRead = ['checkLogin', 'getAppData', 'getListPetugas'].includes(action);
+      
+      // JALUR BYPASS (GET) UNTUK LOADING SUPER CEPAT DI HP
+      if (isRead) {
          const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-         const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-         response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
-         textResult = await response.text();
-         
-         if (textResult.trim().startsWith('<')) {
-            throw new Error("Akses API Terkunci Google! Pastikan deploy dengan akses 'Anyone'.");
+         const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+         let response = await fetch(url, { method: 'GET', redirect: 'follow' });
+         let textResult = await response.text();
+         if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google! Pastikan deploy ke 'Anyone'.");
+         return JSON.parse(textResult);
+      } 
+      // JALUR POST UNTUK SIMPAN DATA
+      else {
+         let response = await fetch(SCRIPT_URL, {
+           method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+           body: JSON.stringify({ action: action, payload: payload })
+         });
+         let textResult = await response.text();
+
+         if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+            const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+            const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+            response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
+            textResult = await response.text();
+            if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
          }
+         return JSON.parse(textResult);
       }
-      return JSON.parse(textResult);
     } catch (error) { throw new Error(error.message); }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
     updateDarkModeIcon();
-    
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
     }
-
     const saved = sessionStorage.getItem('si_majelis_user');
     if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
   });
@@ -469,36 +480,34 @@
 
   function handleLogin(e) {
     e.preventDefault(); const u = document.getElementById('user').value; const p = document.getElementById('pass').value; const btn = document.getElementById('btnLogin');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...';
+    btn.disabled = true; safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
     
     apiCall('checkLogin', {username: u, password: p})
       .then(res => { 
         if (res.status === 'success') { 
             USER_NOW = res; sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
             showMainApp(); loadData(); 
-        } else { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; btn.innerHTML = 'MASUK SISTEM'; } 
+        } else { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); } 
       })
-      .catch(err => { Swal.fire('Error Server', String(err), 'error'); btn.disabled = false; btn.innerHTML = 'MASUK SISTEM'; });
+      .catch(err => { Swal.fire('Error Server', String(err), 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); });
   }
 
-  function handleLogout() {
-    Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Keluar!' }).then((result) => {
-      if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); }
-    });
-  }
+  function handleLogout() { Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Keluar!' }).then((result) => { if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); } }); }
 
   function showMainApp() {
-    document.getElementById('loginPage').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); document.getElementById('userNameLabel').innerText = USER_NOW.nama || 'Pengguna';
+    if(document.getElementById('loginPage')) document.getElementById('loginPage').classList.add('hidden'); 
+    if(document.getElementById('mainApp')) document.getElementById('mainApp').classList.remove('hidden'); 
+    safeSetText('userNameLabel', USER_NOW.nama || 'Pengguna');
     const roleSafe = String(USER_NOW.role).toLowerCase(); const btnAdmin = document.getElementById('btnAdmin'); 
     if (btnAdmin) { if (roleSafe.includes('admin') || roleSafe.includes('engin')) { btnAdmin.classList.remove('hidden'); } else { btnAdmin.classList.add('hidden'); } }
   }
 
- function loadData() {
-    Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data terbaru dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  function loadData() {
+    Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
     
-    document.getElementById('majelisAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
-    document.getElementById('jemaatAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
-    document.getElementById('gerejaTableBody').innerHTML = Array(5).fill(`<tr><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-8 w-full"></div></td></tr>`).join('');
+    safeSetHTML('majelisAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
+    safeSetHTML('jemaatAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
+    safeSetHTML('gerejaTableBody', Array(5).fill(`<tr><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-8 w-full"></div></td></tr>`).join(''));
     
     const curW = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value : "";
     const curR = document.getElementById('filterResort') ? document.getElementById('filterResort').value : "";
@@ -511,28 +520,27 @@
         DATA_MASTER = res; 
         if(!DATA_MASTER.jemaat) DATA_MASTER.jemaat = [];
 
-        renderHomeStats(); 
-        setupFilters(); 
+        renderHomeStats(); setupFilters(); 
 
-        if(curW) document.getElementById('filterWilayah').value = curW; syncFilterResort();
-        if(curR) document.getElementById('filterResort').value = curR; syncFilterGereja();
-        if(curG) document.getElementById('filterGereja').value = curG;
-        if(curJ) document.getElementById('filterJabatan').value = curJ;
+        if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
+        if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
+        if(curG) safeSetValue('filterGereja', curG);
+        if(curJ) safeSetValue('filterJabatan', curJ);
 
         filterTabel(); 
-        if(!document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
-        
+        if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
         Swal.close(); const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
       })
       .catch(err => { 
         Swal.fire('Koneksi Gagal', String(err), 'error'); 
-        document.getElementById('majelisAccordionContainer').innerHTML = '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data dari server.</div>';
+        safeSetHTML('majelisAccordionContainer', '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data.</div>');
       });
   }
   
   function renderMap() {
     try {
       if (leafletMap !== null) leafletMap.remove();
+      if (!document.getElementById('mapWilayah')) return;
       leafletMap = L.map('mapWilayah').setView([2.5, 99.1], 7); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
       let markerCount = 0; let latSum = 0, lngSum = 0;
       DATA_MASTER.gereja.forEach(g => {
@@ -547,17 +555,24 @@
   }
 
   function renderHomeStats() {
-    document.getElementById('statTotalGereja').innerText = DATA_MASTER.gereja.length; document.getElementById('statTotalMajelis').innerText = DATA_MASTER.majelis.length;
     let totKK = 0; DATA_MASTER.jemaat.forEach(j => { if(String(j.Status_Keluarga).toLowerCase() === 'kepala keluarga') totKK++; });
-    document.getElementById('statTotalRT').innerText = totKK.toLocaleString('id-ID'); document.getElementById('statTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
     
-    // Sinkronkan ke modal PDF
-    document.getElementById('pdfTotalGereja').innerText = DATA_MASTER.gereja.length; document.getElementById('pdfTotalMajelis').innerText = DATA_MASTER.majelis.length;
-    document.getElementById('pdfTotalKK').innerText = totKK.toLocaleString('id-ID'); document.getElementById('pdfTotalJiwa').innerText = DATA_MASTER.jemaat.length.toLocaleString('id-ID');
-    document.getElementById('previewDate').innerText = "Diperbarui pada: " + new Date().toLocaleString('id-ID');
+    safeSetText('statTotalGereja', DATA_MASTER.gereja.length); 
+    safeSetText('statTotalMajelis', DATA_MASTER.majelis.length);
+    safeSetText('statTotalRT', totKK.toLocaleString('id-ID')); 
+    safeSetText('statTotalJiwa', DATA_MASTER.jemaat.length.toLocaleString('id-ID'));
+    
+    safeSetText('pdfTotalGereja', DATA_MASTER.gereja.length); 
+    safeSetText('pdfTotalMajelis', DATA_MASTER.majelis.length);
+    safeSetText('pdfTotalKK', totKK.toLocaleString('id-ID')); 
+    safeSetText('pdfTotalJiwa', DATA_MASTER.jemaat.length.toLocaleString('id-ID'));
+    safeSetText('previewDate', "Diperbarui pada: " + new Date().toLocaleString('id-ID'));
 
     const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
-    document.getElementById('jobStatsGrid').innerHTML = Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join('');
+    
+    if(document.getElementById('jobStatsGrid')) {
+      safeSetHTML('jobStatsGrid', Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join(''));
+    }
     
     const statsW = Array(12).fill(0); DATA_MASTER.majelis.forEach(m => { const w = parseInt(m.Wilayah); if(w >= 1 && w <= 12) statsW[w-1]++; });
     initCharts(statsW, statsJ); renderMap();
@@ -565,10 +580,14 @@
 
   function initCharts(dataW, statsJ) {
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif"; Chart.defaults.animation = false; 
-    const ctxW = document.getElementById('chartWilayah').getContext('2d'); if(chartWilayahInstance) chartWilayahInstance.destroy();
-    chartWilayahInstance = new Chart(ctxW, { type: 'bar', data: { labels: Array.from({length: 12}, (_, i) => `W-${i+1}`), datasets: [{ data: dataW, backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, border: {display: false} }, y: { display: false, border: {display: false} } } } });
-    const ctxJ = document.getElementById('chartJabatan').getContext('2d'); if(chartJabatanInstance) chartJabatanInstance.destroy();
-    chartJabatanInstance = new Chart(ctxJ, { type: 'doughnut', data: { labels: Object.keys(statsJ), datasets: [{ data: Object.values(statsJ), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'], borderWidth: 2, borderColor: '#ffffff', hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } } });
+    if(document.getElementById('chartWilayah')) {
+       const ctxW = document.getElementById('chartWilayah').getContext('2d'); if(chartWilayahInstance) chartWilayahInstance.destroy();
+       chartWilayahInstance = new Chart(ctxW, { type: 'bar', data: { labels: Array.from({length: 12}, (_, i) => `W-${i+1}`), datasets: [{ data: dataW, backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, border: {display: false} }, y: { display: false, border: {display: false} } } } });
+    }
+    if(document.getElementById('chartJabatan')) {
+       const ctxJ = document.getElementById('chartJabatan').getContext('2d'); if(chartJabatanInstance) chartJabatanInstance.destroy();
+       chartJabatanInstance = new Chart(ctxJ, { type: 'doughnut', data: { labels: Object.keys(statsJ), datasets: [{ data: Object.values(statsJ), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'], borderWidth: 2, borderColor: '#ffffff', hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } } });
+    }
   }
 
   function hitungUmur(tgl) {
@@ -578,18 +597,17 @@
   }
 
   function switchTab(tab) {
-    ['pageHome', 'pageSearch', 'pageAdmin'].forEach(p => document.getElementById(p).classList.add('hidden')); 
-    ['btnHome', 'btnSearch', 'btnAdmin'].forEach(b => document.getElementById(b).classList.remove('nav-active'));
-    document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
-    document.getElementById('pageTitle').innerText = tab === 'search' ? 'Data Internal' : tab === 'admin' ? 'Akses Admin' : 'Dashboard Pusat';
+    ['pageHome', 'pageSearch', 'pageAdmin'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
+    ['btnHome', 'btnSearch', 'btnAdmin'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
+    if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
+    if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
+    safeSetText('pageTitle', tab === 'search' ? 'Data Internal' : tab === 'admin' ? 'Akses Admin' : 'Dashboard Pusat');
     if(tab === 'admin') loadListPetugas(); if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
   }
 
   function switchDataTab(tabName) {
-    document.getElementById('kontenJemaat').classList.toggle('hidden', tabName !== 'jemaat'); 
-    document.getElementById('kontenMajelis').classList.toggle('hidden', tabName !== 'majelis'); 
-    document.getElementById('kontenIndividu').classList.toggle('hidden', tabName !== 'individu'); 
-    document.getElementById('kontenGereja').classList.toggle('hidden', tabName !== 'gereja');
+    ['kontenJemaat', 'kontenMajelis', 'kontenIndividu', 'kontenGereja'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); });
+    if(document.getElementById('konten' + tabName.charAt(0).toUpperCase() + tabName.slice(1))) document.getElementById('konten' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
     
     ['Jemaat', 'Majelis', 'Individu', 'Gereja'].forEach(t => {
       const btn = document.getElementById('tabBtn'+t);
@@ -610,12 +628,18 @@
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
-  let searchTimeout;
-  document.getElementById('searchTerm').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabel, 300); });
+  let searchTimeout; 
+  if(document.getElementById('searchTerm')) {
+     document.getElementById('searchTerm').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabel, 300); });
+  }
 
   function filterTabel() {
-    const w = document.getElementById('filterWilayah').value.trim().toLowerCase(); const r = document.getElementById('filterResort').value.trim().toLowerCase(); const g = document.getElementById('filterGereja').value.trim().toLowerCase(); 
-    const j = document.getElementById('filterJabatan').value.trim().toLowerCase(); const s = document.getElementById('searchTerm').value.trim().toLowerCase(); const modeSort = document.getElementById('sortData').value;
+    const w = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value.trim().toLowerCase() : ''; 
+    const r = document.getElementById('filterResort') ? document.getElementById('filterResort').value.trim().toLowerCase() : ''; 
+    const g = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim().toLowerCase() : ''; 
+    const j = document.getElementById('filterJabatan') ? document.getElementById('filterJabatan').value.trim().toLowerCase() : ''; 
+    const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : ''; 
+    const modeSort = document.getElementById('sortData') ? document.getElementById('sortData').value : 'nama_az';
     
     // FILTER JEMAAT
     let fj = DATA_MASTER.jemaat.filter(jem => { 
@@ -639,9 +663,9 @@
     renderTabelGereja(filteredGereja, true); window.currentFilteredGereja = filteredGereja;
   }
 
-  // --- TABEL JEMAAT DENGAN ACCORDION & TAMBAH ANGGOTA ---
+  // --- TABEL JEMAAT KELUARGA (+ TOMBOL ANGGOTA) ---
   function renderTabelJemaat(data, resetPage = true) {
-     if(resetPage) currentPageJemaat = 1; const container = document.getElementById('jemaatAccordionContainer');
+     if(resetPage) currentPageJemaat = 1; const container = document.getElementById('jemaatAccordionContainer'); if(!container) return;
      const groupedKK = {}; 
      data.forEach(j => { 
         let nokk = String(j.No_KK).trim(); 
@@ -650,7 +674,7 @@
      });
      
      let arr = Object.keys(groupedKK).map(k => ({ kk: k, ...groupedKK[k] })).sort((a,b) => (a.kpl?a.kpl.Nama_Lengkap:a.kk).localeCompare(b.kpl?b.kpl.Nama_Lengkap:b.kk));
-     document.getElementById('labelTotalKK').innerText = arr.length.toLocaleString('id-ID') + " KK";
+     safeSetText('labelTotalKK', arr.length.toLocaleString('id-ID') + " KK");
      const paginated = arr.slice((currentPageJemaat - 1) * 10, ((currentPageJemaat - 1) * 10) + 10);
      const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
      
@@ -663,7 +687,7 @@
          let btnEditKpl = (idKpl && (role.includes('admin') || role.includes('editor'))) ? `<button onclick="editDataJemaatItem('${idKpl}')" class="text-amber-500 hover:text-amber-700 ml-3"><i class="fas fa-edit"></i></button>` : '';
          let btnHapusKpl = (idKpl && role.includes('admin')) ? `<button onclick="konfirmasiHapusJemaat('${idKpl}')" class="text-rose-500 hover:text-rose-700 ml-2"><i class="fas fa-trash"></i></button>` : '';
          
-         // TOMBOL TAMBAH ANGGOTA KELUARGA
+         // TOMBOL TAMBAH ANGGOTA
          let btnTambahAnggota = (role.includes('admin') || role.includes('editor')) ? `<button onclick="tambahAnggotaKeluarga('${g.kk}', '${g.wil}', '${g.res}', '${g.grj}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold shadow-sm border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors ml-3"><i class="fas fa-plus mr-1"></i> Anggota</button>` : '';
 
          let trs = g.anggota.map(a => {
@@ -681,9 +705,9 @@
      renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
   }
 
-  // --- TABEL MAJELIS KEMBALI SEPERTI SEMULA (ADA WA, PROFIL, DLL) ---
+  // --- TABEL MAJELIS (KEMBALI 100% ASLI DENGAN PROFIL & WA) ---
   function renderTabelReal(data, resetPage = true) {
-    if (resetPage) currentPageMajelis = 1; const container = document.getElementById('majelisAccordionContainer');
+    if (resetPage) currentPageMajelis = 1; const container = document.getElementById('majelisAccordionContainer'); if(!container) return;
     const grouped = {}; data.forEach(m => { let g = m.Nama_Gereja || 'Tingkat Resort'; if(!grouped[g]) grouped[g] = []; grouped[g].push(m); });
     let arrG = Object.keys(grouped).sort(); const paginated = arrG.slice((currentPageMajelis - 1) * 10, ((currentPageMajelis - 1) * 10) + 10);
     const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
@@ -706,15 +730,31 @@
     renderPaginationUI(arrG.length, currentPageMajelis, 'paginationMajelis', 'majelis', 10);
   }
 
+  // --- TABEL INDIVIDU (ASLI ANDA) ---
   function renderTabelIndividu(data, resetPage = true) {
-    if (resetPage) currentPageIndividu = 1; document.getElementById('totalIndividu').innerText = data.length + " Orang"; const startIndex = (currentPageIndividu - 1) * itemsPerPage; const paginatedData = data.slice(startIndex, startIndex + itemsPerPage); const body = document.getElementById('individuTableBody'); const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
-    body.innerHTML = paginatedData.length ? paginatedData.map((m, idx) => { const no = startIndex + idx + 1; const hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; const id = m.ID_Majelis || ''; const nama = m.Nama_Lengkap || '-'; let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean; let btnProfil = `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>`; let btnWA = (hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`; let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : ''; let btnHapus = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : ''; let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5 text-center text-slate-400 font-bold text-xs">${no}</td><td class="p-5"><div class="font-bold text-slate-800 text-sm">${nama}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${id}</div></td><td class="p-5"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-5"><div class="text-[11px] font-bold text-slate-700"><i class="fas fa-church text-indigo-400 w-4"></i> ${infoGereja}</div><div class="text-[10px] text-slate-500 tracking-wider mt-1 uppercase">${infoResort} • Wilayah ${m.Wilayah || '-'}</div></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnProfil}${btnWA}${btnEdit}${btnHapus}</div></td></tr>`; }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">Data Personil Tidak Ditemukan</td></tr>`;
+    if (resetPage) currentPageIndividu = 1; 
+    safeSetText('totalIndividu', data.length + " Orang"); 
+    const startIndex = (currentPageIndividu - 1) * itemsPerPage; const paginatedData = data.slice(startIndex, startIndex + itemsPerPage); const body = document.getElementById('individuTableBody'); if(!body) return;
+    const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
+    
+    body.innerHTML = paginatedData.length ? paginatedData.map((m, idx) => { 
+        const no = startIndex + idx + 1; const hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; const id = m.ID_Majelis || ''; const nama = m.Nama_Lengkap || '-'; 
+        let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean; 
+        
+        let btnProfil = `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>`; 
+        let btnWA = (hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`; 
+        let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : ''; 
+        let btnHapus = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : ''; 
+        
+        let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; 
+        return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5 text-center text-slate-400 font-bold text-xs">${no}</td><td class="p-5"><div class="font-bold text-slate-800 text-sm">${nama}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${id}</div></td><td class="p-5"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-5"><div class="text-[11px] font-bold text-slate-700"><i class="fas fa-church text-indigo-400 w-4"></i> ${infoGereja}</div><div class="text-[10px] text-slate-500 tracking-wider mt-1 uppercase">${infoResort} • Wilayah ${m.Wilayah || '-'}</div></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnProfil}${btnWA}${btnEdit}${btnHapus}</div></td></tr>`; 
+    }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">Data Personil Tidak Ditemukan</td></tr>`;
     renderPaginationUI(data.length, currentPageIndividu, 'paginationIndividu', 'individu', itemsPerPage);
   }
 
-  // --- TABEL GEREJA (ASLI ANDA YANG KEMBALI 100%) ---
+  // --- TABEL GEREJA (ASLI ANDA) ---
   function renderTabelGereja(dataGereja, resetPage = true) {
-    if (resetPage) currentPageGereja = 1; const body = document.getElementById('gerejaTableBody');
+    if (resetPage) currentPageGereja = 1; const body = document.getElementById('gerejaTableBody'); if(!body) return;
     const paginatedData = dataGereja.slice((currentPageGereja - 1) * itemsPerPage, ((currentPageGereja - 1) * itemsPerPage) + itemsPerPage);
     const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
     let filterRT = 0; let filterJiwa = 0; dataGereja.forEach(g => { filterRT += parseInt(g.Total_RT) || 0; filterJiwa += parseInt(g.Total_Jiwa) || 0; });
@@ -736,13 +776,13 @@
       return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5"><div class="font-bold text-slate-800 text-sm flex items-center">${namaG} <span class="${badgeColor} px-2 py-0.5 rounded text-[9px] font-bold uppercase ml-2">${badgeText}</span></div><div class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase mt-1">${res} • Wilayah ${wil}</div></td><td class="p-5"><div class="text-[11px] text-slate-700 mb-1"><i class="fas fa-user-tie text-indigo-400 w-4"></i> <span class="font-bold text-indigo-600">Pendeta:</span> ${pdt?pdt.Nama_Lengkap:'-'}</div><div class="text-[11px] text-slate-700"><i class="fas fa-chalkboard-teacher text-emerald-400 w-4"></i> <span class="font-bold text-emerald-600">Guru Jmt:</span> ${gr?gr.Nama_Lengkap:'-'}</div></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">${rt} RT</span></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${jiwa} Jiwa</span></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnEdit}</div></td></tr>`;
     }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400">Data Gereja Tidak Ditemukan</td></tr>`;
     
-    if (document.getElementById('filterTotalRT')) document.getElementById('filterTotalRT').innerText = filterRT.toLocaleString('id-ID'); 
-    if (document.getElementById('filterTotalJiwa')) document.getElementById('filterTotalJiwa').innerText = filterJiwa.toLocaleString('id-ID');
+    safeSetText('filterTotalRT', filterRT.toLocaleString('id-ID')); 
+    safeSetText('filterTotalJiwa', filterJiwa.toLocaleString('id-ID'));
     renderPaginationUI(dataGereja.length, currentPageGereja, 'paginationGereja', 'gereja', itemsPerPage);
   }
 
   function renderPaginationUI(totalItems, currentPg, containerId, type, perPage) {
-    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId);
+    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId); if(!container) return;
     if (totalPages <= 1) { container.innerHTML = ''; return; }
     let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${currentPg} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Data</span></span><div class="flex items-center gap-1">`;
     if (currentPg > 1) html += `<button onclick="ubahHalaman('${type}', ${currentPg - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
@@ -758,43 +798,74 @@
     else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
   }
 
+  // --- SETUP FILTER & DROPDOWN AMAN ---
   function setupFilters() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
-    document.getElementById('filterWilayah').innerHTML = htmlW; 
-    document.getElementById('formWilayah').innerHTML = htmlJW; 
-    document.getElementById('j_wilayah').innerHTML = htmlJW;
+    
+    safeSetHTML('filterWilayah', htmlW); 
+    safeSetHTML('formWilayah', htmlJW); 
+    safeSetHTML('j_wilayah', htmlJW);
+    safeSetHTML('m_wilayah', htmlJW);
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
-    document.getElementById('filterJabatan').innerHTML = htmlJ; document.getElementById('formJabatan').innerHTML = formJ; 
     
-    syncFilterResort(); syncFormResort('m'); syncFormResortJemaat();
+    safeSetHTML('filterJabatan', htmlJ); 
+    safeSetHTML('formJabatan', formJ); 
+    
+    syncFilterResort(); syncFormResortMajelis(); syncFormResortJemaat();
   }
 
-  function syncFilterResort() { const w = document.getElementById('filterWilayah').value, fr = document.getElementById('filterResort'); fr.innerHTML = '<option value="">Semua Resort / JK</option>'; const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); resorts.forEach(r => fr.innerHTML += `<option value="${r}" data-tipe="RESORT">${r}</option>`); khusus.forEach(k => fr.innerHTML += `<option value="${k}" data-tipe="JK">JK - ${k}</option>`); syncFilterGereja(); }
-  function syncFilterGereja() { const res = document.getElementById('filterResort'), fg = document.getElementById('filterGereja'), val = res.value, tipe = res.options[res.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Seluruh Gereja</option>'; if (tipe === "RESORT") { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => fg.innerHTML += `<option value="${g.Nama_Gereja}">${g.Nama_Gereja}</option>`); fg.disabled = false; } else if (tipe === "JK") { fg.innerHTML = `<option value="${val}">${val}</option>`; fg.value = val; fg.disabled = true; } else { fg.disabled = false; } filterTabel(); }
+  function syncFilterResort() { 
+    const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('filterResort'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
+    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+    resorts.forEach(r => fr.innerHTML += `<option value="${r}" data-tipe="RESORT">${r}</option>`); khusus.forEach(k => fr.innerHTML += `<option value="${k}" data-tipe="JK">JK - ${k}</option>`); 
+    syncFilterGereja(); 
+  }
+  function syncFilterGereja() { 
+    const res = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); if(!fg || !res) return; 
+    const val = res.value; const tipe = res.options[res.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Seluruh Gereja</option>'; 
+    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => fg.innerHTML += `<option value="${g.Nama_Gereja}">${g.Nama_Gereja}</option>`); fg.disabled = false; } 
+    else if (tipe === "JK") { fg.innerHTML = `<option value="${val}">${val}</option>`; fg.value = val; fg.disabled = false; } 
+    else { fg.disabled = false; } 
+    filterTabel(); 
+  }
   
   // KHUSUS FORM MAJELIS
-  function syncFormResort(prefix) { const w = document.getElementById('formWilayah').value, fr = document.getElementById('formResort'); fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); syncFormGereja(); }
-  
-  function syncFormGereja() { 
-    const resSelect = document.getElementById('formResort'), fg = document.getElementById('formGereja'), val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); 
-    fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
-    if (tipe === "RESORT") { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200');} 
-    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } // PERUBAHAN: Tidak lagi di-disable agar bisa disave
-    else { fg.disabled = false; fg.classList.remove('bg-slate-200');} 
+  function syncFormResortMajelis() { 
+    const w = document.getElementById('formWilayah')?.value || document.getElementById('m_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('formResort') || document.getElementById('m_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+    resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+    syncFormGerejaMajelis(); 
+  }
+  function syncFormGerejaMajelis() { 
+    const resSelect = document.getElementById('formResort') || document.getElementById('m_resort'); const fg = document.getElementById('formGereja') || document.getElementById('m_gereja'); if(!fg || !resSelect) return; 
+    const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
+    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
+    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
+    else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
   // KHUSUS FORM JEMAAT
-  function syncFormResortJemaat() { const w = document.getElementById('j_wilayah').value, fr = document.getElementById('j_resort'); fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && g.Induk_Resort).map(g => String(g.Induk_Resort).trim()))].sort(); const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim() === w) && String(g.Tipe_Gereja).toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); syncFormGerejaJemaat(); }
-  
+  function syncFormResortJemaat() { 
+    const w = document.getElementById('j_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('j_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+    resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+    syncFormGerejaJemaat(); 
+  }
   function syncFormGerejaJemaat() { 
-    const resSelect = document.getElementById('j_resort'), fg = document.getElementById('j_gereja'), val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); 
-    fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
-    if (tipe === "RESORT") { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200');} 
-    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200');} // PERUBAHAN: Tidak lagi di-disable agar bisa disave
-    else { fg.disabled = false; fg.classList.remove('bg-slate-200');} 
+    const resSelect = document.getElementById('j_resort'); const fg = document.getElementById('j_gereja'); if(!fg || !resSelect) return; 
+    const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
+    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
+    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
+    else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
   // --- SMART BUTTON & MODAL ---
@@ -805,8 +876,7 @@
           title: 'Tambah Data Baru', text: 'Pilih jenis data yang ingin ditambahkan:', showCancelButton: true, showDenyButton: true,
           confirmButtonText: '<i class="fas fa-users-cog"></i> Data Jemaat', denyButtonText: '<i class="fas fa-id-badge"></i> Data Majelis', cancelButtonText: 'Batal', confirmButtonColor: '#10b981', denyButtonColor: '#4f46e5'
       }).then((result) => {
-          if (result.isConfirmed) { openFormJemaat(); }
-          else if (result.isDenied) { openFormMajelis(); }
+          if (result.isConfirmed) { openFormJemaat(); } else if (result.isDenied) { openFormMajelis(); }
       });
     } else {
       const isJemaat = document.getElementById('kontenJemaat') && !document.getElementById('kontenJemaat').classList.contains('hidden');
@@ -815,64 +885,72 @@
   }
 
   function openFormJemaat() {
-    document.getElementById('formInputJemaat').reset(); 
-    document.getElementById('j_id').value = ""; 
-    document.getElementById('modalTitleJemaat').innerHTML = '<i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat';
-    document.getElementById('btnSubmitJemaat').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Data Jemaat';
-    document.getElementById('modalFormJemaat').classList.remove('hidden'); 
+    if(document.getElementById('formInputJemaat')) document.getElementById('formInputJemaat').reset(); 
+    safeSetValue('j_id', ''); 
+    safeSetHTML('modalTitleJemaat', '<i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat');
+    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Data Jemaat');
+    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
   }
 
   function openFormMajelis() {
-    document.getElementById('formInputMajelis').reset();
-    document.getElementById('m_id').value = ""; 
+    if(document.getElementById('formInputMajelis')) document.getElementById('formInputMajelis').reset();
+    if(document.getElementById('formInput')) document.getElementById('formInput').reset();
+    safeSetValue('m_id', ''); 
     EDIT_MODE_ID = null;
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis';
-    document.getElementById('btnSubmit').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Majelis';
-    document.getElementById('modalForm').classList.remove('hidden'); 
+    safeSetHTML('modalTitle', '<i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis');
+    safeSetHTML('btnSubmit', '<i class="fas fa-save mr-2"></i> Simpan Majelis');
+    if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden'); 
     cekJabatan(); 
   }
   
-  function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+  function closeModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('hidden'); }
 
   function cekJabatan() { 
-    const j = document.getElementById('formJabatan'); 
+    const j = document.getElementById('formJabatan') || document.getElementById('m_jabatan'); if(!j) return;
     const val = j.options[j.selectedIndex]?.text.toLowerCase() || ''; 
-    const g = document.getElementById('formGereja'); const wadah = document.getElementById('wadahGereja');
+    const g = document.getElementById('formGereja') || document.getElementById('m_gereja'); const wadah = document.getElementById('wadahGereja');
     if (val.includes('pendeta') || val.includes('pemimpin jemaat')) { 
-      wadah.classList.add('hidden'); g.required = false; g.value = ""; 
+      if(wadah) wadah.classList.add('hidden'); if(g) { g.required = false; g.value = ""; }
     } else { 
-      wadah.classList.remove('hidden'); g.required = true; 
+      if(wadah) wadah.classList.remove('hidden'); if(g) g.required = true; 
     } 
   }
 
   // --- TAMBAH ANGGOTA KELUARGA (PRE-FILL FORM) ---
   function tambahAnggotaKeluarga(noKK, wilayah, resort, gereja) {
-    document.getElementById('formInputJemaat').reset(); 
-    document.getElementById('j_id').value = ""; 
-    document.getElementById('j_kk').value = noKK; 
-    document.getElementById('j_status').value = "Anak"; // Default ke anak
+    if(document.getElementById('formInputJemaat')) document.getElementById('formInputJemaat').reset(); 
+    safeSetValue('j_id', ''); 
+    safeSetValue('j_kk', noKK); 
+    safeSetValue('j_status', 'Anak'); // Default ke anak
     
-    document.getElementById('j_wilayah').value = wilayah;
+    safeSetValue('j_wilayah', wilayah);
     syncFormResortJemaat(); 
-    document.getElementById('j_resort').value = resort;
-    syncFormGerejaJemaat(); 
-    document.getElementById('j_gereja').value = gereja;
+    
+    // Memberi jeda kecil agar dropdown resort sempat ter-render sebelum di-set
+    setTimeout(() => {
+       safeSetValue('j_resort', resort);
+       syncFormGerejaJemaat(); 
+       setTimeout(() => {
+          safeSetValue('j_gereja', gereja);
+       }, 50);
+    }, 50);
 
-    document.getElementById('modalTitleJemaat').innerHTML = '<i class="fas fa-user-plus text-emerald-500 mr-2"></i> Tambah Anggota (KK: ' + noKK + ')';
-    document.getElementById('btnSubmitJemaat').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Anggota';
-    document.getElementById('modalFormJemaat').classList.remove('hidden'); 
+    safeSetHTML('modalTitleJemaat', '<i class="fas fa-user-plus text-emerald-500 mr-2"></i> Tambah Anggota (KK: ' + noKK + ')');
+    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Anggota');
+    
+    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
   }
 
   // --- SIMPAN MAJELIS ---
-  function handleSimpan(e) {
+  function handleSimpan(e, tipe) {
     e.preventDefault(); 
     const payload = Object.fromEntries(new FormData(e.target));
-    const btn = document.getElementById('btnSubmit');
+    const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
     
-    let fr = document.getElementById('formResort');
-    let tipeGereja = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
+    let fr = document.getElementById('formResort') || document.getElementById('m_resort');
+    let tipeGereja = fr ? fr.options[fr.selectedIndex]?.getAttribute('data-tipe') : '';
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
     
     const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
@@ -907,41 +985,53 @@
   // --- EDIT MAJELIS ---
   function editDataMajelis(id) {
     const m = DATA_MASTER.majelis.find(i => i.ID_Majelis == id); if (!m) return; 
-    EDIT_MODE_ID = id; document.getElementById('m_id').value = id;
-    document.getElementById('m_nama').value = m.Nama_Lengkap || ''; 
-    document.getElementById('formJabatan').value = m.Jabatan || ''; cekJabatan(); 
-    document.getElementById('formWilayah').value = m.Wilayah || ''; syncFormResort(); 
-    document.getElementById('formResort').value = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim(); syncFormGereja(); 
-    document.getElementById('formGereja').value = String(m.Nama_Gereja || '').trim(); 
-    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; document.getElementById('m_hp').value = hp;
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-id-badge text-amber-500 mr-2"></i> Edit Personil'; 
-    document.getElementById('btnSubmit').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Perubahan'; 
-    document.getElementById('modalForm').classList.remove('hidden');
+    EDIT_MODE_ID = id; safeSetValue('m_id', id);
+    safeSetValue('m_nama', m.Nama_Lengkap || ''); 
+    safeSetValue('formJabatan', m.Jabatan || ''); 
+    safeSetValue('m_jabatan', m.Jabatan || ''); cekJabatan(); 
+    
+    safeSetValue('formWilayah', m.Wilayah || ''); 
+    safeSetValue('m_wilayah', m.Wilayah || ''); syncFormResortMajelis(); 
+    
+    const resVal = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim();
+    safeSetValue('formResort', resVal); 
+    safeSetValue('m_resort', resVal); syncFormGerejaMajelis(); 
+    
+    safeSetValue('formGereja', String(m.Nama_Gereja || '').trim()); 
+    safeSetValue('m_gereja', String(m.Nama_Gereja || '').trim()); 
+    
+    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; safeSetValue('m_hp', hp);
+    safeSetHTML('modalTitle', '<i class="fas fa-id-badge text-amber-500 mr-2"></i> Edit Personil'); 
+    safeSetHTML('btnSubmit', '<i class="fas fa-save mr-2"></i> Simpan Perubahan'); 
+    if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden');
   }
 
-  // --- EDIT JEMAAT KELUARGA ---
+  // --- EDIT JEMAAT ---
   function editDataJemaatItem(id) {
     const j = DATA_MASTER.jemaat.find(i => i.ID_Jemaat == id); if (!j) return; 
-    document.getElementById('j_id').value = id; document.getElementById('j_kk').value = j.No_KK || ''; 
-    document.getElementById('j_nama').value = j.Nama_Lengkap || ''; document.getElementById('j_status').value = j.Status_Keluarga || ''; 
-    document.getElementById('j_jk').value = j.Jenis_Kelamin || '';
+    safeSetValue('j_id', id); safeSetValue('j_kk', j.No_KK || ''); 
+    safeSetValue('j_nama', j.Nama_Lengkap || ''); safeSetValue('j_status', j.Status_Keluarga || ''); 
+    safeSetValue('j_jk', j.Jenis_Kelamin || '');
     
     let tgl = j.Tanggal_Lahir;
     if (tgl && String(tgl).includes('/')) { let p = String(tgl).split('/'); if(p.length===3) tgl = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`; } 
     else if (tgl) { try { tgl = new Date(tgl).toISOString().split('T')[0]; } catch(e){} }
-    document.getElementById('j_tgl').value = tgl || '';
+    safeSetValue('j_tgl', tgl || '');
     
-    document.getElementById('j_kondisi').value = j.Kondisi || ''; document.getElementById('j_pekerjaan').value = j.Pekerjaan || '';
-    document.getElementById('j_wilayah').value = j.Wilayah || ''; syncFormResortJemaat(); 
-    document.getElementById('j_resort').value = j.Resort ? String(j.Resort).trim() : String(j.Nama_Gereja).trim(); syncFormGerejaJemaat(); 
-    document.getElementById('j_gereja').value = String(j.Nama_Gereja || '').trim(); 
-    document.getElementById('modalTitleJemaat').innerHTML = '<i class="fas fa-users-cog text-amber-500 mr-2"></i> Edit Data Jemaat'; 
-    document.getElementById('btnSubmitJemaat').innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Perubahan'; 
-    document.getElementById('modalFormJemaat').classList.remove('hidden');
+    safeSetValue('j_kondisi', j.Kondisi || ''); safeSetValue('j_pekerjaan', j.Pekerjaan || '');
+    safeSetValue('j_wilayah', j.Wilayah || ''); syncFormResortJemaat(); 
+    safeSetValue('j_resort', j.Resort ? String(j.Resort).trim() : String(j.Nama_Gereja).trim()); syncFormGerejaJemaat(); 
+    
+    // Memberi jeda kecil agar sync sempat memunculkan opsi dropdown sebelum di set valuenya
+    setTimeout(() => { safeSetValue('j_gereja', String(j.Nama_Gereja || '').trim()); }, 50);
+    
+    safeSetHTML('modalTitleJemaat', '<i class="fas fa-users-cog text-amber-500 mr-2"></i> Edit Data Jemaat'); 
+    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Perubahan'); 
+    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden');
   }
 
-  function konfirmasiHapus(id) { Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusMajelis', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } }); }
-  function konfirmasiHapusJemaat(id) { Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusJemaat', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); }); } }); }
+  function konfirmasiHapus(id) { Swal.fire({ title: 'Hapus data permanen?', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusMajelis', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } }); }
+  function konfirmasiHapusJemaat(id) { Swal.fire({ title: 'Hapus data jemaat?', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusJemaat', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); }); } }); }
 
   // --- SMART DOWNLOAD TEMPLATE & IMPORT EXCEL ---
   function downloadTemplateImport() { 
@@ -985,8 +1075,8 @@
     const reader = new FileReader(); 
     reader.onload = function(e) { 
         try { 
-            const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'}); 
-            const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
+            const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); 
+            const firstSheet = workbook.SheetNames[0]; const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]); 
             if(excelData.length === 0) return Swal.fire('Kosong', 'Excel kosong.', 'warning'); 
             Swal.fire({ title: 'Menyuntikkan API...', didOpen: () => Swal.showLoading() }); 
             apiCall(apiName, {excelData: excelData, userRole: USER_NOW.role}).then(res => { 
@@ -1014,11 +1104,11 @@
   }
 
   // FUNGSI PROFIL & LAIN-LAIN
-  function bukaProfil(id) { const m = DATA_MASTER.majelis.find(x => x.ID_Majelis === id); if(!m) return; document.getElementById('profNama').innerText = m.Nama_Lengkap || '-'; document.getElementById('profJabatan').innerText = m.Jabatan || '-'; document.getElementById('profGereja').innerText = m.Nama_Gereja || 'Tingkat Resort'; document.getElementById('profWilayah').innerText = m.Resort ? `${m.Resort} (W-${m.Wilayah||'-'})` : `Wilayah ${m.Wilayah||'-'}`; let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '-'; document.getElementById('profWA').innerText = hp; document.getElementById('profID').innerText = id; let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean; const btnChat = document.getElementById('btnChatProf'); if(hpClean.length >= 9) { btnChat.href = "https://wa.me/" + hpClean; btnChat.style.display = "flex"; } else { btnChat.style.display = "none"; } document.getElementById('modalProfil').classList.remove('hidden'); }
-  function tutupProfil() { document.getElementById('modalProfil').classList.add('hidden'); }
+  function bukaProfil(id) { const m = DATA_MASTER.majelis.find(x => x.ID_Majelis === id); if(!m) return; safeSetText('profNama', m.Nama_Lengkap || '-'); safeSetText('profJabatan', m.Jabatan || '-'); safeSetText('profGereja', m.Nama_Gereja || 'Tingkat Resort'); safeSetText('profWilayah', m.Resort ? `${m.Resort} (W-${m.Wilayah||'-'})` : `Wilayah ${m.Wilayah||'-'}`); let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '-'; safeSetText('profWA', hp); safeSetText('profID', id); let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean; const btnChat = document.getElementById('btnChatProf'); if(hpClean.length >= 9) { btnChat.href = "https://wa.me/" + hpClean; btnChat.style.display = "flex"; } else { btnChat.style.display = "none"; } if(document.getElementById('modalProfil')) document.getElementById('modalProfil').classList.remove('hidden'); }
+  function tutupProfil() { if(document.getElementById('modalProfil')) document.getElementById('modalProfil').classList.add('hidden'); }
   
-  function openBlastModal() { if(!window.currentFilteredList || window.currentFilteredList.length === 0) return Swal.fire('Data Kosong', 'Pilih minimal satu personil.', 'info'); document.getElementById('countPenerima').innerText = window.currentFilteredList.length; document.getElementById('modalBlastFonte').classList.remove('hidden'); }
-  function closeBlastModal() { document.getElementById('modalBlastFonte').classList.add('hidden'); }
+  function openBlastModal() { if(!window.currentFilteredList || window.currentFilteredList.length === 0) return Swal.fire('Data Kosong', 'Pilih minimal satu personil.', 'info'); safeSetText('countPenerima', window.currentFilteredList.length); if(document.getElementById('modalBlastFonte')) document.getElementById('modalBlastFonte').classList.remove('hidden'); }
+  function closeBlastModal() { if(document.getElementById('modalBlastFonte')) document.getElementById('modalBlastFonte').classList.add('hidden'); }
   
   function kirimBlastSekarang() { 
     const list = window.currentFilteredList; const pesan = document.getElementById('pesanFonte').value; const fileInput = document.getElementById('fileBlast'); 
@@ -1055,37 +1145,37 @@
     
     if (!dataList || dataList.length === 0) { return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak.', 'info'); } 
     
-    document.getElementById('judulCetakPdf').innerText = judul; 
-    document.getElementById('tglCetakPdf').innerText = "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); 
+    safeSetText('judulCetakPdf', judul); 
+    safeSetText('tglCetakPdf', "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })); 
     
     const fw = document.getElementById('filterWilayah'); const fr = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); const fj = document.getElementById('filterJabatan'); 
-    document.getElementById('infoFilterCetak').innerHTML = `<div><b>Wilayah:</b> ${fw.options[fw.selectedIndex].text}</div><div><b>Resort / JK:</b> ${fr.options[fr.selectedIndex].text}</div><div><b>Unit Gereja:</b> ${fg.options[fg.selectedIndex].text}</div>${(!isJemaat && document.getElementById('kontenGereja') && !document.getElementById('kontenGereja').classList.contains('hidden') === false) ? `<div><b>Jabatan:</b> ${fj.options[fj.selectedIndex].text}</div>` : ''}`; 
+    const fwText = fw ? fw.options[fw.selectedIndex].text : ''; const frText = fr ? fr.options[fr.selectedIndex].text : ''; const fgText = fg ? fg.options[fg.selectedIndex].text : ''; const fjText = fj ? fj.options[fj.selectedIndex].text : '';
+    safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>${(!isJemaat && document.getElementById('kontenGereja') && !document.getElementById('kontenGereja').classList.contains('hidden') === false) ? `<div><b>Jabatan:</b> ${fjText}</div>` : ''}`); 
     document.querySelector('#areaCetakDokumen table').style.fontSize = "9px"; 
-    const thead = document.getElementById('headTabelCetak'); const tbody = document.getElementById('bodyTabelCetak'); 
     
     if(isJemaat) { 
-        thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No KK</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`; 
-        tbody.innerHTML = dataList.map((j, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${j.No_KK||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${j.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${hitungUmur(j.Tanggal_Lahir)}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Pekerjaan||'-'}</td></tr>`).join(''); 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No KK</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`); 
+        safeSetHTML('bodyTabelCetak', dataList.map((j, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${j.No_KK||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${j.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${hitungUmur(j.Tanggal_Lahir)}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Pekerjaan||'-'}</td></tr>`).join('')); 
     } else if (isMajelis) { 
-        thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`; 
-        const g_filter = document.getElementById('filterGereja').value.trim().toLowerCase(); const grouped = {}; 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`); 
+        const g_filter = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim().toLowerCase() : ''; const grouped = {}; 
         dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (!isPimpinan) { let gereja = m.Nama_Gereja || 'Tingkat Resort'; if (!grouped[gereja]) grouped[gereja] = { resort: m.Resort, majelis: [] }; grouped[gereja].majelis.push(m); } }); 
         dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (isPimpinan) { let gerejaBawah = DATA_MASTER.gereja.filter(grj => String(grj.Induk_Resort || grj.Resort).trim() === String(m.Resort).trim()); if (gerejaBawah.length > 0) { gerejaBawah.forEach(grj => { let namaG = grj.Nama_Gereja; if (g_filter && String(namaG).trim().toLowerCase() !== g_filter) return; if (!grouped[namaG]) grouped[namaG] = { resort: m.Resort, majelis: [] }; if (!grouped[namaG].majelis.some(x => x.ID_Majelis === m.ID_Majelis)) grouped[namaG].majelis.push({...m, Nama_Gereja: namaG}); }); } else { let fallback = m.Resort ? "Resort " + m.Resort : 'Tingkat Resort'; if (g_filter && fallback.toLowerCase() !== g_filter) return; if (!grouped[fallback]) grouped[fallback] = { resort: m.Resort, majelis: [] }; if (!grouped[fallback].majelis.some(x => x.ID_Majelis === m.ID_Majelis)) grouped[fallback].majelis.push(m); } } }); 
         Object.keys(grouped).forEach(k => { grouped[k].majelis.sort((a, b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff!==0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); }); 
         const groupArray = Object.keys(grouped).map(k => ({ namaGereja: k, ...grouped[k] })).sort((a, b) => a.namaGereja.localeCompare(b.namaGereja)); 
-        tbody.innerHTML = groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join(''); 
+        safeSetHTML('bodyTabelCetak', groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join('')); 
     } else if (isIndividu) { 
-        thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`; 
-        tbody.innerHTML = dataList.map((m, i) => { let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td></tr>`; }).join(''); 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`); 
+        safeSetHTML('bodyTabelCetak', dataList.map((m, i) => { let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td></tr>`; }).join('')); 
     } else { 
-        thead.innerHTML = `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Unit Gereja</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Induk Resort / JK</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total RT</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total Jiwa</th></tr>`; 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Unit Gereja</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Induk Resort / JK</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total RT</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total Jiwa</th></tr>`); 
         let totRT = 0, totJiwa = 0; 
-        tbody.innerHTML = dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`; 
+        safeSetHTML('bodyTabelCetak', dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`); 
     } 
-    document.getElementById('modalCetakData').classList.remove('hidden'); 
+    if(document.getElementById('modalCetakData')) document.getElementById('modalCetakData').classList.remove('hidden'); 
   }
   
-  function tutupPreviewCetakData() { document.getElementById('modalCetakData').classList.add('hidden'); }
+  function tutupPreviewCetakData() { if(document.getElementById('modalCetakData')) document.getElementById('modalCetakData').classList.add('hidden'); }
   
   function eksekusiCetakTabelPDF() {
     const isMajelis = document.getElementById('kontenMajelis') && !document.getElementById('kontenMajelis').classList.contains('hidden'); const isIndividu = document.getElementById('kontenIndividu') && !document.getElementById('kontenIndividu').classList.contains('hidden'); const isJemaat = document.getElementById('kontenJemaat') && !document.getElementById('kontenJemaat').classList.contains('hidden'); let namaFile = 'Laporan_Data_Gereja_GKPI.pdf'; if (isMajelis) namaFile = 'Laporan_Struktur_Majelis_GKPI.pdf'; if (isIndividu) namaFile = 'Laporan_Direktori_Personil_GKPI.pdf'; if (isJemaat) namaFile = 'Laporan_Keluarga_Jemaat_GKPI.pdf';
