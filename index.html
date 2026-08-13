@@ -424,7 +424,7 @@
   let currentPageMajelis = 1, currentPageGereja = 1, currentPageIndividu = 1, currentPageJemaat = 1; 
   const itemsPerPage = 20;
 
-  // --- FUNGSI JEMBATAN API (ANTI BADAI) ---
+  // --- FUNGSI JEMBATAN API (ANTI BADAI & ANTI REDIRECT) ---
   async function apiCall(action, payload = {}) {
     try {
       let response = await fetch(SCRIPT_URL, {
@@ -433,8 +433,9 @@
       });
       let textResult = await response.text();
 
-      if (textResult.trim().startsWith('<')) {
-         console.warn("Jalur POST diblokir Google, mengalihkan ke Jalur Darurat (GET)...");
+      // Jika Google mencegat dengan HTML (<) ATAU membelokkan POST menjadi GET ("REST API...")
+      if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+         console.warn("Jalur POST dibelokkan, mengalihkan ke Jalur Darurat (GET)...");
          const encodedPayload = encodeURIComponent(JSON.stringify(payload));
          const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
          response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
