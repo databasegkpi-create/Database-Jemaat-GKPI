@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF">
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF">
   <title>GKPI Data Hub</title>
   
@@ -13,6 +18,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -31,11 +37,15 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     div:where(.swal2-container) div:where(.swal2-popup) { border-radius: 1.5rem !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .leaflet-container { z-index: 10 !important; } .leaflet-top, .leaflet-bottom { z-index: 10 !important; }
+    
+    .leaflet-container { z-index: 10 !important; }
+    .leaflet-top, .leaflet-bottom { z-index: 10 !important; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .animate-zoom { animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
     .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loadingSkeleton 1.5s infinite; border-radius: 8px; }
     @keyframes loadingSkeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .page-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 800; font-size: 11px; transition: all 0.2s; }
@@ -44,8 +54,44 @@
     .page-btn.inactive:hover { background-color: #e2e8f0; color: #334155; transform: translateY(-1px); }
     details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
 
-    /* Dark Mode */
-    html.dark { background-color: #0f172a; color: #f8fafc; } html.dark body { background-color: #0f172a; color: #f8fafc; } html.dark .bg-white { background-color: #1e293b !important; } html.dark .bg-slate-50 { background-color: #0f172a !important; } html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; } html.dark .text-slate-600 { color: #cbd5e1 !important; } html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; } html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; } html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; } html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; } html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; } html.dark th, html.dark td { border-color: #334155 !important; } html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; }
+    html.dark { background-color: #0f172a; color: #f8fafc; }
+    html.dark body { background-color: #0f172a; color: #f8fafc; }
+    html.dark .bg-white { background-color: #1e293b !important; }
+    html.dark .bg-slate-50 { background-color: #0f172a !important; }
+    html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; }
+    html.dark .text-slate-600 { color: #cbd5e1 !important; }
+    html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; }
+    html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; }
+    html.dark .shadow-sm, html.dark .soft-shadow { box-shadow: 0 4px 20px -2px rgba(0,0,0,0.5) !important; }
+    html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; }
+    html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+    html.dark .shadow-indigo-200, html.dark .shadow-emerald-200, html.dark .shadow-amber-200, html.dark .shadow-rose-200 { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6) !important; }
+    html.dark .nav-active { background-color: #3730a3 !important; color: #e0e7ff !important; }
+    html.dark .nav-active i { color: #818cf8 !important; }
+    html.dark details > summary { background-color: #1e293b !important; }
+    html.dark details > summary:hover { background-color: #334155 !important; }
+    html.dark details > summary.group-open\:bg-indigo-50 { background-color: #1e293b !important; }
+    html.dark .group-open\:text-indigo-700 { color: #818cf8 !important; }
+    html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; }
+    html.dark .group-open\:bg-indigo-200 { background-color: rgba(79, 70, 229, 0.3) !important; color: #e0e7ff !important; }
+    html.dark .bg-indigo-50\/50 { background-color: #0f172a !important; border-bottom-color: #334155 !important; }
+    html.dark .border-indigo-100 { border-color: #334155 !important; }
+    html.dark th, html.dark td { border-color: #334155 !important; }
+    html.dark th.text-indigo-400 { color: #94a3b8 !important; } 
+    html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; } 
+    html.dark .bg-indigo-50 { background-color: rgba(79, 70, 229, 0.2) !important; } html.dark .text-indigo-600 { color: #818cf8 !important; }
+    html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.2) !important; } html.dark .text-emerald-600 { color: #34d399 !important; }
+    html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.2) !important; } html.dark .text-amber-600 { color: #fbbf24 !important; }
+    html.dark .bg-rose-50 { background-color: rgba(225, 29, 72, 0.2) !important; } html.dark .text-rose-600 { color: #fb7185 !important; }
+    html.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.2) !important; } html.dark .text-blue-600 { color: #60a5fa !important; }
+    html.dark .bg-purple-100 { background-color: rgba(147, 51, 234, 0.2) !important; } html.dark .text-purple-700 { color: #c084fc !important; }
+    html.dark .text-slate-50 { color: #0f172a !important; } 
+    html.dark .text-indigo-500 { color: #818cf8 !important; }
+    html.dark .text-emerald-500 { color: #34d399 !important; }
+    html.dark .text-amber-500 { color: #fbbf24 !important; }
+    html.dark .text-blue-500 { color: #60a5fa !important; }
+    html.dark #mapWilayah { filter: invert(1) hue-rotate(180deg) brightness(95%) contrast(90%); }
+    html.dark .page-btn.inactive { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
   </style>
 </head>
 <body class="antialiased">
@@ -71,20 +117,27 @@
   </div>
 </div>
 
-<!-- APLIKASI UTAMA -->
 <div id="mainApp" class="hidden h-screen flex flex-col md:flex-row bg-slate-50">
+  <!-- SIDEBAR NAVIGASI -->
   <aside class="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col z-20 flex-shrink-0 h-auto md:h-full">
     <div class="p-6 md:p-8 flex items-center gap-4 border-b border-slate-100">
       <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-12 h-12 object-contain drop-shadow-sm" onerror="this.outerHTML='<div class=\\'w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl shadow-md\\'><i class=\\'fas fa-church\\'></i></div>'">
       <div><h1 class="font-extrabold text-xl text-slate-800 leading-none tracking-tight">SINODE GKPI</h1><span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Database GKPI</span></div>
     </div>
-    <nav class="flex-1 px-4 py-6 overflow-y-auto flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto border-b md:border-none">
+    <nav class="flex-1 px-4 py-6 overflow-y-auto flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto md:overflow-x-hidden border-b md:border-none">
       <div class="flex flex-row md:flex-col gap-2 md:mb-auto">
         <button onclick="switchTab('home')" id="btnHome" class="nav-active flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all whitespace-nowrap w-full"><i class="fas fa-layer-group w-5 text-center"></i> Dashboard Pusat</button>
         <button onclick="switchTab('search')" id="btnSearch" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-indigo-600 whitespace-nowrap w-full"><i class="fas fa-users w-5 text-center"></i> Data Internal</button>
       </div>
       <div class="flex flex-row md:flex-col gap-2 md:mt-auto md:pt-6 md:border-t md:border-slate-200">
+        <div class="px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest hidden md:block">🔗 Tautan Aplikasi Lain</div>
+        <a href="https://script.google.com/macros/s/AKfycbx-uXm8JEdQWS_kO_bSRbzn_4WGb3uJzqMKqnc3Xp_8PWq4pNenEH8VWWdhI_LN3eh2VQ/exec?p=admin" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-emerald-600 whitespace-nowrap group w-full"><i class="fas fa-fingerprint w-5 text-center text-slate-400 group-hover:text-emerald-500 transition-colors"></i> Absensi Pegawai</a>
+        <a href="https://script.google.com/macros/s/AKfycbyqaaqf4jdwjJYfduiwttFDRipT2b9suUKVveJeElC7SsIbiRF242_H08DBp4i62P9L/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-blue-600 whitespace-nowrap group w-full"><i class="fas fa-user-tie w-5 text-center text-slate-400 group-hover:text-blue-500 transition-colors"></i> Database Pendeta</a>
+        <a href="https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-indigo-600 whitespace-nowrap group w-full"><i class="fas fa-church w-5 text-center text-slate-400 group-hover:text-indigo-500 transition-colors"></i> Database Jemaat</a>
+        <a href="https://script.google.com/macros/s/AKfycbwiI5UpSuOMctYhEHSFZM1a9gaslLbeP9QBbCUehdQisZXNhOWeNo97mtgVlROvTxG8BQ/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-amber-600 whitespace-nowrap group w-full"><i class="fas fa-folder-open w-5 text-center text-slate-400 group-hover:text-amber-500 transition-colors"></i> E-Arsip GKPI</a>
+        <div class="md:mt-4 pt-4 border-t border-slate-200 hidden md:block" id="adminDivider"></div>
         <button onclick="switchTab('admin')" id="btnAdmin" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-rose-50 hover:text-rose-600 hidden whitespace-nowrap"><i class="fas fa-shield-alt w-5 text-center"></i> Akses Admin</button>
+        <button onclick="promptInstallPWA()" id="btnInstallApp" class="flex items-center gap-3 px-4 py-3 md:mt-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-lg shadow-emerald-200/50 hover:shadow-xl hover:-translate-y-0.5 transition-all whitespace-nowrap w-full group"><i class="fas fa-download w-5 text-center group-hover:animate-bounce"></i> Install Aplikasi</button>
       </div>
     </nav>
     <div class="p-6 mt-auto hidden md:block border-t border-slate-100">
@@ -100,7 +153,8 @@
       <div class="flex items-center gap-2 md:gap-3">
         <button onclick="toggleDarkMode()" id="btnDarkMode" class="bg-slate-100 text-slate-600 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-slate-200 transition-all flex items-center justify-center w-10 md:w-auto"><i class="fas fa-moon"></i></button>
         <button onclick="loadData()" class="bg-emerald-50 text-emerald-600 px-3 md:px-5 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-sync-alt"></i> <span class="hidden md:inline">Refresh</span></button>
-        <button onclick="openModalSmart()" class="bg-indigo-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-plus"></i> <span class="hidden md:inline">Tambah Data</span><span class="md:hidden">Tambah</span></button>
+        <button onclick="openModal()" class="bg-indigo-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-plus"></i> <span class="hidden md:inline">Tambah Data</span><span class="md:hidden">Tambah</span></button>
+        <button onclick="handleLogout()" class="bg-rose-50 text-rose-600 px-3 md:px-5 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-power-off"></i> <span class="hidden md:inline">Keluar</span></button>
       </div>
     </header>
 
@@ -109,7 +163,7 @@
         
         <!-- HALAMAN DASHBOARD -->
         <div id="pageHome" class="space-y-6 animate-fade">
-          <div class="flex justify-end items-center mb-2"><button onclick="bukaPreviewCetakData()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Cetak Laporan PDF</button></div>
+          <div class="flex justify-end items-center mb-2"><button onclick="openPdfPreview()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Export Laporan PDF</button></div>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-church"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unit Gereja</p><h4 id="statTotalGereja" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-place-of-worship"></i></div></div>
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-users"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Personil Majelis</p><h4 id="statTotalMajelis" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-id-badge"></i></div></div>
@@ -140,7 +194,7 @@
             </div>
             <div class="flex gap-3 w-full md:w-auto overflow-x-auto">
               <input type="file" id="inputExcelImport" accept=".xlsx, .xls" class="hidden" onchange="prosesImportExcel(event)">
-              <button onclick="klikImportExcelSmart()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import Massal</button>
+              <button onclick="klikImportExcelSmart()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import</button>
               <button onclick="openBlastModal()" class="flex items-center justify-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-bullhorn"></i> Blast WA</button>
               <button onclick="bukaPreviewCetakData()" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export</button>
@@ -158,7 +212,7 @@
           <div id="kontenJemaat" class="block bg-white rounded-3xl soft-shadow border border-slate-100 overflow-hidden flex flex-col animate-fade">
             <div class="p-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
               <h3 class="font-bold text-slate-700"><i class="fas fa-users-cog text-emerald-500 mr-2"></i> Daftar Kepala Keluarga & Jemaat</h3>
-              <span class="px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold shadow-sm border border-emerald-200" id="labelTotalKK">0 KK</span>
+              <span class="px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold" id="labelTotalKK">0 KK</span>
             </div>
             <div id="jemaatAccordionContainer" class="p-5 space-y-4 overflow-y-auto min-h-[300px] bg-slate-50/50"></div>
             <div id="paginationJemaat" class="p-4 bg-white border-t border-slate-200 flex justify-between items-center"></div>
@@ -175,7 +229,7 @@
           <div id="kontenIndividu" class="hidden bg-white rounded-3xl soft-shadow border border-slate-100 overflow-hidden flex flex-col animate-fade">
             <div class="p-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
               <h3 class="font-bold text-slate-700"><i class="fas fa-address-book text-indigo-500 mr-2"></i> Daftar Seluruh Personil Majelis</h3>
-              <span class="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold shadow-sm border border-indigo-200" id="totalIndividu">0 Orang</span>
+              <span class="px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold" id="totalIndividu">0 Orang</span>
             </div>
             <div class="overflow-x-auto min-h-[300px]">
               <table class="w-full text-left border-collapse whitespace-nowrap">
@@ -229,7 +283,7 @@
       <div><h3 id="modalTitleJemaat" class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat</h3><p class="text-xs text-slate-500 font-medium mt-1">Lengkapi informasi keluarga/jemaat</p></div>
       <button onclick="closeModal('modalFormJemaat')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button>
     </div>
-    <form id="formInputJemaat" onsubmit="handleSimpanJemaat(event)" class="p-8 space-y-5">
+    <form id="formInputJemaat" onsubmit="handleSimpan(event, 'jemaat')" class="p-8 space-y-5">
       <input type="hidden" name="ID_Jemaat" id="j_id">
       
       <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 text-center">
@@ -354,9 +408,10 @@
   </div>
 </div>
 
-<!-- ================= AREA SCRIPT ================= -->
+<!-- ================= AREA SCRIPT (REST API & LOGIC) ================= -->
 <script>
   // -------------------------------------------------------------
+  // PERHATIAN SANGAT PENTING! 
   // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
   // -------------------------------------------------------------
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
@@ -366,49 +421,54 @@
   let USER_NOW = null;
   let chartWilayahInstance = null, chartJabatanInstance = null;
   let leafletMap = null;
-  let currentPageMajelis = 1; let currentPageGereja = 1; let currentPageIndividu = 1; let currentPageJemaat = 1; 
+  let currentPageMajelis = 1, currentPageGereja = 1, currentPageIndividu = 1, currentPageJemaat = 1; 
   const itemsPerPage = 20;
 
-  // --- FUNGSI PENGAMAN DOM ---
+  // --- FUNGSI PENGAMAN DOM (ANTI ERROR NULL) ---
   function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
+  // --- FUNGSI JEMBATAN API (SUPER FAST & ANTI BADAI) ---
   async function apiCall(action, payload = {}) {
     try {
-      let response = await fetch(SCRIPT_URL, {
-        method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, payload: payload })
-      });
-      let textResult = await response.text();
-
-      // Cek apakah Google mencegat dengan Login HTML atau membelokkan POST menjadi GET ("REST API...")
-      if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+      const isRead = ['checkLogin', 'getAppData', 'getListPetugas'].includes(action);
+      
+      // JALUR BYPASS (GET) UNTUK LOADING SUPER CEPAT DI HP
+      if (isRead) {
          const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-         const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-         response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
-         textResult = await response.text();
-         
-         if (textResult.trim().startsWith('<')) {
-            throw new Error("Akses API Terkunci Google! Pastikan deploy dengan akses 'Anyone'.");
+         const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+         let response = await fetch(url, { method: 'GET', redirect: 'follow' });
+         let textResult = await response.text();
+         if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google! Pastikan deploy ke 'Anyone'.");
+         return JSON.parse(textResult);
+      } 
+      // JALUR POST UNTUK SIMPAN DATA
+      else {
+         let response = await fetch(SCRIPT_URL, {
+           method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+           body: JSON.stringify({ action: action, payload: payload })
+         });
+         let textResult = await response.text();
+
+         if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+            const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+            const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+            response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
+            textResult = await response.text();
+            if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
          }
-         if (textResult.trim().startsWith('REST')) {
-            throw new Error("Kode.gs di Server belum terupdate! Anda WAJIB Deploy ulang ke 'New version'.");
-         }
+         return JSON.parse(textResult);
       }
-      return JSON.parse(textResult);
     } catch (error) { throw new Error(error.message); }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
     updateDarkModeIcon();
-    
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
     }
-
     const saved = sessionStorage.getItem('si_majelis_user');
     if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
   });
@@ -430,11 +490,7 @@
       .catch(err => { Swal.fire('Error Server', String(err), 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); });
   }
 
-  function handleLogout() {
-    Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Keluar!' }).then((result) => {
-      if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); }
-    });
-  }
+  function handleLogout() { Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#ef4444', confirmButtonText: 'Ya, Keluar!' }).then((result) => { if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); } }); }
 
   function showMainApp() {
     if(document.getElementById('loginPage')) document.getElementById('loginPage').classList.add('hidden'); 
@@ -444,8 +500,8 @@
     if (btnAdmin) { if (roleSafe.includes('admin') || roleSafe.includes('engin')) { btnAdmin.classList.remove('hidden'); } else { btnAdmin.classList.add('hidden'); } }
   }
 
- function loadData() {
-    Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data terbaru dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+  function loadData() {
+    Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
     
     safeSetHTML('majelisAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
     safeSetHTML('jemaatAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
@@ -471,12 +527,11 @@
 
         filterTabel(); 
         if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
-        
         Swal.close(); const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
       })
       .catch(err => { 
         Swal.fire('Koneksi Gagal', String(err), 'error'); 
-        safeSetHTML('majelisAccordionContainer', '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data. Pastikan ID Spreadsheet benar.</div>');
+        safeSetHTML('majelisAccordionContainer', '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data. Pastikan ID Anda benar.</div>');
       });
   }
   
@@ -648,7 +703,7 @@
      renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
   }
 
-  // --- TABEL MAJELIS (DIKEMBALIKAN KE ASLI ANDA) ---
+  // --- TABEL MAJELIS (KEMBALI 100% ASLI DENGAN PROFIL & WA) ---
   function renderTabelReal(data, resetPage = true) {
     if (resetPage) currentPageMajelis = 1; const container = document.getElementById('majelisAccordionContainer'); if(!container) return;
     const grouped = {}; data.forEach(m => { let g = m.Nama_Gereja || 'Tingkat Resort'; if(!grouped[g]) grouped[g] = []; grouped[g].push(m); });
@@ -673,7 +728,7 @@
     renderPaginationUI(arrG.length, currentPageMajelis, 'paginationMajelis', 'majelis', 10);
   }
 
-  // --- TABEL INDIVIDU (DIKEMBALIKAN KE ASLI ANDA) ---
+  // --- TABEL INDIVIDU (ASLI ANDA) ---
   function renderTabelIndividu(data, resetPage = true) {
     if (resetPage) currentPageIndividu = 1; 
     safeSetText('totalIndividu', data.length + " Orang"); 
@@ -695,7 +750,7 @@
     renderPaginationUI(data.length, currentPageIndividu, 'paginationIndividu', 'individu', itemsPerPage);
   }
 
-  // --- TABEL GEREJA (DIKEMBALIKAN KE ASLI ANDA) ---
+  // --- TABEL GEREJA (ASLI ANDA YANG KEMBALI 100%) ---
   function renderTabelGereja(dataGereja, resetPage = true) {
     if (resetPage) currentPageGereja = 1; const body = document.getElementById('gerejaTableBody'); if(!body) return;
     const paginatedData = dataGereja.slice((currentPageGereja - 1) * itemsPerPage, ((currentPageGereja - 1) * itemsPerPage) + itemsPerPage);
@@ -725,7 +780,7 @@
   }
 
   function renderPaginationUI(totalItems, currentPg, containerId, type, perPage) {
-    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId); if(!container) return;
+    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId);
     if (totalPages <= 1) { container.innerHTML = ''; return; }
     let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${currentPg} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Data</span></span><div class="flex items-center gap-1">`;
     if (currentPg > 1) html += `<button onclick="ubahHalaman('${type}', ${currentPg - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
@@ -749,7 +804,6 @@
     safeSetHTML('filterWilayah', htmlW); 
     safeSetHTML('formWilayah', htmlJW); 
     safeSetHTML('j_wilayah', htmlJW);
-    safeSetHTML('m_wilayah', htmlJW);
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
@@ -757,7 +811,7 @@
     safeSetHTML('filterJabatan', htmlJ); 
     safeSetHTML('formJabatan', formJ); 
     
-    syncFilterResort(); syncFormResortMajelis(); syncFormResortJemaat();
+    syncFilterResort(); syncFormResort(); syncFormResortJemaat();
   }
 
   function syncFilterResort() { 
@@ -778,16 +832,16 @@
   }
   
   // KHUSUS FORM MAJELIS
-  function syncFormResortMajelis() { 
-    const w = document.getElementById('formWilayah')?.value || document.getElementById('m_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('formResort') || document.getElementById('m_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+  function syncFormResort() { 
+    const w = document.getElementById('formWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('formResort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
     const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
     const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
     resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
-    syncFormGerejaMajelis(); 
+    syncFormGereja(); 
   }
-  function syncFormGerejaMajelis() { 
-    const resSelect = document.getElementById('formResort') || document.getElementById('m_resort'); const fg = document.getElementById('formGereja') || document.getElementById('m_gereja'); if(!fg || !resSelect) return; 
+  function syncFormGereja() { 
+    const resSelect = document.getElementById('formResort'); const fg = document.getElementById('formGereja'); if(!fg || !resSelect) return; 
     const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
     if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
     else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
@@ -811,7 +865,7 @@
     else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
-  // --- SMART BUTTON & MODAL ---
+  // --- SMART BUTTON ---
   function openModalSmart() {
     const isHome = !document.getElementById('pageHome').classList.contains('hidden');
     if (isHome) {
@@ -849,9 +903,9 @@
   function closeModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('hidden'); }
 
   function cekJabatan() { 
-    const j = document.getElementById('formJabatan') || document.getElementById('m_jabatan'); if(!j) return;
+    const j = document.getElementById('formJabatan'); if(!j) return;
     const val = j.options[j.selectedIndex]?.text.toLowerCase() || ''; 
-    const g = document.getElementById('formGereja') || document.getElementById('m_gereja'); const wadah = document.getElementById('wadahGereja');
+    const g = document.getElementById('formGereja'); const wadah = document.getElementById('wadahGereja');
     if (val.includes('pendeta') || val.includes('pemimpin jemaat')) { 
       if(wadah) wadah.classList.add('hidden'); if(g) { g.required = false; g.value = ""; }
     } else { 
@@ -891,7 +945,7 @@
     const originalText = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
     
-    let fr = document.getElementById('formResort') || document.getElementById('m_resort');
+    let fr = document.getElementById('formResort');
     let tipeGereja = fr ? fr.options[fr.selectedIndex]?.getAttribute('data-tipe') : '';
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
     
@@ -935,10 +989,10 @@
     safeSetValue('formJabatan', m.Jabatan || ''); cekJabatan(); 
     safeSetValue('formWilayah', m.Wilayah || ''); syncFormResort(); 
     
-    const formResort = document.getElementById('formResort') || document.getElementById('m_resort');
+    const formResort = document.getElementById('formResort');
     if(formResort) formResort.value = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim(); syncFormGereja(); 
     
-    const formGereja = document.getElementById('formGereja') || document.getElementById('m_gereja');
+    const formGereja = document.getElementById('formGereja');
     if(formGereja) formGereja.value = String(m.Nama_Gereja || '').trim(); 
     
     let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; 
