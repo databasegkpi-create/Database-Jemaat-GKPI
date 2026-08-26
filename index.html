@@ -451,38 +451,44 @@
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // FUNGSI JEMBATAN API (SESUAI KODE ASLI)
+  // --- FUNGSI JEMBATAN API (SUPER FAST & SECURED) ---
+  const SECRET_API_KEY = "GKPI_HUB_SECURE_2026"; // HARUS SAMA DENGAN DI KODE.GS
+
   async function apiCall(action, payload = {}) {
     try {
-      let response = await fetch(SCRIPT_URL, {
-        method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, payload: payload })
-      });
-      let textResult = await response.text();
+      // INJEKSI KUNCI RAHASIA KE DALAM PAYLOAD
+      payload.api_key = SECRET_API_KEY;
 
-      if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+      const isRead = ['checkLogin', 'getAppData', 'getListPetugas'].includes(action);
+      
+      // JALUR BYPASS (GET) UNTUK LOADING SUPER CEPAT DI HP
+      if (isRead) {
          const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-         const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-         response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
-         textResult = await response.text();
-         
-         if (textResult.trim().startsWith('<')) {
-            throw new Error("Akses API Terkunci Google! Pastikan deploy dengan akses 'Anyone'.");
+         const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+         let response = await fetch(url, { method: 'GET', redirect: 'follow' });
+         let textResult = await response.text();
+         if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google! Pastikan deploy ke 'Anyone'.");
+         return JSON.parse(textResult);
+      } 
+      // JALUR POST UNTUK SIMPAN DATA
+      else {
+         let response = await fetch(SCRIPT_URL, {
+           method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+           body: JSON.stringify({ action: action, payload: payload })
+         });
+         let textResult = await response.text();
+
+         if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+            const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+            const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+            response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
+            textResult = await response.text();
+            if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
          }
+         return JSON.parse(textResult);
       }
-      return JSON.parse(textResult);
     } catch (error) { throw new Error(error.message); }
   }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
-    updateDarkModeIcon();
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-      const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
-    }
-    const saved = sessionStorage.getItem('si_majelis_user');
-    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
-  });
 
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
   function updateDarkModeIcon() { const btn = document.getElementById('btnDarkMode'); const icon = btn.querySelector('i'); if(document.documentElement.classList.contains('dark')) { icon.className = 'fas fa-sun text-amber-400'; } else { icon.className = 'fas fa-moon'; } }
