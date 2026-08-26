@@ -1535,6 +1535,52 @@
     html2pdf().set({ margin: 0.4, filename: 'Statistik_GKPI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdfDocumentArea')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); closePdfPreview(); Swal.fire('Berhasil!', 'File PDF telah terunduh.', 'success'); });
   };
 
+  // --- FUNGSI KLIK NAMA GEREJA (MEMUNCULKAN INFO DETAIL) ---
+  window.showDetailGereja = function(encNama) {
+      let nama = decodeURIComponent(encNama);
+      
+      // Cari data gereja berdasarkan nama secara spesifik
+      let g = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === nama.trim() || String(x['Nama Gereja']).trim() === nama.trim());
+      
+      if(!g) {
+          Swal.fire('Error', 'Data detail gereja tidak ditemukan di server.', 'error');
+          return;
+      }
+
+      // Tarik data tanggal dan nomor register (mengakomodasi berbagai format penamaan kolom)
+      let tgl = g.Tanggal_Berdiri || g['Tanggal Berdiri'] || g['Tanggal_berdiri'] || '-';
+      let noReg = g.No_Register || g['No Register'] || g['No_register'] || 'Belum Ada Data';
+      
+      // Proses tanggal agar format Indonesia menggunakan fungsi aman yang baru
+      let d = window.parseDateSafe(tgl);
+      let umur = hitungUmur(tgl);
+      let tglStr = (!d || isNaN(d.getTime())) ? tgl : d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+      Swal.fire({
+          title: 'Informasi Unit Gereja',
+          html: `
+             <div class="text-left space-y-4">
+               <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Nama Gereja / Unit</p>
+                  <p class="text-lg font-black text-slate-800">${g.Nama_Gereja || g['Nama Gereja']}</p>
+               </div>
+               <div class="grid grid-cols-2 gap-4">
+                   <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-center shadow-inner">
+                      <p class="text-[10px] text-indigo-500 font-bold uppercase mb-1">Nomor Register</p>
+                      <p class="text-sm font-bold text-indigo-900">${noReg}</p>
+                   </div>
+                   <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center shadow-inner">
+                      <p class="text-[10px] text-emerald-500 font-bold uppercase mb-1">Berdiri Sejak</p>
+                      <p class="text-sm font-bold text-emerald-900">${tglStr}</p>
+                      <p class="text-[10px] text-emerald-600 font-bold mt-1">Usia: ${umur}</p>
+                   </div>
+               </div>
+             </div>
+          `,
+          confirmButtonColor: '#4f46e5'
+      });
+  };
+
   // ADMIN PETUGAS & LAINNYA
   function loadListPetugas() { const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>'; apiCall('getListPetugas').then(res => { if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; } container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join(''); }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; }); }
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg.message, 'success'); e.target.reset(); loadListPetugas(); }); }
