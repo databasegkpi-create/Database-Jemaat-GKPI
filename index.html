@@ -18,10 +18,10 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
+
  <!-- SCRIPT GENERATOR PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- Script di bawah ini wajib ada untuk cetak PDF Jemaat & Majelis -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1281,39 +1281,50 @@
     } 
   }
 
-  // --- KEMBALIKAN FITUR CETAK PREVIEW PDF LAMA YANG ELEGAN ---
+ // --- KEMBALIKAN FITUR CETAK PREVIEW PDF LAMA YANG ELEGAN ---
   function bukaPreviewCetakData() { 
-    const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden'); 
-    const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden'); 
-    const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden'); 
+    // Pendeteksi Anti-Tumpuk: Memeriksa elemen yang sedang tampil di layar
+    const isJemaat = document.getElementById('pageJemaat') && !document.getElementById('pageJemaat').classList.contains('hidden'); 
+    const isMajelis = document.getElementById('pageSearch') && !document.getElementById('pageSearch').classList.contains('hidden') && !document.getElementById('kontenMajelis').classList.contains('hidden'); 
+    const isIndividu = document.getElementById('pageSearch') && !document.getElementById('pageSearch').classList.contains('hidden') && !document.getElementById('kontenIndividu').classList.contains('hidden'); 
     
     let dataList = [];
-    if(isJemaat) { dataList = window.currentFilteredJemaat; }
-    else if(isMajelis || isIndividu) { dataList = window.currentFilteredList; }
-    else { dataList = window.currentFilteredGereja; }
+    if(isJemaat) { dataList = window.currentFilteredJemaat || []; }
+    else if(isMajelis || isIndividu) { dataList = window.currentFilteredList || []; }
+    else { dataList = window.currentFilteredGereja || []; }
     
     let judul = "Data Jemaat & Unit Gereja"; 
     if (isMajelis) judul = "Struktur Majelis Per Gereja"; 
     if (isIndividu) judul = "Direktori Personil Majelis"; 
     if (isJemaat) judul = "Data Keluarga Jemaat"; 
     
-    if (!dataList || dataList.length === 0) { return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak.', 'info'); } 
+    if (!dataList || dataList.length === 0) { 
+        return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak saat ini.', 'info'); 
+    } 
     
     safeSetText('judulCetakPdf', judul); 
     safeSetText('tglCetakPdf', "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })); 
     
-    let fwText = ""; let frText = ""; let fgText = ""; let fjText = "";
-    if(isJemaat) {
-        const fw = document.getElementById('f_wil_j'); const fr = document.getElementById('f_res_j'); const fg = document.getElementById('f_ger_j'); 
-        fwText = fw ? fw.options[fw.selectedIndex].text : ''; frText = fr ? fr.options[fr.selectedIndex].text : ''; fgText = fg ? fg.options[fg.selectedIndex].text : '';
-        safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>`); 
-    } else {
-        const fw = document.getElementById('filterWilayah'); const fr = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); const fj = document.getElementById('filterJabatan'); 
-        fwText = fw ? fw.options[fw.selectedIndex].text : ''; frText = fr ? fr.options[fr.selectedIndex].text : ''; fgText = fg ? fg.options[fg.selectedIndex].text : ''; fjText = fj ? fj.options[fj.selectedIndex].text : '';
-        safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>${(isMajelis || isIndividu) ? `<div><b>Jabatan:</b> ${fjText}</div>` : ''}`); 
-    }
+    let fwText = "-"; let frText = "-"; let fgText = "-"; let fjText = "-";
+    try {
+        if(isJemaat) {
+            const fw = document.getElementById('f_wil_j'); const fr = document.getElementById('f_res_j'); const fg = document.getElementById('f_ger_j'); 
+            fwText = (fw && fw.selectedIndex >= 0) ? fw.options[fw.selectedIndex].text : '-'; 
+            frText = (fr && fr.selectedIndex >= 0) ? fr.options[fr.selectedIndex].text : '-'; 
+            fgText = (fg && fg.selectedIndex >= 0) ? fg.options[fg.selectedIndex].text : '-';
+            safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>`); 
+        } else {
+            const fw = document.getElementById('filterWilayah'); const fr = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); const fj = document.getElementById('filterJabatan'); 
+            fwText = (fw && fw.selectedIndex >= 0) ? fw.options[fw.selectedIndex].text : '-'; 
+            frText = (fr && fr.selectedIndex >= 0) ? fr.options[fr.selectedIndex].text : '-'; 
+            fgText = (fg && fg.selectedIndex >= 0) ? fg.options[fg.selectedIndex].text : '-'; 
+            fjText = (fj && fj.selectedIndex >= 0) ? fj.options[fj.selectedIndex].text : '-';
+            safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>${(isMajelis || isIndividu) ? `<div><b>Jabatan:</b> ${fjText}</div>` : ''}`); 
+        }
+    } catch(e) { console.error("Gagal membaca filter", e); }
     
-    document.querySelector('#areaCetakDokumen table').style.fontSize = "9px"; 
+    const areaTabel = document.querySelector('#areaCetakDokumen table');
+    if (areaTabel) areaTabel.style.fontSize = "9px"; 
     
     if(isJemaat) { 
         safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No KK</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`); 
@@ -1339,6 +1350,7 @@
         let totRT = 0, totJiwa = 0; 
         safeSetHTML('bodyTabelCetak', dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`); 
     } 
+    
     if(document.getElementById('modalCetakData')) document.getElementById('modalCetakData').classList.remove('hidden'); 
   }
   
