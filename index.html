@@ -1465,6 +1465,56 @@
       }, 50); 
   };
 
+  // ==========================================
+  // FITUR PREVIEW PDF DASHBOARD PUSAT
+  // ==========================================
+  window.openPdfPreview = function() {
+    const prevDate = document.getElementById('previewDate');
+    if(prevDate) prevDate.innerText = "Diperbarui pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // Menyesuaikan ID agar tidak error
+    safeSetText('pdfTotalGereja', document.getElementById('statTotalGereja') ? document.getElementById('statTotalGereja').innerText : '0'); 
+    safeSetText('pdfTotalMajelis', document.getElementById('statTotalMajelis') ? document.getElementById('statTotalMajelis').innerText : '0'); 
+    safeSetText('pdfTotalKK', document.getElementById('statTotalRT') ? document.getElementById('statTotalRT').innerText : '0'); 
+    safeSetText('pdfTotalJiwa', document.getElementById('statTotalJiwa') ? document.getElementById('statTotalJiwa').innerText : '0');
+    
+    if (document.getElementById('chartWilayah') && document.getElementById('prevChartW')) document.getElementById('prevChartW').src = document.getElementById('chartWilayah').toDataURL("image/png", 1.0); 
+    if (document.getElementById('chartJabatan') && document.getElementById('prevChartJ')) document.getElementById('prevChartJ').src = document.getElementById('chartJabatan').toDataURL("image/png", 1.0);
+    
+    const tbodyJob = document.getElementById('prevJobTableBody'); 
+    if(tbodyJob) {
+        tbodyJob.innerHTML = ''; 
+        const statsJ = {}; 
+        DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); 
+        DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; }); 
+        Object.keys(statsJ).forEach(jabatan => { tbodyJob.innerHTML += `<tr><td class="border border-slate-200 p-3 text-slate-800 font-medium">${jabatan}</td><td class="border border-slate-200 p-3 text-center text-indigo-600 font-bold">${statsJ[jabatan]}</td></tr>`; });
+    }
+
+    const dataAgregat = {}; 
+    for (let i = 1; i <= 12; i++) { dataAgregat[String(i)] = { gereja: 0, rt: 0, jiwa: 0 }; } 
+    DATA_MASTER.gereja.forEach(g => { let w = String(g.Wilayah).trim(); if (dataAgregat[w] !== undefined) { dataAgregat[w].gereja += 1; dataAgregat[w].rt += parseInt(g.Total_RT) || 0; dataAgregat[w].jiwa += parseInt(g.Total_Jiwa) || 0; } });
+    
+    const tbodyWilayah = document.getElementById('prevWilayahTableBody'); 
+    if(tbodyWilayah) {
+        tbodyWilayah.innerHTML = ''; 
+        for (let i = 1; i <= 12; i++) { const info = dataAgregat[String(i)]; if(info.gereja > 0) { tbodyWilayah.innerHTML += `<tr><td class="border border-slate-200 p-3 text-slate-800 font-bold text-center">W-${i}</td><td class="border border-slate-200 p-3 text-center text-slate-600">${info.gereja}</td><td class="border border-slate-200 p-3 text-center text-amber-600 font-semibold">${info.rt.toLocaleString('id-ID')}</td><td class="border border-slate-200 p-3 text-center text-emerald-600 font-semibold">${info.jiwa.toLocaleString('id-ID')}</td></tr>`; } }
+    }
+
+    const modal = document.getElementById('modalPdfPreview');
+    if(modal) modal.classList.remove('hidden');
+  };
+
+  window.closePdfPreview = function() { 
+      const modal = document.getElementById('modalPdfPreview');
+      if(modal) modal.classList.add('hidden'); 
+  };
+
+  window.executePdfDownload = function() {
+    const isDark = document.documentElement.classList.contains('dark'); if (isDark) document.documentElement.classList.remove('dark');
+    Swal.fire({ title: 'Menyimpan PDF...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+    html2pdf().set({ margin: 0.4, filename: 'Statistik_GKPI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdfDocumentArea')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); closePdfPreview(); Swal.fire('Berhasil!', 'File PDF telah terunduh.', 'success'); });
+  };
+
   // ADMIN PETUGAS & LAINNYA
   function loadListPetugas() { const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>'; apiCall('getListPetugas').then(res => { if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; } container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join(''); }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; }); }
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg.message, 'success'); e.target.reset(); loadListPetugas(); }); }
