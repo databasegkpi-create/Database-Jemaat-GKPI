@@ -398,22 +398,44 @@
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // --- FUNGSI PARSE TANGGAL EXCEL/ISO ---
+// --- FUNGSI PARSE TANGGAL EXCEL/ISO SUPER AMAN ---
   function parseDateSafe(tgl) {
       if (!tgl) return null;
-      let d = new Date(tgl);
-      if (!isNaN(d.getTime())) return d; 
       
-      if (typeof tgl === 'number') return new Date(Math.round((tgl - 25569) * 86400 * 1000));
-      
-      let str = String(tgl).trim();
-      let parts = str.split(/[-/T ]/); // Split berdasar spasi, strip, garis miring, atau huruf T
-      if (parts.length >= 3) {
-          let p0 = parseInt(parts[0]); let p1 = parseInt(parts[1]); let p2 = parseInt(parts[2]);
-          if (String(parts[2]).length === 4) return new Date(p2, p1 - 1, p0); 
-          if (String(parts[0]).length === 4) return new Date(p0, p1 - 1, p2); 
+      // 1. Jika data sudah berupa object Date asli
+      if (tgl instanceof Date && !isNaN(tgl.getTime())) return tgl;
+
+      // 2. Deteksi Angka Serial Excel (Baik yang tipenya 'number' maupun 'string angka')
+      let numTgl = Number(tgl);
+      if (!isNaN(numTgl) && String(tgl).trim() !== "") {
+          // Konversi format serial Excel ke Javascript Date
+          return new Date(Math.round((numTgl - 25569) * 86400 * 1000));
       }
-      return null;
+
+      // 3. Parse sistem default Javascript
+      let d = new Date(tgl);
+      if (!isNaN(d.getTime())) return d;
+
+      // 4. Manual parsing untuk string DD/MM/YYYY atau YYYY-MM-DD
+      let str = String(tgl).trim().substring(0, 10); 
+      let parts = str.split(/[-/]/); 
+      
+      if (parts.length >= 3) {
+          let p0 = parseInt(parts[0], 10); 
+          let p1 = parseInt(parts[1], 10); 
+          let p2 = parseInt(parts[2], 10);
+          
+          // Jika format YYYY-MM-DD (Tahun di depan)
+          if (String(parts[0]).length === 4) {
+              return new Date(p0, p1 - 1, p2);
+          }
+          // Jika format DD/MM/YYYY atau DD-MM-YYYY (Tahun di belakang)
+          else if (String(parts[2]).length === 4) {
+              return new Date(p2, p1 - 1, p0);
+          }
+      }
+
+      return null; // Gagal di-parse sepenuhnya
   }
 
   function hitungUmur(tgl) {
