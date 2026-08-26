@@ -18,8 +18,9 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
-  <!-- SCRIPT CETAK PDF VERSI ELEGAN (KEMBALI KE ASLI) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- SCRIPT GENERATOR PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -56,7 +57,6 @@
     .page-btn.inactive:hover { background-color: #e2e8f0; color: #334155; transform: translateY(-1px); }
     details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
 
-    /* Dark Mode */
     html.dark { background-color: #0f172a; color: #f8fafc; } html.dark body { background-color: #0f172a; color: #f8fafc; } html.dark .bg-white { background-color: #1e293b !important; } html.dark .bg-slate-50 { background-color: #0f172a !important; } html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; } html.dark .text-slate-600 { color: #cbd5e1 !important; } html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; } html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; } html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; } html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; } html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; } html.dark th, html.dark td { border-color: #334155 !important; } html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; } html.dark .bg-indigo-50 { background-color: rgba(79, 70, 229, 0.2) !important; } html.dark .text-indigo-600 { color: #818cf8 !important; } html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.2) !important; } html.dark .text-emerald-600 { color: #34d399 !important; } html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.2) !important; } html.dark .text-amber-600 { color: #fbbf24 !important; } html.dark .bg-rose-50 { background-color: rgba(225, 29, 72, 0.2) !important; } html.dark .text-rose-600 { color: #fb7185 !important; } html.dark .text-slate-50 { color: #0f172a !important; } html.dark .text-indigo-500 { color: #818cf8 !important; } html.dark .text-emerald-500 { color: #34d399 !important; } html.dark .text-amber-500 { color: #fbbf24 !important; } html.dark .page-btn.inactive { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
   </style>
 </head>
@@ -131,8 +131,7 @@
         
         <!-- HALAMAN DASHBOARD -->
         <div id="pageHome" class="space-y-6 animate-fade">
-          <!-- Tombol PDF Dashboard dikembalikan menggunakan fitur Preview Elegan -->
-          <div class="flex justify-end items-center mb-2"><button onclick="openPdfPreview()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Unduh Laporan PDF</button></div>
+          <div class="flex justify-end items-center mb-2"><button onclick="generateTruePDF('Statistik GKPI')" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Unduh Laporan PDF</button></div>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-church"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unit Gereja</p><h4 id="statTotalGereja" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-place-of-worship"></i></div></div>
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-users"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Personil Majelis</p><h4 id="statTotalMajelis" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-id-badge"></i></div></div>
@@ -159,7 +158,7 @@
           </div>
         </div>
 
-        <!-- HALAMAN DATA JEMAAT -->
+        <!-- HALAMAN DATA JEMAAT (TERPISAH) -->
         <div id="pageJemaat" class="hidden space-y-6 animate-fade">
           <div class="bg-white p-5 rounded-3xl soft-shadow border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="relative"><select id="f_wil_j" onchange="syncResortJemaatPage()" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm text-slate-700 focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"></select><i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i></div>
@@ -176,9 +175,7 @@
               <button onclick="openFormJemaatBulk()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah Jemaat (Keluarga)</button>
               <input type="file" id="inputExcelImportJemaat" accept=".xlsx, .xls" class="hidden" onchange="prosesImportJemaatExcel(event)">
               <button onclick="klikImportJemaatExcelSmart()" class="flex items-center justify-center gap-2 bg-slate-800 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-slate-200 hover:bg-slate-900 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import & Template</button>
-              
-              <!-- Tombol PDF Jemaat dikembalikan menggunakan Preview Elegan -->
-              <button onclick="bukaPreviewCetakData()" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
+              <button onclick="generateTruePDF('Database Jemaat Keluarga')" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export Excel</button>
             </div>
           </div>
@@ -194,7 +191,7 @@
           </div>
         </div>
 
-        <!-- HALAMAN DATA INTERNAL (MAJELIS & GEREJA) -->
+        <!-- HALAMAN DATA INTERNAL -->
         <div id="pageSearch" class="hidden space-y-6 animate-fade">
           <div class="bg-white p-5 rounded-3xl soft-shadow border border-slate-100 grid grid-cols-1 md:grid-cols-5 gap-4">
             <div class="relative"><select id="filterWilayah" onchange="syncFilterResort()" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"></select><i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i></div>
@@ -213,8 +210,7 @@
               <input type="file" id="inputExcelImport" accept=".xlsx, .xls" class="hidden" onchange="prosesImportExcel(event)">
               <button onclick="klikImportExcelSmart()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import & Template</button>
               <button onclick="openBlastModal()" class="flex items-center justify-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-bullhorn"></i> Blast WA</button>
-              <!-- Tombol PDF Majelis dikembalikan menggunakan Preview Elegan -->
-              <button onclick="bukaPreviewCetakData()" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
+              <button onclick="generateTruePDF('Data Internal Majelis & Unit')" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export</button>
             </div>
           </div>
@@ -291,7 +287,6 @@
       <button onclick="closeModal('modalTambahKeluarga')" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition-colors"><i class="fas fa-times"></i></button>
     </div>
     <form id="formKeluargaBulk" onsubmit="simpanKeluargaBulk(event)" class="flex-1 overflow-y-auto p-8 bg-slate-50">
-      <!-- 1. DATA GEREJA -->
       <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-church text-emerald-500 mr-2"></i> 1. Penempatan Jemaat & Kartu Keluarga</h4>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="bk_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
@@ -300,7 +295,6 @@
          <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">No KK (Kosongkan Jika Baru)</label><input type="text" id="bk_kk" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-bold text-emerald-700" placeholder="Ketik No KK..."></div>
       </div>
 
-      <!-- 2. KEPALA KELUARGA -->
       <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-user-tie text-emerald-500 mr-2"></i> 2. Identitas Kepala Keluarga</h4>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3 p-5 bg-white border border-emerald-100 rounded-xl mb-6 shadow-sm">
          <div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Kepala Keluarga</label><input type="text" id="bk_nama_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
@@ -309,21 +303,18 @@
          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" id="bk_pek_kk" class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
       </div>
 
-      <!-- 3. ANGGOTA KELUARGA -->
       <div class="flex justify-between items-center mb-3 border-b border-slate-200 pb-2">
          <h4 class="text-sm font-bold text-slate-800"><i class="fas fa-users text-emerald-500 mr-2"></i> 3. Anggota Keluarga (Istri / Anak)</h4>
          <button type="button" onclick="tambahBarisAnggota()" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-lg hover:bg-emerald-500 hover:text-white transition-colors shadow-sm"><i class="fas fa-plus mr-1"></i> Tambah Anggota</button>
       </div>
-      <div id="containerAnggotaKeluarga" class="space-y-3 mb-8">
-          <!-- Baris Anggota Akan Muncul Disini -->
-      </div>
+      <div id="containerAnggotaKeluarga" class="space-y-3 mb-8"></div>
 
       <button type="submit" id="btnSubmitKeluarga" class="w-full bg-slate-800 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Seluruh Keluarga</button>
     </form>
   </div>
 </div>
 
-<!-- MODAL EDIT INDIVIDU JEMAAT -->
+<!-- MODAL EDIT INDIVIDU (SATUAN) -->
 <div id="modalFormJemaat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[91] flex items-center justify-center p-4">
   <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
     <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10">
@@ -390,58 +381,8 @@
   </div>
 </div>
 
-<!-- SCRIPT CETAK PDF VERSI ELEGAN / KEMBALI KE ASLI -->
-<div id="modalPdfPreview" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[80] flex flex-col items-center p-4 md:p-8">
-  <div class="w-full max-w-[800px] flex justify-between items-center bg-white rounded-t-2xl px-6 py-4 shadow-md">
-    <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-search mr-2 text-indigo-500"></i> Preview Laporan PDF</h3>
-    <div class="flex gap-2"><button onclick="closePdfPreview()" class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold uppercase transition-colors">Batal</button><button onclick="executePdfDownload()" class="px-4 py-2 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-xs font-bold uppercase shadow-md flex items-center gap-2 transition-colors"><i class="fas fa-download"></i> Unduh PDF</button></div>
-  </div>
-  <div class="w-full max-w-[800px] bg-white overflow-y-auto rounded-b-2xl shadow-2xl flex-1 p-8 no-scrollbar" style="max-height: 85vh;">
-    <div id="pdfDocumentArea" class="bg-white text-slate-800 p-2" style="font-family: Arial, sans-serif;">
-      <div class="flex justify-between items-center border-b-4 border-slate-800 pb-4 mb-6">
-        <div class="flex items-center gap-4"><div class="w-16 h-16 bg-slate-800 text-white rounded-xl flex items-center justify-center text-3xl shadow-md"><i class="fas fa-church"></i></div><div><h1 class="font-black text-2xl tracking-tight text-slate-900 leading-none">SINODE GKPI</h1><p class="text-xs font-bold text-slate-500 tracking-widest mt-1">SISTEM INFORMASI MAJELIS PUSAT</p></div></div>
-        <div class="text-right"><h2 class="text-lg font-bold text-indigo-600 uppercase">Laporan Statistik</h2><p id="previewDate" class="text-xs text-slate-500 mt-1 font-semibold"></p></div>
-      </div>
-      <h3 class="text-sm font-bold bg-slate-100 p-2 border-l-4 border-indigo-500 mb-4 uppercase">1. Ringkasan Global</h3>
-      <div class="grid grid-cols-4 gap-4 mb-8">
-        <div class="border border-slate-200 p-4 rounded-xl text-center bg-slate-50"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Unit Gereja</p><p id="pdfTotalGereja" class="text-3xl font-black text-slate-800 mt-1">0</p></div>
-        <div class="border border-slate-200 p-4 rounded-xl text-center bg-slate-50"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Personil Majelis</p><p id="pdfTotalMajelis" class="text-3xl font-black text-slate-800 mt-1">0</p></div>
-        <div class="border border-slate-200 p-4 rounded-xl text-center bg-slate-50"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total RT</p><p id="pdfTotalKK" class="text-3xl font-black text-slate-800 mt-1">0</p></div>
-        <div class="border border-slate-200 p-4 rounded-xl text-center bg-slate-50"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Jiwa</p><p id="pdfTotalJiwa" class="text-3xl font-black text-slate-800 mt-1">0</p></div>
-      </div>
-      <h3 class="text-sm font-bold bg-slate-100 p-2 border-l-4 border-indigo-500 mb-4 uppercase">2. Visualisasi Data</h3>
-      <div class="grid grid-cols-2 gap-6 mb-8"><div class="border border-slate-200 p-4 rounded-xl text-center"><p class="text-xs font-bold text-slate-600 mb-4">Distribusi Wilayah</p><img id="prevChartW" src="" alt="Chart Wilayah" class="max-h-[200px] object-contain mx-auto"></div><div class="border border-slate-200 p-4 rounded-xl text-center"><p class="text-xs font-bold text-slate-600 mb-4">Persentase Jabatan</p><img id="prevChartJ" src="" alt="Chart Jabatan" class="max-h-[200px] object-contain mx-auto"></div></div>
-      <h3 class="text-sm font-bold bg-slate-100 p-2 border-l-4 border-indigo-500 mb-4 uppercase">3. Rincian Jabatan Majelis</h3><table class="w-full text-left border-collapse border border-slate-200 text-sm mb-6"><thead class="bg-slate-100"><tr><th class="border border-slate-200 p-3 font-bold text-slate-700">Nama Jabatan</th><th class="border border-slate-200 p-3 font-bold text-slate-700 text-center w-32">Total Personil</th></tr></thead><tbody id="prevJobTableBody"></tbody></table>
-      <h3 class="text-sm font-bold bg-slate-100 p-2 border-l-4 border-indigo-500 mb-4 uppercase">4. Rincian Per Wilayah</h3><table class="w-full text-left border-collapse border border-slate-200 text-sm"><thead class="bg-slate-100"><tr><th class="border border-slate-200 p-3 font-bold text-slate-700">Wilayah</th><th class="border border-slate-200 p-3 font-bold text-slate-700 text-center">Gereja</th><th class="border border-slate-200 p-3 font-bold text-slate-700 text-center">RT</th><th class="border border-slate-200 p-3 font-bold text-slate-700 text-center">Jiwa</th></tr></thead><tbody id="prevWilayahTableBody"></tbody></table>
-      <div class="mt-12 text-center border-t border-slate-200 pt-4"><p class="text-[10px] text-slate-400 font-medium">Dokumen ini digenerate secara otomatis oleh GKPI Data Hub.</p></div>
-    </div>
-  </div>
-</div>
-
-<div id="modalCetakData" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[80] flex flex-col items-center p-4 md:p-8">
-  <div class="w-full max-w-[1000px] flex justify-between items-center bg-white rounded-t-2xl px-6 py-4 shadow-md">
-    <h3 class="text-lg font-bold text-slate-800"><i class="fas fa-print mr-2 text-rose-600"></i> Preview Cetak Dokumen</h3>
-    <div class="flex gap-2"><button onclick="tutupPreviewCetakData()" class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-xs font-bold uppercase transition-colors">Batal</button><button onclick="eksekusiCetakTabelPDF()" class="px-4 py-2 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-xs font-bold uppercase shadow-md flex items-center gap-2 transition-colors"><i class="fas fa-download"></i> Unduh PDF</button></div>
-  </div>
-  <div class="w-full max-w-[1000px] bg-white overflow-y-auto rounded-b-2xl shadow-2xl flex-1 p-8 no-scrollbar" style="max-height: 85vh;">
-    <div id="areaCetakDokumen" class="bg-white text-slate-800 p-4" style="font-family: Arial, sans-serif;">
-      <div style="display: flex; align-items: center; border-bottom: 3px solid #1e293b; padding-bottom: 15px; margin-bottom: 20px;">
-        <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" style="width: 70px; height: 70px; margin-right: 20px;" crossorigin="anonymous">
-        <div style="flex-grow: 1;"><h1 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a; text-transform: uppercase;">SINODE GEREJA KRISTEN PROTESTAN INDONESIA</h1><p style="font-size: 12px; font-weight: 700; margin: 5px 0 0 0; color: #64748b; letter-spacing: 1px;">SISTEM INFORMASI MAJELIS PUSAT GKPI</p></div>
-        <div style="text-align: right;"><h2 id="judulCetakPdf" style="font-size: 16px; font-weight: bold; color: #e11d48; margin: 0; text-transform: uppercase;">Daftar Data</h2><p id="tglCetakPdf" style="font-size: 10px; color: #64748b; margin: 5px 0 0 0;"></p></div>
-      </div>
-      <div style="background-color: #f8fafc; padding: 10px 15px; border-left: 4px solid #e11d48; margin-bottom: 20px; font-size: 11px;"><p style="margin: 0; font-weight: bold; color: #334155; margin-bottom: 5px;">Parameter Filter Data:</p><div id="infoFilterCetak" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; color: #475569;"></div></div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 10px;"><thead id="headTabelCetak" style="background-color: #f1f5f9; text-align: left; color: #334155;"></thead><tbody id="bodyTabelCetak"></tbody></table>
-      <div style="margin-top: 30px; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 9px; color: #94a3b8; text-align: center;"><p style="margin: 0;">Dokumen ini digenerate secara otomatis oleh GKPI Data Hub.</p></div>
-    </div>
-  </div>
-</div>
-
 <!-- ================= AREA SCRIPT ================= -->
 <script>
-  // -------------------------------------------------------------
-  // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
-  // -------------------------------------------------------------
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOnaTcwjyY1QYxs_gpKSCePhIAmyfyWWZG_J-0XILWUTLPm4hnlHw5tJjCczChM3LE/exec";
   const SECRET_API_KEY = "GKPI_HUB_SECURE_2026";
 
@@ -466,7 +407,7 @@
       if (typeof tgl === 'number') return new Date(Math.round((tgl - 25569) * 86400 * 1000));
       
       let str = String(tgl).trim();
-      let parts = str.split(/[-/]/);
+      let parts = str.split(/[-/T ]/); // Split berdasar spasi, strip, garis miring, atau huruf T
       if (parts.length >= 3) {
           let p0 = parseInt(parts[0]); let p1 = parseInt(parts[1]); let p2 = parseInt(parts[2]);
           if (String(parts[2]).length === 4) return new Date(p2, p1 - 1, p0); 
@@ -480,7 +421,7 @@
       if(!d || isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
   }
 
-  // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
+  // --- FUNGSI JEMBATAN API ---
   async function apiCall(action, payload = {}) {
     try {
       payload.api_key = SECRET_API_KEY; 
@@ -491,14 +432,8 @@
          const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
          let response = await fetch(url, { method: 'GET', redirect: 'follow' });
          let textResult = await response.text();
-         
          if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google! Pastikan deploy ke 'Anyone'.");
-         
-         try {
-             return JSON.parse(textResult);
-         } catch(err) {
-             throw new Error("Server gagal mengurai data. Pastikan Google Apps Script (Kode.gs) sudah di-Deploy ke 'New version' (Versi Baru).");
-         }
+         try { return JSON.parse(textResult); } catch(err) { throw new Error("Server gagal mengurai data. Deploy Kode.gs ke Versi Baru."); }
       } 
       else {
          let response = await fetch(SCRIPT_URL, {
@@ -512,15 +447,9 @@
             const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
             response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
             textResult = await response.text();
-            
             if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
          }
-         
-         try {
-             return JSON.parse(textResult);
-         } catch(err) {
-             throw new Error("Server gagal mengurai data. Pastikan Google Apps Script (Kode.gs) sudah di-Deploy ke 'New version' (Versi Baru).");
-         }
+         try { return JSON.parse(textResult); } catch(err) { throw new Error("Server gagal mengurai data. Deploy Kode.gs ke Versi Baru."); }
       }
     } catch (error) { throw new Error(error.message); }
   }
@@ -634,12 +563,6 @@
     safeSetText('statTotalRT', totRT.toLocaleString('id-ID')); 
     safeSetText('statTotalJiwa', totJiwa.toLocaleString('id-ID'));
     
-    safeSetText('pdfTotalGereja', DATA_MASTER.gereja.length); 
-    safeSetText('pdfTotalMajelis', DATA_MASTER.majelis.length);
-    safeSetText('pdfTotalKK', totRT.toLocaleString('id-ID')); 
-    safeSetText('pdfTotalJiwa', totJiwa.toLocaleString('id-ID'));
-    safeSetText('previewDate', "Diperbarui pada: " + new Date().toLocaleString('id-ID'));
-
     const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
     if(document.getElementById('jobStatsGrid')) safeSetHTML('jobStatsGrid', Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join(''));
     
@@ -698,27 +621,20 @@
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
-  // --- SETUP FILTER ---
   function setupFilters() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
     
-    safeSetHTML('filterWilayah', htmlW); 
-    safeSetHTML('f_wil_j', htmlW); 
-    safeSetHTML('formWilayah', htmlJW); 
-    safeSetHTML('bk_wilayah', htmlJW);
-    safeSetHTML('j_wilayah', htmlJW);
+    safeSetHTML('filterWilayah', htmlW); safeSetHTML('f_wil_j', htmlW); safeSetHTML('formWilayah', htmlJW); safeSetHTML('bk_wilayah', htmlJW); safeSetHTML('j_wilayah', htmlJW);
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
     
-    safeSetHTML('filterJabatan', htmlJ); 
-    safeSetHTML('formJabatan', formJ); 
+    safeSetHTML('filterJabatan', htmlJ); safeSetHTML('formJabatan', formJ); 
     
     syncFilterResort(); syncResortJemaatPage(); syncFormResortMajelis(); syncFormResortJemaatEdit();
   }
 
-  // Filter Internal
   function syncFilterResort() { 
     const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('filterResort'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -736,7 +652,6 @@
     filterTabel(); 
   }
 
-  // Filter Halaman Jemaat
   function syncResortJemaatPage() { 
     const w = document.getElementById('f_wil_j')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('f_res_j'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -754,7 +669,6 @@
     filterTabelJemaat(); 
   }
   
-  // Filter Modal Jemaat Bulk
   function syncFormResortBulk() { 
     const w = document.getElementById('bk_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('bk_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
@@ -815,7 +729,7 @@
     const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : ''; 
     const modeSort = document.getElementById('sortData') ? document.getElementById('sortData').value : 'nama_az';
     
-    // FILTER MAJELIS - Mengembalikan logika Murni berdasarkan Nama Gereja persis di Excel
+    // FILTER MAJELIS KEMBALI MURNI: Murni mencocokkan Nama_Gereja di Excel tanpa asumsi Pimpinan Resort
     let filteredMajelis = DATA_MASTER.majelis.filter(m => {
       const safeG = String(m.Nama_Gereja || '').trim().toLowerCase(); 
       const safeR = String(m.Resort || '').trim().toLowerCase(); 
@@ -847,7 +761,7 @@
     renderTabelJemaat(fj, true); window.currentFilteredJemaat = fj;
   }
 
-  // --- TABEL JEMAAT KELUARGA & FITUR HAPUS SATU KELUARGA ---
+  // --- TABEL JEMAAT KELUARGA ---
   function renderTabelJemaat(data, resetPage = true) {
      if(resetPage) currentPageJemaat = 1; const container = document.getElementById('jemaatAccordionContainer'); if(!container) return;
      const groupedKK = {}; 
@@ -869,11 +783,8 @@
          let jkKpl = g.kpl ? (g.kpl.Jenis_Kelamin === 'Laki-laki' ? '<i class="fas fa-mars text-blue-500 ml-1"></i>' : '<i class="fas fa-venus text-rose-500 ml-1"></i>') : '';
          
          let btnEditKpl = (idKpl && (role.includes('admin') || role.includes('editor'))) ? `<button onclick="editDataJemaatItem('${idKpl}')" class="text-amber-500 hover:text-amber-700 ml-3" title="Edit KK"><i class="fas fa-edit"></i></button>` : '';
-         
-         // PERBAIKAN: Tombol hapus KK kini akan menghapus seluruh keluarga berdasarkan Nomor KK
          let btnHapusKpl = (idKpl && role.includes('admin')) ? `<button onclick="konfirmasiHapusKeluarga('${g.kk}')" class="text-rose-500 hover:text-rose-700 ml-2" title="Hapus Seluruh Keluarga"><i class="fas fa-trash"></i></button>` : '';
-         
-         let btnCetakPDF = `<button onclick="bukaPreviewCetakKeluarga('${g.kk}')" class="text-indigo-500 hover:text-indigo-700 ml-3" title="Cetak Kartu Keluarga PDF"><i class="fas fa-print"></i></button>`;
+         let btnCetakPDF = `<button onclick="cetakPDFKeluarga('${g.kk}')" class="text-indigo-500 hover:text-indigo-700 ml-3" title="Cetak Kartu Keluarga PDF"><i class="fas fa-print"></i></button>`;
          let btnTambahAnggota = (role.includes('admin') || role.includes('editor')) ? `<button onclick="tambahAnggotaKeluarga('${g.kk}', '${g.wil}', '${g.res}', '${g.grj}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold shadow-sm border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors ml-3"><i class="fas fa-plus mr-1"></i> Anggota</button>` : '';
 
          let trs = g.anggota.map(a => {
@@ -891,7 +802,7 @@
      renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
   }
 
-  // --- FUNGSI MENGHAPUS SELURUH KELUARGA SEKALIGUS ---
+  // --- HAPUS KELUARGA MASSAL ---
   window.konfirmasiHapusKeluarga = function(noKK) {
       Swal.fire({
           title: 'Hapus Seluruh Keluarga?',
@@ -903,15 +814,8 @@
       }).then(async (result) => {
           if (result.isConfirmed) {
               Swal.fire({ title: 'Menghapus Keluarga...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-              
-              // Temukan seluruh ID Jemaat yang memiliki No_KK yang sama
               let members = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === String(noKK).trim());
-              
-              for (let m of members) {
-                  if (m.ID_Jemaat) {
-                      try { await apiCall('hapusJemaat', {id: m.ID_Jemaat}); } catch(e) {}
-                  }
-              }
+              for (let m of members) { if (m.ID_Jemaat) { try { await apiCall('hapusJemaat', {id: m.ID_Jemaat}); } catch(e) {} } }
               Swal.fire('Terhapus!', 'Seluruh data keluarga berhasil dihapus.', 'success');
               loadData();
           }
@@ -923,6 +827,7 @@
     if (resetPage) currentPageMajelis = 1; window.currentFilteredList = data; 
     const grouped = {};
     
+    // Murni grouping berdasar Nama_Gereja
     data.forEach(m => { 
       let g = m.Nama_Gereja || 'Tingkat Resort'; 
       if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
@@ -962,7 +867,7 @@
         const hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; const id = m.ID_Majelis || ''; const nama = m.Nama_Lengkap || '-'; 
         let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
         
-        let btnProfil = `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>`;
+        let btnProfil = `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-50 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>`;
         let btnWA = (hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`;
         let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
         let btnHapus = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
@@ -1059,10 +964,7 @@
     if(document.getElementById('formKeluargaBulk')) document.getElementById('formKeluargaBulk').reset(); 
     document.getElementById('containerAnggotaKeluarga').innerHTML = ''; 
     counterAnggota = 0;
-    
-    // Perbaikan Dropdown Kosong
-    syncFormResortBulk(); 
-
+    syncFormResortBulk(); // Sinkron dropdown langsung saat dibuka
     if(document.getElementById('modalTambahKeluarga')) document.getElementById('modalTambahKeluarga').classList.remove('hidden'); 
   }
 
@@ -1128,7 +1030,7 @@
         }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan Seluruh Keluarga'; });
   };
 
-  // --- EDIT JEMAAT INDIVIDU & TAMBAH 1 ANAK ---
+  // --- EDIT JEMAAT INDIVIDU (FORM SATUAN DIHAPUS TOMBOL TAMBAH LAGINYA) ---
   function editDataJemaatItem(id) {
     const j = DATA_MASTER.jemaat.find(i => i.ID_Jemaat == id); if (!j) return; 
     safeSetValue('j_id', id); safeSetValue('j_kk', j.No_KK || ''); 
@@ -1158,7 +1060,6 @@
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
     
     const action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat';
-    
     Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
     apiCall(action, payload).then(res => { closeModal('modalFormJemaat'); btn.disabled = false; btn.innerHTML = originalText; loadData(); }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
   }
@@ -1348,8 +1249,14 @@
     } else if (isMajelis) { 
         safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`); 
         const g_filter = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim().toLowerCase() : ''; const grouped = {}; 
-        dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (!isPimpinan) { let gereja = m.Nama_Gereja || 'Tingkat Resort'; if (!grouped[gereja]) grouped[gereja] = { resort: m.Resort, majelis: [] }; grouped[gereja].majelis.push(m); } }); 
-        dataList.forEach(m => { let isPimpinan = (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (!m.Nama_Gereja || String(m.Nama_Gereja).trim().toLowerCase() === 'tingkat resort'); if (isPimpinan) { let gerejaBawah = DATA_MASTER.gereja.filter(grj => String(grj.Induk_Resort || grj.Resort).trim() === String(m.Resort).trim()); if (gerejaBawah.length > 0) { gerejaBawah.forEach(grj => { let namaG = grj.Nama_Gereja; if (g_filter && String(namaG).trim().toLowerCase() !== g_filter) return; if (!grouped[namaG]) grouped[namaG] = { resort: m.Resort, majelis: [] }; if (!grouped[namaG].majelis.some(x => x.ID_Majelis === m.ID_Majelis)) grouped[namaG].majelis.push({...m, Nama_Gereja: namaG}); }); } else { let fallback = m.Resort ? "Resort " + m.Resort : 'Tingkat Resort'; if (g_filter && fallback.toLowerCase() !== g_filter) return; if (!grouped[fallback]) grouped[fallback] = { resort: m.Resort, majelis: [] }; if (!grouped[fallback].majelis.some(x => x.ID_Majelis === m.ID_Majelis)) grouped[fallback].majelis.push(m); } } }); 
+        
+        // Perbaikan Murni: grouping by Nama_Gereja persis di Excel
+        dataList.forEach(m => { 
+          let g = m.Nama_Gereja || 'Tingkat Resort'; 
+          if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
+          grouped[g].majelis.push(m); 
+        });
+
         Object.keys(grouped).forEach(k => { grouped[k].majelis.sort((a, b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff!==0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); }); 
         const groupArray = Object.keys(grouped).map(k => ({ namaGereja: k, ...grouped[k] })).sort((a, b) => a.namaGereja.localeCompare(b.namaGereja)); 
         safeSetHTML('bodyTabelCetak', groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join('')); 
@@ -1373,6 +1280,24 @@
     html2pdf().set({ margin: [0.4, 0.3, 0.4, 0.3], filename: namaFile, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'avoid-all', avoid: 'tr' } }).from(document.getElementById('areaCetakDokumen')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); tutupPreviewCetakData(); Swal.fire('Berhasil!', 'File PDF siap dicetak!', 'success'); });
   }
 
+  window.bukaPreviewCetakKeluarga = function(noKK) {
+     let family = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === noKK);
+     if(!family || family.length === 0) return;
+     let kk = family.find(f => String(f.Status_Keluarga).toLowerCase() === 'kepala keluarga') || family[0];
+     
+     let judul = "KARTU KELUARGA JEMAAT"; 
+     safeSetText('judulCetakPdf', judul); 
+     safeSetText('tglCetakPdf', "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })); 
+     
+     safeSetHTML('infoFilterCetak', `<div><b>No KK:</b> ${noKK}</div><div><b>Kepala Keluarga:</b> ${kk.Nama_Lengkap}</div><div><b>Wilayah/Resort:</b> W-${kk.Wilayah} / ${kk.Resort||'-'}</div><div><b>Unit Gereja:</b> ${kk.Nama_Gereja||'-'}</div>`); 
+     
+     document.querySelector('#areaCetakDokumen table').style.fontSize = "10px"; 
+     safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`); 
+     safeSetHTML('bodyTabelCetak', family.map((j, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${j.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${j.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${hitungUmur(j.Tanggal_Lahir)}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Pekerjaan||'-'}</td></tr>`).join('')); 
+     
+     if(document.getElementById('modalCetakData')) document.getElementById('modalCetakData').classList.remove('hidden'); 
+  };
+
   function openPdfPreview() {
     document.getElementById('previewDate').innerText = "Diperbarui pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     document.getElementById('prevTotalGereja').innerText = document.getElementById('statTotalGereja').innerText; document.getElementById('prevTotalMajelis').innerText = document.getElementById('statTotalMajelis').innerText; document.getElementById('prevTotalRT').innerText = document.getElementById('statTotalRT').innerText; document.getElementById('prevTotalJiwa').innerText = document.getElementById('statTotalJiwa').innerText;
@@ -1390,7 +1315,7 @@
     html2pdf().set({ margin: 0.4, filename: 'Statistik_GKPI.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdfDocumentArea')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); closePdfPreview(); Swal.fire('Berhasil!', 'File PDF telah terunduh.', 'success'); });
   }
 
-  // ADMIN PETUGAS & PWA
+  // ADMIN PETUGAS & LAINNYA
   function loadListPetugas() { const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>'; apiCall('getListPetugas').then(res => { if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; } container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join(''); }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; }); }
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg.message, 'success'); e.target.reset(); loadListPetugas(); }); }
   function hapusAkun(un) { Swal.fire({ title: 'Cabut akses petugas?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((r) => { if (r.isConfirmed) { Swal.fire({ title: 'Mencabut...', didOpen: () => { Swal.showLoading() } }); apiCall('hapusPetugas', {username: un}).then(() => { Swal.fire('Dihapus!', 'Akses telah dicabut.', 'success'); loadListPetugas(); }); } }); }
