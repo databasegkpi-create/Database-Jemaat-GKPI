@@ -449,23 +449,39 @@
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // --- FUNGSI PARSE TANGGAL EXCEL/ISO SUPER AMAN ---
+ // --- FUNGSI PARSE TANGGAL EXCEL/ISO SUPER AMAN ---
   window.parseDateSafe = function(tgl) {
       if (!tgl) return null;
+      
+      // 1. Jika data sudah berbentuk object Date asli
       if (tgl instanceof Date && !isNaN(tgl.getTime())) return tgl;
+      
+      // 2. MENCEGAH MUNDUR 1 HARI: Deteksi format ISO dari Google API (mengandung T dan Z)
+      if (typeof tgl === 'string' && tgl.includes('T') && tgl.includes('Z')) {
+          let d = new Date(tgl);
+          if (!isNaN(d.getTime())) return d;
+      }
+
+      // 3. Deteksi angka serial Excel (baik format number maupun string)
       let numTgl = Number(tgl);
       if (!isNaN(numTgl) && String(tgl).trim() !== "") {
           return new Date(Math.round((numTgl - 25569) * 86400 * 1000));
       }
+      
+      // 4. Pemotongan string manual (hanya jika bukan ISO Google API)
       let str = String(tgl).trim().substring(0, 10); 
       let parts = str.split(/[-/]/); 
+      
       if (parts.length >= 3) {
           let p0 = parseInt(parts[0], 10); let p1 = parseInt(parts[1], 10); let p2 = parseInt(parts[2], 10);
           if (String(parts[0]).length === 4) return new Date(p0, p1 - 1, p2);
           else if (String(parts[2]).length === 4) return new Date(p2, p1 - 1, p0);
       }
+      
+      // 5. Fallback terakhir
       let d = new Date(tgl);
       if (!isNaN(d.getTime())) return d;
+      
       return null;
   };
 
@@ -1335,7 +1351,7 @@
     html2pdf().set({ margin: [0.4, 0.3, 0.4, 0.3], filename: namaFile, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'avoid-all', avoid: 'tr' } }).from(document.getElementById('areaCetakDokumen')).save().then(() => { if (isDark) document.documentElement.classList.add('dark'); tutupPreviewCetakData(); Swal.fire('Berhasil!', 'File PDF siap dicetak!', 'success'); });
   }
 
-  // --- FUNGSI PENCARIAN GEREJA ULANG TAHUN ---
+ // --- FUNGSI PENCARIAN GEREJA ULANG TAHUN ---
   window.cariUlangTahunGereja = function() {
       const startVal = document.getElementById('ultahStart').value;
       const endVal = document.getElementById('ultahEnd').value;
@@ -1362,6 +1378,7 @@
           }
 
           DATA_MASTER.gereja.forEach(g => {
+              // Menarik tanggal dari berbagai kemungkinan nama kolom excel
               let tgl = g.Tanggal_Berdiri || g['Tanggal Berdiri'] || g['Tanggal_berdiri'];
               if(!tgl) return;
               
@@ -1375,32 +1392,34 @@
               let yStart = d1.getFullYear(); 
               let yEnd = d2.getFullYear();
 
-              let anniv1 = new Date(yStart, month, date).getTime();
-              let anniv2 = new Date(yEnd, month, date).getTime();
+              let anniv1 = new Date(yStart, month, date);
+              let anniv2 = new Date(yEnd, month, date);
 
               let isMatch = false; 
               let matchAnniv = null;
               
-              if(anniv1 >= sTime && anniv1 <= eTime) { 
+              if(anniv1.getTime() >= sTime && anniv1.getTime() <= eTime) { 
                   isMatch = true; matchAnniv = anniv1; 
-              } else if(anniv2 >= sTime && anniv2 <= eTime) { 
+              } else if(anniv2.getTime() >= sTime && anniv2.getTime() <= eTime) { 
                   isMatch = true; matchAnniv = anniv2; 
               }
 
               if(isMatch) {
-                  let age = new Date(matchAnniv).getFullYear() - bYear;
+                  let age = matchAnniv.getFullYear() - bYear;
+                  // Cegah error logika umur negatif
                   if (age >= 0) {
                       results.push({ 
                           gereja: g.Nama_Gereja || g['Nama Gereja'], 
                           resort: g.Induk_Resort || g.Resort || 'Jemaat Khusus', 
                           tglBerdiriAsli: bDate, 
-                          tglUltahTahunIni: new Date(matchAnniv), 
+                          tglUltahTahunIni: matchAnniv, 
                           usia: age 
                       });
                   }
               }
           });
 
+          // Urutkan berdasarkan tanggal terdekat yang ulang tahun
           results.sort((a,b) => a.tglUltahTahunIni.getTime() - b.tglUltahTahunIni.getTime());
 
           if(results.length === 0) {
