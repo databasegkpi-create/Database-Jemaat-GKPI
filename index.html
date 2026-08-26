@@ -57,6 +57,7 @@
     .page-btn.inactive:hover { background-color: #e2e8f0; color: #334155; transform: translateY(-1px); }
     details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
 
+    /* Dark Mode */
     html.dark { background-color: #0f172a; color: #f8fafc; } html.dark body { background-color: #0f172a; color: #f8fafc; } html.dark .bg-white { background-color: #1e293b !important; } html.dark .bg-slate-50 { background-color: #0f172a !important; } html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; } html.dark .text-slate-600 { color: #cbd5e1 !important; } html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; } html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; } html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; } html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; } html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; } html.dark th, html.dark td { border-color: #334155 !important; } html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; } html.dark .bg-indigo-50 { background-color: rgba(79, 70, 229, 0.2) !important; } html.dark .text-indigo-600 { color: #818cf8 !important; } html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.2) !important; } html.dark .text-emerald-600 { color: #34d399 !important; } html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.2) !important; } html.dark .text-amber-600 { color: #fbbf24 !important; } html.dark .bg-rose-50 { background-color: rgba(225, 29, 72, 0.2) !important; } html.dark .text-rose-600 { color: #fb7185 !important; } html.dark .text-slate-50 { color: #0f172a !important; } html.dark .text-indigo-500 { color: #818cf8 !important; } html.dark .text-emerald-500 { color: #34d399 !important; } html.dark .text-amber-500 { color: #fbbf24 !important; } html.dark .page-btn.inactive { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
   </style>
 </head>
@@ -172,7 +173,7 @@
                 <input type="text" id="search_j" placeholder="Cari Nama / No KK Jemaat..." class="w-full py-3.5 pl-11 pr-4 bg-white rounded-2xl border border-slate-200 soft-shadow outline-none text-sm font-medium focus:ring-2 focus:ring-emerald-500 transition-all">
             </div>
             <div class="flex gap-3 w-full md:w-auto overflow-x-auto">
-              <!-- TOMBOL TAMBAH JEMAAT MENGGUNAKAN FORM KELUARGA BULK -->
+              <!-- TOMBOL TAMBAH JEMAAT -->
               <button onclick="openFormJemaatBulk()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah Jemaat (Keluarga)</button>
               
               <input type="file" id="inputExcelImportJemaat" accept=".xlsx, .xls" class="hidden" onchange="prosesImportJemaatExcel(event)">
@@ -212,6 +213,7 @@
               <input type="file" id="inputExcelImport" accept=".xlsx, .xls" class="hidden" onchange="prosesImportExcel(event)">
               <button onclick="klikImportExcelSmart()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import & Template</button>
               <button onclick="openBlastModal()" class="flex items-center justify-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-bullhorn"></i> Blast WA</button>
+              <!-- TOMBOL CETAK TRUE PDF -->
               <button onclick="generateTruePDF('Data Internal Majelis & Unit')" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export</button>
             </div>
@@ -393,7 +395,7 @@
   // -------------------------------------------------------------
   // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
   // -------------------------------------------------------------
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOnaTcwjyY1QYxs_gpKSCePhIAmyfyWWZG_J-0XILWUTLPm4hnlHw5tJjCczChM3LE/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
   const SECRET_API_KEY = "GKPI_HUB_SECURE_2026";
 
   let DATA_MASTER = { majelis: [], gereja: [], jabatan: [], jemaat: [], petugas: [] };
@@ -407,6 +409,29 @@
   function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+  // --- FUNGSI PARSE TANGGAL EXCEL/ISO ---
+  function parseDateSafe(tgl) {
+      if (!tgl) return null;
+      let d = new Date(tgl);
+      if (!isNaN(d.getTime())) return d; 
+      
+      if (typeof tgl === 'number') return new Date(Math.round((tgl - 25569) * 86400 * 1000));
+      
+      let str = String(tgl).trim();
+      let parts = str.split(/[-/]/);
+      if (parts.length >= 3) {
+          let p0 = parseInt(parts[0]); let p1 = parseInt(parts[1]); let p2 = parseInt(parts[2]);
+          if (String(parts[2]).length === 4) return new Date(p2, p1 - 1, p0); 
+          if (String(parts[0]).length === 4) return new Date(p0, p1 - 1, p2); 
+      }
+      return null;
+  }
+
+  function hitungUmur(tgl) {
+      if(!tgl) return "-"; let d = parseDateSafe(tgl);
+      if(!d || isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
+  }
 
   // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
   async function apiCall(action, payload = {}) {
@@ -456,9 +481,11 @@
   document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
     updateDarkModeIcon();
+    
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
     }
+
     const saved = sessionStorage.getItem('si_majelis_user');
     if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
   });
@@ -512,12 +539,12 @@
         renderHomeStats(); 
         setupFilters(); 
 
-        if(curW && document.getElementById('filterWilayah')) document.getElementById('filterWilayah').value = curW; syncFilterResort();
-        if(curR && document.getElementById('filterResort')) document.getElementById('filterResort').value = curR; syncFilterGereja();
-        if(curG && document.getElementById('filterGereja')) document.getElementById('filterGereja').value = curG;
-        if(curJ && document.getElementById('filterJabatan')) document.getElementById('filterJabatan').value = curJ;
+        if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
+        if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
+        if(curG) safeSetValue('filterGereja', curG);
+        if(curJ) safeSetValue('filterJabatan', curJ);
 
-        if(curWJ && document.getElementById('f_wil_j')) document.getElementById('f_wil_j').value = curWJ; syncResortJemaatPage();
+        if(curWJ) safeSetValue('f_wil_j', curWJ); syncResortJemaatPage();
 
         filterTabel(); 
         filterTabelJemaat();
@@ -526,12 +553,8 @@
         Swal.close(); const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
       })
       .catch(err => { 
-        Swal.fire({
-          icon: 'error',
-          title: 'Koneksi Gagal',
-          html: String(err)
-        });
-        if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data dari server.</div>';
+        Swal.fire({ icon: 'error', title: 'Koneksi Gagal', html: String(err) });
+        if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data dari server. Pastikan Anda mendeploy Kode.gs ke Versi Baru.</div>';
       });
   }
   
@@ -564,7 +587,15 @@
     safeSetText('statTotalRT', totRT.toLocaleString('id-ID')); 
     safeSetText('statTotalJiwa', totJiwa.toLocaleString('id-ID'));
     
+    safeSetText('pdfTotalGereja', DATA_MASTER.gereja.length); 
+    safeSetText('pdfTotalMajelis', DATA_MASTER.majelis.length);
+    safeSetText('pdfTotalKK', totRT.toLocaleString('id-ID')); 
+    safeSetText('pdfTotalJiwa', totJiwa.toLocaleString('id-ID'));
+    safeSetText('previewDate', "Diperbarui pada: " + new Date().toLocaleString('id-ID'));
+
     const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
+    if(document.getElementById('jobStatsGrid')) safeSetHTML('jobStatsGrid', Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join(''));
+    
     const statsW = Array(12).fill(0); DATA_MASTER.majelis.forEach(m => { const w = parseInt(m.Wilayah); if(w >= 1 && w <= 12) statsW[w-1]++; });
     initCharts(statsW, statsJ); renderMap();
   }
@@ -581,29 +612,7 @@
     }
   }
 
-  // --- FUNGSI PARSE TANGGAL EXCEL/ISO ---
-  function parseDateSafe(tgl) {
-      if (!tgl) return null;
-      let d = new Date(tgl);
-      if (!isNaN(d.getTime())) return d; 
-      
-      if (typeof tgl === 'number') return new Date(Math.round((tgl - 25569) * 86400 * 1000));
-      
-      let str = String(tgl).trim();
-      let parts = str.split(/[-/]/);
-      if (parts.length >= 3) {
-          let p0 = parseInt(parts[0]); let p1 = parseInt(parts[1]); let p2 = parseInt(parts[2]);
-          if (parts[2].length === 4) return new Date(p2, p1 - 1, p0); 
-          if (parts[0].length === 4) return new Date(p0, p1 - 1, p2); 
-      }
-      return null;
-  }
-
-  function hitungUmur(tgl) {
-      if(!tgl) return "-"; let d = parseDateSafe(tgl);
-      if(!d || isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
-  }
-
+  // --- MENU SWITCHING ---
   function switchTab(tab) {
     ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
     ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
@@ -642,20 +651,27 @@
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
+  // --- SETUP FILTER ---
   function setupFilters() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
     
-    safeSetHTML('filterWilayah', htmlW); safeSetHTML('f_wil_j', htmlW); safeSetHTML('formWilayah', htmlJW); safeSetHTML('bk_wilayah', htmlJW); safeSetHTML('j_wilayah', htmlJW);
+    safeSetHTML('filterWilayah', htmlW); 
+    safeSetHTML('f_wil_j', htmlW); 
+    safeSetHTML('formWilayah', htmlJW); 
+    safeSetHTML('bk_wilayah', htmlJW);
+    safeSetHTML('j_wilayah', htmlJW);
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
     
-    safeSetHTML('filterJabatan', htmlJ); safeSetHTML('formJabatan', formJ); 
+    safeSetHTML('filterJabatan', htmlJ); 
+    safeSetHTML('formJabatan', formJ); 
     
     syncFilterResort(); syncResortJemaatPage(); syncFormResortMajelis(); syncFormResortJemaatEdit();
   }
 
+  // Filter Internal
   function syncFilterResort() { 
     const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('filterResort'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -673,6 +689,7 @@
     filterTabel(); 
   }
 
+  // Filter Halaman Jemaat
   function syncResortJemaatPage() { 
     const w = document.getElementById('f_wil_j')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('f_res_j'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -690,6 +707,7 @@
     filterTabelJemaat(); 
   }
   
+  // Filter Modal Jemaat Bulk
   function syncFormResortBulk() { 
     const w = document.getElementById('bk_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('bk_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
@@ -738,6 +756,8 @@
     else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
+
+  // --- SMART PENCARIAN & FILTERING ---
   let searchTimeout; 
   if(document.getElementById('searchTerm')) { document.getElementById('searchTerm').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabel, 300); }); }
   if(document.getElementById('search_j')) { document.getElementById('search_j').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabelJemaat, 300); }); }
@@ -898,7 +918,9 @@
       const namaG = g.Nama_Gereja || g['Nama Gereja'] || '-'; const res = g.Induk_Resort || g.Resort || 'Jemaat Khusus'; const wil = g.Wilayah || '-'; 
       const rt = parseInt(g.Total_RT) || 0; const jiwa = parseInt(g.Total_Jiwa) || 0; const statusGrj = g.Status_Gereja || g['Status Gereja'] || g.Tipe_Gereja || g['Tipe Gereja'] || 'Pagaran';
       
-      let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.'); let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
+      let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.');
+      let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
+
       let pdt = DATA_MASTER.majelis.find(m => String(m.Resort).trim() === String(res).trim() && (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')));
       let gr = DATA_MASTER.majelis.find(m => String(m.Nama_Gereja).trim() === String(namaG).trim() && String(m.Jabatan).toLowerCase().includes('guru'));
       
@@ -936,6 +958,13 @@
     for (let i = Math.max(1, currentPg - 2); i <= Math.min(totalPages, currentPg + 2); i++) html += `<button onclick="ubahHalaman('${type}', ${i})" class="page-btn ${i===currentPg?'active':'inactive'}">${i}</button>`;
     if (currentPg < totalPages) html += `<button onclick="ubahHalaman('${type}', ${currentPg + 1})" class="page-btn inactive"><i class="fas fa-chevron-right"></i></button>`;
     container.innerHTML = html + `</div>`;
+  }
+
+  function ubahHalaman(type, page) { 
+    if (type === 'majelis') { currentPageMajelis = page; renderTabelReal(window.currentFilteredList, false); } 
+    else if (type === 'individu') { currentPageIndividu = page; renderTabelIndividu(window.currentFilteredList, false); }
+    else if (type === 'jemaat') { currentPageJemaat = page; renderTabelJemaat(window.currentFilteredJemaat, false); }
+    else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
   }
 
   // --- SMART ADD BUTTONS ---
@@ -1203,7 +1232,208 @@
     } 
   }
 
-  // ADMIN PETUGAS
+  // --- FUNGSI KLIK NAMA GEREJA ---
+  window.showDetailGereja = function(encNama) {
+      let nama = decodeURIComponent(encNama);
+      let g = DATA_MASTER.gereja.find(x => x.Nama_Gereja === nama || x['Nama Gereja'] === nama);
+      if(!g) return;
+      let tgl = g.Tanggal_Berdiri || g['Tanggal Berdiri'] || '-';
+      let noReg = g.No_Register || g['No Register'] || 'Belum Ada Data';
+      let d = parseDateSafe(tgl);
+      let umur = hitungUmur(tgl);
+      let tglStr = (!d || isNaN(d.getTime())) ? tgl : d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+      Swal.fire({
+          title: 'Informasi Unit Gereja',
+          html: `
+             <div class="text-left space-y-4">
+               <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Nama Gereja / Unit</p>
+                  <p class="text-lg font-black text-slate-800">${g.Nama_Gereja || g['Nama Gereja']}</p>
+               </div>
+               <div class="grid grid-cols-2 gap-4">
+                   <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-center shadow-inner">
+                      <p class="text-[10px] text-indigo-500 font-bold uppercase mb-1">Nomor Register</p>
+                      <p class="text-sm font-bold text-indigo-900">${noReg}</p>
+                   </div>
+                   <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center shadow-inner">
+                      <p class="text-[10px] text-emerald-500 font-bold uppercase mb-1">Berdiri Sejak</p>
+                      <p class="text-sm font-bold text-emerald-900">${tglStr}</p>
+                      <p class="text-[10px] text-emerald-600 font-bold mt-1">Usia: ${umur}</p>
+                   </div>
+               </div>
+             </div>
+          `,
+          confirmButtonColor: '#4f46e5'
+      });
+  };
+
+  // --- FUNGSI ULANG TAHUN DI DASHBOARD ---
+  window.cariUlangTahunGereja = function() {
+      const startVal = document.getElementById('ultahStart').value;
+      const endVal = document.getElementById('ultahEnd').value;
+      const container = document.getElementById('ultahResultGrid');
+
+      if(!startVal || !endVal) {
+          Swal.fire('Perhatian', 'Silakan pilih rentang tanggal terlebih dahulu.', 'warning');
+          return;
+      }
+
+      const d1 = new Date(startVal); d1.setHours(0,0,0,0);
+      const d2 = new Date(endVal); d2.setHours(23,59,59,999);
+      const sTime = d1.getTime(); const eTime = d2.getTime();
+      const yStart = d1.getFullYear(); const yEnd = d2.getFullYear();
+
+      let results = [];
+      DATA_MASTER.gereja.forEach(g => {
+          let tgl = g.Tanggal_Berdiri || g['Tanggal Berdiri'];
+          if(!tgl) return;
+          let bDate = parseDateSafe(tgl);
+          if(!bDate || isNaN(bDate.getTime())) return;
+
+          let month = bDate.getMonth(); let date = bDate.getDate();
+          let anniv1 = new Date(yStart, month, date).getTime();
+          let anniv2 = new Date(yEnd, month, date).getTime();
+
+          let isMatch = false; let matchAnniv = null;
+          if(anniv1 >= sTime && anniv1 <= eTime) { isMatch = true; matchAnniv = anniv1; }
+          else if(anniv2 >= sTime && anniv2 <= eTime) { isMatch = true; matchAnniv = anniv2; }
+
+          if(isMatch) {
+              let age = new Date(matchAnniv).getFullYear() - bDate.getFullYear();
+              results.push({ gereja: g.Nama_Gereja || g['Nama Gereja'], resort: g.Induk_Resort || g.Resort || 'Jemaat Khusus', tglBerdiriAsli: bDate, tglUltahTahunIni: new Date(matchAnniv), usia: age });
+          }
+      });
+
+      results.sort((a,b) => a.tglUltahTahunIni.getTime() - b.tglUltahTahunIni.getTime());
+
+      if(results.length === 0) {
+          container.innerHTML = `<div class="p-6 text-center text-slate-400 font-medium text-sm col-span-full border-2 border-dashed border-slate-200 rounded-2xl">Tidak ada unit gereja yang berulang tahun di rentang tanggal tersebut.</div>`;
+          return;
+      }
+
+      container.innerHTML = results.map(r => {
+          let tglStr = r.tglBerdiriAsli.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+          let ultahStr = r.tglUltahTahunIni.toLocaleDateString('id-ID', {day:'numeric', month:'long'});
+          return `<div class="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"><div class="absolute -right-4 -top-4 text-rose-50 opacity-50 text-7xl"><i class="fas fa-birthday-cake"></i></div><div class="relative z-10"><span class="px-2 py-1 bg-rose-100 text-rose-700 text-[9px] font-black rounded uppercase tracking-wider mb-2 inline-block">${ultahStr}</span><h4 class="font-bold text-slate-800 text-sm leading-tight mb-1 truncate" title="${r.gereja}">${r.gereja}</h4><p class="text-[10px] text-slate-500 font-semibold mb-3 truncate">${r.resort}</p><div class="flex items-end justify-between border-t border-slate-100 pt-3"><div><p class="text-[9px] text-slate-400 uppercase font-bold">Sejak</p><p class="text-[11px] font-bold text-slate-700">${tglStr}</p></div><div class="text-right"><p class="text-[9px] text-rose-400 uppercase font-bold">Usia</p><p class="text-lg font-black text-rose-600 leading-none">${r.usia} <span class="text-[10px]">Thn</span></p></div></div></div></div>`;
+      }).join('');
+  };
+
+  // ==========================================
+  // FITUR GENERATE TRUE PDF DARI 0 (VECTOR BASED)
+  // ==========================================
+  function getBase64ImageFromURL(url) {
+      return new Promise((resolve, reject) => {
+        var img = new Image(); img.setAttribute("crossOrigin", "anonymous");
+        img.onload = () => { var canvas = document.createElement("canvas"); canvas.width = img.width; canvas.height = img.height; var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png")); };
+        img.onerror = error => { resolve(null); }; img.src = url;
+      });
+  }
+
+  window.generateTruePDF = async function(customTitle) {
+      const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
+      const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
+      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
+      
+      const dataList = isJemaat ? window.currentFilteredJemaat : ((isMajelis || isIndividu) ? window.currentFilteredList : window.currentFilteredGereja);
+      
+      if (!dataList || dataList.length === 0) { return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak.', 'info'); }
+      
+      Swal.fire({ title: 'Menyusun Dokumen PDF...', html: 'Mohon tunggu sebentar.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a4');
+      
+      let imgData = null;
+      try { imgData = await getBase64ImageFromURL('https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF'); } catch(e) {}
+
+      let columns = []; let rows = [];
+
+      if (isJemaat) {
+          columns = ['No', 'No KK', 'Nama Lengkap', 'Hubungan', 'L/P', 'Usia', 'Pekerjaan'];
+          rows = dataList.map((j, i) => [
+              i+1, j.No_KK||'-', j.Nama_Lengkap||'-', j.Status_Keluarga||'-', j.Jenis_Kelamin||'-', hitungUmur(j.Tanggal_Lahir), j.Pekerjaan||'-'
+          ]);
+      } else if (isMajelis) {
+          columns = ['No', 'Nama Lengkap', 'Jabatan', 'No. WA', 'Penempatan Unit', 'Wilayah'];
+          rows = dataList.map((m, i) => [
+              i+1, m.Nama_Lengkap||'-', m.Jabatan||'-', m.No_HP||'-', m.Nama_Gereja||'Tingkat Resort', m.Wilayah||'-'
+          ]);
+      } else if (isIndividu) {
+          columns = ['No', 'Nama Lengkap', 'Jabatan', 'Penempatan Unit', 'Resort/Wilayah', 'No. WA'];
+          rows = dataList.map((m, i) => [
+              i+1, m.Nama_Lengkap||'-', m.Jabatan||'-', m.Nama_Gereja||'Tingkat Resort', (m.Resort||'JK') + ' (W-'+(m.Wilayah||'-')+')', m.No_HP||'-'
+          ]);
+      } else {
+          columns = ['No', 'Nama Unit Gereja', 'Status', 'Wilayah', 'Induk Resort / JK', 'Total RT', 'Total Jiwa'];
+          rows = dataList.map((g, i) => [
+              i+1, g.Nama_Gereja||'-', g.Status_Gereja || g.Tipe_Gereja || 'Pagaran', g.Wilayah||'-', g.Induk_Resort || g.Resort || 'JK', parseInt(g.Total_RT)||0, parseInt(g.Total_Jiwa)||0
+          ]);
+      }
+
+      doc.autoTable({
+          head: [columns], body: rows, startY: 110, theme: 'grid',
+          headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
+          bodyStyles: { fontSize: 9 }, alternateRowStyles: { fillColor: [241, 245, 249] },
+          margin: { top: 110, left: 30, right: 30, bottom: 40 },
+          didDrawPage: function (data) {
+              if (imgData) { doc.addImage(imgData, 'PNG', 30, 30, 45, 45); }
+              doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+              doc.text("SINODE GEREJA KRISTEN PROTESTAN INDONESIA", 85, 48);
+              doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+              doc.text("SISTEM INFORMASI DATA HUB GKPI", 85, 62);
+              doc.setDrawColor(203, 213, 225); doc.setLineWidth(1); doc.line(30, 80, doc.internal.pageSize.width - 30, 80);
+              doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(79, 70, 229);
+              doc.text(customTitle, 30, 98);
+              
+              doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont("helvetica", "normal");
+              doc.text("Halaman " + data.pageNumber, 30, doc.internal.pageSize.height - 20);
+              doc.text("© 2026 GKPI Data Hub. Dicetak: " + new Date().toLocaleString('id-ID'), doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 20, { align: 'right' });
+          }
+      });
+      doc.save(customTitle.replace(/\s+/g, '_') + '.pdf');
+      Swal.close();
+  };
+
+  // CETAK PDF KARTU KELUARGA (TRUE PDF)
+  window.cetakPDFKeluarga = async function(noKK) {
+     let family = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === noKK);
+     if(!family || family.length === 0) return;
+     let kk = family.find(f => String(f.Status_Keluarga).toLowerCase() === 'kepala keluarga') || family[0];
+     
+     Swal.fire({ title: 'Menyusun PDF Keluarga...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+     const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape', 'pt', 'a4');
+     let imgData = null; try { imgData = await getBase64ImageFromURL('https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF'); } catch(e) {}
+
+     const columns = ['No', 'Nama Lengkap', 'Status Hubungan', 'L/P', 'Tgl Lahir', 'Usia', 'Pekerjaan', 'Kondisi'];
+     const rows = family.map((f, i) => [ i + 1, f.Nama_Lengkap, f.Status_Keluarga, f.Jenis_Kelamin === 'Laki-laki' ? 'L' : 'P', f.Tanggal_Lahir ? new Date(f.Tanggal_Lahir).toLocaleDateString('id-ID') : '-', hitungUmur(f.Tanggal_Lahir), f.Pekerjaan || '-', f.Kondisi || '-' ]);
+
+     doc.autoTable({
+        head: [columns], body: rows, startY: 155, theme: 'grid', headStyles: { fillColor: [16, 185, 129] },
+        didDrawPage: function (data) {
+            if (imgData) { doc.addImage(imgData, 'PNG', 30, 30, 45, 45); }
+            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+            doc.text("KARTU KELUARGA JEMAAT", 85, 48);
+            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+            doc.text("GKPI " + (kk.Nama_Gereja || '-'), 85, 62);
+            doc.setDrawColor(203, 213, 225); doc.setLineWidth(1); doc.line(30, 80, doc.internal.pageSize.width - 30, 80);
+
+            doc.setFontSize(11); doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold");
+            doc.text("No. KK : " + noKK, 30, 105);
+            doc.text("Kepala Keluarga : " + kk.Nama_Lengkap, 30, 120);
+            doc.text("Wilayah / Resort : W-" + kk.Wilayah + " / " + (kk.Resort || '-'), 30, 135);
+            
+            doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont("helvetica", "normal");
+            doc.text("Halaman " + data.pageNumber, 30, doc.internal.pageSize.height - 20);
+            doc.text("© 2026 GKPI Data Hub", doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 20, { align: 'right' });
+        }
+     });
+     doc.save('Kartu_Keluarga_' + noKK + '.pdf');
+     Swal.close();
+  };
+
+  // ADMIN PETUGAS & LAINNYA
   function loadListPetugas() { const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>'; apiCall('getListPetugas').then(res => { if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; } container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join(''); }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; }); }
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg.message, 'success'); e.target.reset(); loadListPetugas(); }); }
   function hapusAkun(un) { Swal.fire({ title: 'Cabut akses petugas?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((r) => { if (r.isConfirmed) { Swal.fire({ title: 'Mencabut...', didOpen: () => { Swal.showLoading() } }); apiCall('hapusPetugas', {username: un}).then(() => { Swal.fire('Dihapus!', 'Akses telah dicabut.', 'success'); loadListPetugas(); }); } }); }
