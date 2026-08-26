@@ -85,7 +85,6 @@
   </div>
 </div>
 
-
 <div id="mainApp" class="hidden h-screen flex flex-col md:flex-row bg-slate-50">
   <!-- SIDEBAR NAVIGASI -->
   <aside class="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col z-20 flex-shrink-0 h-auto md:h-full">
@@ -175,11 +174,12 @@
                 <input type="text" id="search_j" placeholder="Cari Nama / No KK Jemaat..." class="w-full py-3.5 pl-11 pr-4 bg-white rounded-2xl border border-slate-200 soft-shadow outline-none text-sm font-medium focus:ring-2 focus:ring-emerald-500 transition-all">
             </div>
             <div class="flex gap-3 w-full md:w-auto overflow-x-auto">
-              <!-- TOMBOL TAMBAH JEMAAT YANG SUDAH DIPERBAIKI -->
-              <button onclick="openFormJemaat()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah Jemaat (Keluarga)</button>
+              <!-- TOMBOL TAMBAH JEMAAT (KELUARGA) BERPANGGIL FUNGSI YANG BENAR -->
+              <button onclick="openFormJemaatBulk()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-plus"></i> Tambah Jemaat (Keluarga)</button>
               
               <input type="file" id="inputExcelImportJemaat" accept=".xlsx, .xls" class="hidden" onchange="prosesImportJemaatExcel(event)">
               <button onclick="klikImportJemaatExcelSmart()" class="flex items-center justify-center gap-2 bg-slate-800 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-slate-200 hover:bg-slate-900 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import & Template</button>
+              <!-- TOMBOL CETAK TRUE PDF -->
               <button onclick="generateTruePDF('Database Jemaat Keluarga')" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export Excel</button>
             </div>
@@ -215,7 +215,7 @@
               <input type="file" id="inputExcelImport" accept=".xlsx, .xls" class="hidden" onchange="prosesImportExcel(event)">
               <button onclick="klikImportExcelSmart()" class="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-import"></i> Import & Template</button>
               <button onclick="openBlastModal()" class="flex items-center justify-center gap-2 bg-amber-500 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-bullhorn"></i> Blast WA</button>
-              <!-- TOMBOL CETAK PDF BARU -->
+              <!-- TOMBOL CETAK TRUE PDF -->
               <button onclick="generateTruePDF('Data Internal Majelis & Unit')" class="flex items-center justify-center gap-2 bg-rose-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-print"></i> Cetak PDF</button>
               <button onclick="exportToExcel()" class="flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"><i class="fas fa-file-excel"></i> Export</button>
             </div>
@@ -285,45 +285,61 @@
 
 <!-- ================= SELURUH KOTAK POP-UP/MODAL DI BAWAH INI ================= -->
 
-<!-- MODAL FORM JEMAAT KELUARGA (Dengan Fitur Tambah Anggota Interaktif) -->
-<div id="modalFormJemaat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[90] flex items-center justify-center p-4">
-  <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
-    <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10">
-      <div><h3 id="modalTitleJemaat" class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat</h3><p class="text-xs text-slate-500 font-medium mt-1">Lengkapi informasi keluarga/jemaat</p></div>
-      <button onclick="closeModal('modalFormJemaat')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button>
+<!-- MODAL TAMBAH KELUARGA BULK -->
+<div id="modalTambahKeluarga" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[90] flex items-center justify-center p-4 md:p-8">
+  <div class="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom">
+    <div class="bg-emerald-600 px-8 py-5 flex justify-between items-center text-white z-10 shrink-0">
+      <div><h3 class="text-xl font-black flex items-center"><i class="fas fa-users-cog mr-3"></i> Formulir Data Keluarga</h3><p class="text-[11px] font-medium text-emerald-100 mt-1 uppercase tracking-widest">Registrasi Kepala Keluarga beserta Istri & Anak sekaligus</p></div>
+      <button onclick="closeModal('modalTambahKeluarga')" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition-colors"><i class="fas fa-times"></i></button>
     </div>
-    <form id="formInputJemaat" onsubmit="handleSimpanJemaat(event)" class="p-8 space-y-5">
-      <input type="hidden" name="ID_Jemaat" id="j_id">
-      
-      <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 text-center">
-         <label class="text-[11px] font-bold text-emerald-700 uppercase tracking-widest block mb-2">Nomor KK (Kartu Keluarga)</label>
-         <input type="text" name="No_KK" id="j_kk" placeholder="Isi untuk gabung KK. Kosongkan jika KK Baru." class="w-full p-3.5 rounded-xl bg-white border border-emerald-300 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-center uppercase text-slate-700 shadow-inner">
+    <form id="formKeluargaBulk" onsubmit="simpanKeluargaBulk(event)" class="flex-1 overflow-y-auto p-8 bg-slate-50">
+      <!-- 1. DATA GEREJA -->
+      <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-church text-emerald-500 mr-2"></i> 1. Penempatan Jemaat & Kartu Keluarga</h4>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="bk_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
+         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="bk_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
+         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Unit Gereja</label><select id="bk_gereja" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
+         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">No KK (Kosongkan Jika Baru)</label><input type="text" id="bk_kk" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-bold text-emerald-700" placeholder="Ketik No KK..."></div>
       </div>
 
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label><input type="text" name="Nama_Lengkap" id="j_nama" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"></div>
-      
-      <div class="grid grid-cols-2 gap-5">
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status Hubungan</label><select name="Status_Keluarga" id="j_status" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"><option value="Kepala Keluarga">Kepala Keluarga</option><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Tanggungan">Tanggungan Lain</option></select></div>
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jenis Kelamin</label><select name="Jenis_Kelamin" id="j_jk" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+      <!-- 2. KEPALA KELUARGA -->
+      <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-user-tie text-emerald-500 mr-2"></i> 2. Identitas Kepala Keluarga</h4>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 p-5 bg-white border border-emerald-100 rounded-xl mb-6 shadow-sm">
+         <div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Kepala Keluarga</label><input type="text" id="bk_nama_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
+         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select id="bk_jk_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Lahir</label><input type="date" id="bk_tgl_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
+         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" id="bk_pek_kk" class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
       </div>
-      
-      <div class="grid grid-cols-2 gap-5">
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tanggal Lahir</label><input type="date" name="Tanggal_Lahir" id="j_tgl" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm text-slate-700 transition-all"></div>
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kondisi</label><select name="Kondisi" id="j_kondisi" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div>
+
+      <!-- 3. ANGGOTA KELUARGA -->
+      <div class="flex justify-between items-center mb-3 border-b border-slate-200 pb-2">
+         <h4 class="text-sm font-bold text-slate-800"><i class="fas fa-users text-emerald-500 mr-2"></i> 3. Anggota Keluarga (Istri / Anak)</h4>
+         <button type="button" onclick="tambahBarisAnggota()" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-lg hover:bg-emerald-500 hover:text-white transition-colors shadow-sm"><i class="fas fa-plus mr-1"></i> Tambah Anggota</button>
       </div>
-      
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pekerjaan</label><input type="text" name="Pekerjaan" id="j_pekerjaan" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"></div>
-      
-      <div class="pt-4 border-t border-slate-100 grid grid-cols-2 gap-5">
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="j_wilayah" onchange="syncFormResortJemaatEdit()" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs transition-all"></select></div>
-         <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Resort / JK</label><select name="Resort" id="j_resort" onchange="syncFormGerejaJemaatEdit()" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs transition-all"></select></div>
-      </div>
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit Nama Gereja</label><select name="Nama_Gereja" id="j_gereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs transition-all"></select></div>
-      
-      <div class="pt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-         <button type="submit" onclick="window.tambahLagi = true;" class="w-full bg-emerald-100 text-emerald-700 p-3.5 rounded-xl font-bold uppercase tracking-widest shadow-sm hover:bg-emerald-200 transition-all flex items-center justify-center gap-2"><i class="fas fa-user-plus"></i> Simpan & Tambah Anggota</button>
-         <button type="submit" id="btnSubmitJemaat" onclick="window.tambahLagi = false;" class="w-full bg-emerald-600 text-white p-3.5 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Selesai</button>
-      </div>
+      <div id="containerAnggotaKeluarga" class="space-y-3 mb-8"></div>
+
+      <button type="submit" id="btnSubmitKeluarga" class="w-full bg-slate-800 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Seluruh Keluarga</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL EDIT INDIVIDU (JEMAAT) -->
+<div id="modalFormJemaat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[91] flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
+    <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10">
+      <div><h3 id="modalTitleJemaat" class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-user-edit text-amber-500 mr-2"></i> Edit Data Jemaat</h3></div>
+      <button onclick="closeModal('modalFormJemaat')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="formEditJemaat" onsubmit="handleSimpanJemaat(event)" class="p-8 space-y-5">
+      <input type="hidden" name="ID_Jemaat" id="j_id">
+      <div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 text-center"><label class="text-[11px] font-bold text-amber-700 uppercase tracking-widest block mb-2">Nomor KK (Kartu Keluarga)</label><input type="text" name="No_KK" id="j_kk" class="w-full p-3.5 rounded-xl bg-white border border-amber-300 outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-center uppercase text-slate-700"></div>
+      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Nama Lengkap</label><input type="text" name="Nama_Lengkap" id="j_nama" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"></div>
+      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Status Hubungan</label><select name="Status_Keluarga" id="j_status" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"><option value="Kepala Keluarga">Kepala Keluarga</option><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Tanggungan">Tanggungan Lain</option></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Jenis Kelamin</label><select name="Jenis_Kelamin" id="j_jk" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div></div>
+      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Tanggal Lahir</label><input type="date" name="Tanggal_Lahir" id="j_tgl" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700 transition-all"></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Kondisi</label><select name="Kondisi" id="j_kondisi" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"><option value="Hidup">Hidup</option><option value="Meninggal">Meninggal</option></select></div></div>
+      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" name="Pekerjaan" id="j_pekerjaan" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"></div>
+      <div class="pt-4 border-t border-slate-100 grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Wilayah</label><select name="Wilayah" id="j_wilayah" onchange="syncFormResortJemaatEdit()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Resort / JK</label><select name="Resort" id="j_resort" onchange="syncFormGerejaJemaatEdit()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 font-semibold text-sm transition-all"></select></div></div>
+      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase">Unit Nama Gereja</label><select name="Nama_Gereja" id="j_gereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 text-xs transition-all"></select></div>
+      <div class="pt-4"><button type="submit" id="btnEditJemaatIndividu" class="w-full bg-amber-500 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Perubahan</button></div>
     </form>
   </div>
 </div>
@@ -374,7 +390,7 @@
   </div>
 </div>
 
-<!-- ================= AREA SCRIPT ================= -->
+<!-- ================= AREA SCRIPT (REST API & LOGIC) ================= -->
 <script>
   // -------------------------------------------------------------
   // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
@@ -390,15 +406,13 @@
   let currentPageMajelis = 1; let currentPageGereja = 1; let currentPageIndividu = 1; let currentPageJemaat = 1; 
   const itemsPerPage = 20;
 
-  // --- FUNGSI PENGAMAN DOM ---
   function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
   async function apiCall(action, payload = {}) {
     try {
-      payload.api_key = SECRET_API_KEY; // Menyisipkan Kunci Rahasia
+      payload.api_key = SECRET_API_KEY; 
       const isRead = ['checkLogin', 'getAppData', 'getListPetugas'].includes(action);
       
       if (isRead) {
@@ -470,7 +484,6 @@
   function loadData() {
     Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data terbaru dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
     
-    // Skeleton Loaders
     if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
     if(document.getElementById('jemaatAccordionContainer')) document.getElementById('jemaatAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
     if(document.getElementById('gerejaTableBody')) document.getElementById('gerejaTableBody').innerHTML = Array(5).fill(`<tr><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-8 w-full"></div></td></tr>`).join('');
@@ -487,15 +500,14 @@
         DATA_MASTER = res; 
         if(!DATA_MASTER.jemaat) DATA_MASTER.jemaat = [];
 
-        renderHomeStats(); 
-        setupFilters(); 
+        renderHomeStats(); setupFilters(); 
 
-        if(curW && document.getElementById('filterWilayah')) document.getElementById('filterWilayah').value = curW; syncFilterResort();
-        if(curR && document.getElementById('filterResort')) document.getElementById('filterResort').value = curR; syncFilterGereja();
-        if(curG && document.getElementById('filterGereja')) document.getElementById('filterGereja').value = curG;
-        if(curJ && document.getElementById('filterJabatan')) document.getElementById('filterJabatan').value = curJ;
+        if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
+        if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
+        if(curG) safeSetValue('filterGereja', curG);
+        if(curJ) safeSetValue('filterJabatan', curJ);
 
-        if(curWJ && document.getElementById('f_wil_j')) document.getElementById('f_wil_j').value = curWJ; syncResortJemaatPage();
+        if(curWJ) safeSetValue('f_wil_j', curWJ); syncResortJemaatPage();
 
         filterTabel(); 
         filterTabelJemaat();
@@ -561,7 +573,6 @@
       if(isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
   }
 
-  // --- MENU SWITCHING ---
   function switchTab(tab) {
     ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
     ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
@@ -600,26 +611,20 @@
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
-  // --- SETUP FILTER ---
   function setupFilters() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
     
-    safeSetHTML('filterWilayah', htmlW); 
-    safeSetHTML('f_wil_j', htmlW); 
-    safeSetHTML('formWilayah', htmlJW); 
-    safeSetHTML('j_wilayah', htmlJW);
+    safeSetHTML('filterWilayah', htmlW); safeSetHTML('f_wil_j', htmlW); safeSetHTML('formWilayah', htmlJW); safeSetHTML('bk_wilayah', htmlJW); safeSetHTML('j_wilayah', htmlJW);
     
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
     
-    safeSetHTML('filterJabatan', htmlJ); 
-    safeSetHTML('formJabatan', formJ); 
+    safeSetHTML('filterJabatan', htmlJ); safeSetHTML('formJabatan', formJ); 
     
-    syncFilterResort(); syncResortJemaatPage(); syncFormResortMajelis(); syncFormResortJemaatEdit();
+    syncFilterResort(); syncResortJemaatPage(); syncFormResortBulk(); syncFormResortJemaatEdit();
   }
 
-  // Filter Internal
   function syncFilterResort() { 
     const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('filterResort'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -637,7 +642,6 @@
     filterTabel(); 
   }
 
-  // Filter Halaman Jemaat
   function syncResortJemaatPage() { 
     const w = document.getElementById('f_wil_j')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('f_res_j'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
@@ -654,17 +658,17 @@
     else { fg.disabled = false; } 
     filterTabelJemaat(); 
   }
-
-  function syncFormResortMajelis() { 
-    const w = document.getElementById('formWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('formResort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+  
+  function syncFormResortBulk() { 
+    const w = document.getElementById('bk_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('bk_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
     const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
     const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
     resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
-    syncFormGerejaMajelis(); 
+    syncFormGerejaBulk(); 
   }
-  function syncFormGerejaMajelis() { 
-    const resSelect = document.getElementById('formResort'); const fg = document.getElementById('formGereja'); if(!fg || !resSelect) return; 
+  function syncFormGerejaBulk() { 
+    const resSelect = document.getElementById('bk_resort'); const fg = document.getElementById('bk_gereja'); if(!fg || !resSelect) return; 
     const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
     if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
     else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
@@ -687,8 +691,6 @@
     else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
-
-  // --- SMART PENCARIAN & FILTERING ---
   let searchTimeout; 
   if(document.getElementById('searchTerm')) { document.getElementById('searchTerm').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabel, 300); }); }
   if(document.getElementById('search_j')) { document.getElementById('search_j').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabelJemaat, 300); }); }
@@ -701,7 +703,6 @@
     const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : ''; 
     const modeSort = document.getElementById('sortData') ? document.getElementById('sortData').value : 'nama_az';
     
-    // FILTER MAJELIS
     let filteredMajelis = DATA_MASTER.majelis.filter(m => {
       const safeG = String(m.Nama_Gereja || '').trim().toLowerCase(); const safeR = String(m.Resort || '').trim().toLowerCase(); let passG = (!g || safeG === g);
       if (!passG && (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')) && (safeG === 'tingkat resort' || safeG === '') && g) { let churchObj = DATA_MASTER.gereja.find(grj => String(grj.Nama_Gereja).trim().toLowerCase() === g); if (churchObj && String(churchObj.Induk_Resort || churchObj.Resort).trim().toLowerCase() === safeR) passG = true; }
@@ -710,7 +711,6 @@
     filteredMajelis.sort((a, b) => { if (modeSort === 'hierarki') { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); } return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); });
     renderTabelReal(filteredMajelis, true); renderTabelIndividu(filteredMajelis, true); window.currentFilteredList = filteredMajelis;
 
-    // FILTER GEREJA
     let filteredGereja = DATA_MASTER.gereja.filter(grj => { const safeR = String(grj.Induk_Resort || grj.Resort || '').trim().toLowerCase(); const safeG = String(grj.Nama_Gereja || '').trim().toLowerCase(); return (!w || String(grj.Wilayah || '').trim().toLowerCase() === w) && (!r || (safeR && safeR === r) || (!safeR && safeG === r)) && (!g || safeG === g) && (!s || safeG.includes(s) || safeR.includes(s)); });
     filteredGereja.sort((a, b) => { if (modeSort === 'nama_az' || modeSort === 'hierarki') return String(a.Nama_Gereja).localeCompare(String(b.Nama_Gereja)); return parseInt(a.Wilayah || 0) - parseInt(b.Wilayah || 0); });
     renderTabelGereja(filteredGereja, true); window.currentFilteredGereja = filteredGereja;
@@ -722,7 +722,6 @@
     const g = document.getElementById('f_ger_j') ? document.getElementById('f_ger_j').value.trim().toLowerCase() : ''; 
     const s = document.getElementById('search_j') ? document.getElementById('search_j').value.trim().toLowerCase() : ''; 
     
-    // FILTER JEMAAT
     let fj = DATA_MASTER.jemaat.filter(jem => { 
         const sg = String(jem.Nama_Gereja).toLowerCase(); const sr = String(jem.Resort).toLowerCase(); 
         return (!w || String(jem.Wilayah).toLowerCase()===w) && (!r || sr===r || sg===r) && (!g || sg===g) && (!s || String(jem.Nama_Lengkap).toLowerCase().includes(s) || String(jem.No_KK).toLowerCase().includes(s)); 
@@ -773,7 +772,6 @@
      renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
   }
 
-  // --- TABEL MAJELIS ---
   function renderTabelReal(data, resetPage = true) {
     if (resetPage) currentPageMajelis = 1; window.currentFilteredList = data; 
     const g_filter = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim().toLowerCase() : ''; const grouped = {};
@@ -856,7 +854,7 @@
 
   function renderTabelGereja(dataGereja, resetPage = true) {
     if (resetPage) currentPageGereja = 1; const paginatedData = dataGereja.slice((currentPageGereja - 1) * itemsPerPage, ((currentPageGereja - 1) * itemsPerPage) + itemsPerPage);
-    const body = document.getElementById('gerejaTableBody'); if(!body) return; const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
+    const body = document.getElementById('gerejaTableBody'); const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
     let filterRT = 0; let filterJiwa = 0; dataGereja.forEach(g => { filterRT += parseInt(g.Total_RT) || 0; filterJiwa += parseInt(g.Total_Jiwa) || 0; });
 
     body.innerHTML = paginatedData.length ? paginatedData.map(g => {
@@ -890,7 +888,7 @@
   }
 
   function renderPaginationUI(totalItems, currentPg, containerId, type, perPage) {
-    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId); if(!container) return;
+    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId);
     if (totalPages <= 1) { container.innerHTML = ''; return; }
     let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${currentPg} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Data</span></span><div class="flex items-center gap-1">`;
     if (currentPg > 1) html += `<button onclick="ubahHalaman('${type}', ${currentPg - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
@@ -899,98 +897,7 @@
     container.innerHTML = html + `</div>`;
   }
 
-  function ubahHalaman(type, page) { 
-    if (type === 'majelis') { currentPageMajelis = page; renderTabelReal(window.currentFilteredList, false); } 
-    else if (type === 'individu') { currentPageIndividu = page; renderTabelIndividu(window.currentFilteredList, false); }
-    else if (type === 'jemaat') { currentPageJemaat = page; renderTabelJemaat(window.currentFilteredJemaat, false); }
-    else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
-  }
-
-  function setupFilters() { 
-    let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
-    for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
-    
-    safeSetHTML('filterWilayah', htmlW); 
-    safeSetHTML('f_wil_j', htmlW); 
-    safeSetHTML('formWilayah', htmlJW); 
-    safeSetHTML('j_wilayah', htmlJW);
-    
-    let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
-    DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
-    
-    safeSetHTML('filterJabatan', htmlJ); 
-    safeSetHTML('formJabatan', formJ); 
-    
-    syncFilterResort(); syncResortJemaatPage(); syncFormResortMajelis(); syncFormResortJemaatEdit();
-  }
-
-  function syncFilterResort() { 
-    const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('filterResort'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
-    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
-    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
-    resorts.forEach(r => fr.innerHTML += `<option value="${r}" data-tipe="RESORT">${r}</option>`); khusus.forEach(k => fr.innerHTML += `<option value="${k}" data-tipe="JK">JK - ${k}</option>`); 
-    syncFilterGereja(); 
-  }
-  function syncFilterGereja() { 
-    const res = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); if(!fg || !res) return; 
-    const val = res.value; const tipe = res.options[res.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Seluruh Gereja</option>'; 
-    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => fg.innerHTML += `<option value="${g.Nama_Gereja}">${g.Nama_Gereja}</option>`); fg.disabled = false; } 
-    else if (tipe === "JK") { fg.innerHTML = `<option value="${val}">${val}</option>`; fg.value = val; fg.disabled = false; } 
-    else { fg.disabled = false; } 
-    filterTabel(); 
-  }
-
-  function syncResortJemaatPage() { 
-    const w = document.getElementById('f_wil_j')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('f_res_j'); if(!fr) return; fr.innerHTML = '<option value="">Semua Resort / JK</option>'; 
-    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
-    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
-    resorts.forEach(r => fr.innerHTML += `<option value="${r}" data-tipe="RESORT">${r}</option>`); khusus.forEach(k => fr.innerHTML += `<option value="${k}" data-tipe="JK">JK - ${k}</option>`); 
-    syncGerejaJemaatPage(); 
-  }
-  function syncGerejaJemaatPage() { 
-    const res = document.getElementById('f_res_j'); const fg = document.getElementById('f_ger_j'); if(!fg || !res) return; 
-    const val = res.value; const tipe = res.options[res.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Seluruh Gereja</option>'; 
-    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => fg.innerHTML += `<option value="${g.Nama_Gereja}">${g.Nama_Gereja}</option>`); fg.disabled = false; } 
-    else if (tipe === "JK") { fg.innerHTML = `<option value="${val}">${val}</option>`; fg.value = val; fg.disabled = false; } 
-    else { fg.disabled = false; } 
-    filterTabelJemaat(); 
-  }
-  
-  function syncFormResortMajelis() { 
-    const w = document.getElementById('formWilayah')?.value || document.getElementById('m_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('formResort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
-    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
-    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
-    resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
-    syncFormGerejaMajelis(); 
-  }
-  function syncFormGerejaMajelis() { 
-    const resSelect = document.getElementById('formResort'); const fg = document.getElementById('formGereja'); if(!fg || !resSelect) return; 
-    const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
-    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
-    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
-    else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
-  }
-
-  function syncFormResortJemaatEdit() { 
-    const w = document.getElementById('j_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
-    const fr = document.getElementById('j_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
-    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
-    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
-    resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
-    syncFormGerejaJemaatEdit(); 
-  }
-  function syncFormGerejaJemaatEdit() { 
-    const resSelect = document.getElementById('j_resort'); const fg = document.getElementById('j_gereja'); if(!fg || !resSelect) return; 
-    const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
-    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
-    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
-    else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
-  }
-
-  // --- SMART BUTTON ---
+  // --- SMART ADD BUTTONS ---
   function openModalSmart() {
     const isHome = !document.getElementById('pageHome').classList.contains('hidden');
     if (isHome) {
@@ -998,20 +905,19 @@
           title: 'Tambah Data Baru', text: 'Pilih jenis data yang ingin ditambahkan:', showCancelButton: true, showDenyButton: true,
           confirmButtonText: '<i class="fas fa-users-cog"></i> Data Jemaat', denyButtonText: '<i class="fas fa-id-badge"></i> Data Majelis', cancelButtonText: 'Batal', confirmButtonColor: '#10b981', denyButtonColor: '#4f46e5'
       }).then((result) => {
-          if (result.isConfirmed) { openFormJemaat(); } else if (result.isDenied) { openFormMajelis(); }
+          if (result.isConfirmed) { openFormJemaatBulk(); } else if (result.isDenied) { openFormMajelis(); }
       });
     } else {
       const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
-      if(isJemaat) { openFormJemaat(); } else { openFormMajelis(); }
+      if(isJemaat) { openFormJemaatBulk(); } else { openFormMajelis(); }
     }
   }
 
-  function openFormJemaat() {
-    if(document.getElementById('formInputJemaat')) document.getElementById('formInputJemaat').reset(); 
-    safeSetValue('j_id', ''); 
-    safeSetHTML('modalTitleJemaat', '<i class="fas fa-users-cog text-emerald-500 mr-2"></i> Form Data Jemaat');
-    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Selesai');
-    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
+  function openFormJemaatBulk() {
+    if(document.getElementById('formKeluargaBulk')) document.getElementById('formKeluargaBulk').reset(); 
+    document.getElementById('containerAnggotaKeluarga').innerHTML = ''; 
+    counterAnggota = 0;
+    if(document.getElementById('modalTambahKeluarga')) document.getElementById('modalTambahKeluarga').classList.remove('hidden'); 
   }
 
   function openFormMajelis() {
@@ -1026,128 +932,57 @@
   
   function closeModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('hidden'); }
 
-  function cekJabatan() { 
-    const j = document.getElementById('formJabatan'); if(!j) return;
-    const val = j.options[j.selectedIndex]?.text.toLowerCase() || ''; 
-    const g = document.getElementById('formGereja'); const wadah = document.getElementById('wadahGereja');
-    if (val.includes('pendeta') || val.includes('pemimpin jemaat')) { 
-      if(wadah) wadah.classList.add('hidden'); if(g) { g.required = false; g.value = ""; }
-    } else { 
-      if(wadah) wadah.classList.remove('hidden'); if(g) g.required = true; 
-    } 
-  }
+  // FUNGSI TAMBAH BARIS ANGGOTA (BULK)
+  let counterAnggota = 0;
+  window.tambahBarisAnggota = function() {
+      counterAnggota++;
+      const div = document.createElement('div');
+      div.className = "grid grid-cols-1 md:grid-cols-6 gap-3 p-4 bg-white border border-emerald-100 rounded-xl relative shadow-sm";
+      div.id = `barisAnggota_${counterAnggota}`;
+      div.innerHTML = `
+          <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md"><i class="fas fa-times text-xs"></i></button>
+          <div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Anggota</label><input type="text" class="input-nama w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Hubungan</label><select class="input-hub w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Tanggungan">Tanggungan</option></select></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select class="input-jk w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Lahir</label><input type="date" class="input-tgl w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" class="input-pek w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
+      `;
+      document.getElementById('containerAnggotaKeluarga').appendChild(div);
+  };
 
-  // --- TAMBAH ANGGOTA KELUARGA (PRE-FILL FORM) ---
-  function tambahAnggotaKeluarga(noKK, wilayah, resort, gereja) {
-    if(document.getElementById('formInputJemaat')) document.getElementById('formInputJemaat').reset(); 
-    safeSetValue('j_id', ''); 
-    safeSetValue('j_kk', noKK); 
-    safeSetValue('j_status', 'Anak'); 
-    
-    safeSetValue('j_wilayah', wilayah);
-    syncFormResortJemaatEdit(); 
-    
-    setTimeout(() => {
-       safeSetValue('j_resort', resort);
-       syncFormGerejaJemaatEdit(); 
-       setTimeout(() => {
-          safeSetValue('j_gereja', gereja);
-       }, 50);
-    }, 50);
+  window.simpanKeluargaBulk = function(e) {
+      e.preventDefault();
+      const no_kk = document.getElementById('bk_kk').value;
+      const wil = document.getElementById('bk_wilayah').value;
+      const res = document.getElementById('bk_resort').value;
+      const ger = document.getElementById('bk_gereja').value;
+      const tipeGereja = document.getElementById('bk_resort').options[document.getElementById('bk_resort').selectedIndex]?.getAttribute('data-tipe');
+      
+      let finalGer = ger; let finalRes = res;
+      if (tipeGereja === "JK") { finalGer = res; finalRes = ""; }
+      
+      let arrData = [];
+      arrData.push({ No_KK: no_kk, Wilayah: wil, Resort: finalRes, Nama_Gereja: finalGer, Nama_Lengkap: document.getElementById('bk_nama_kk').value, Status_Keluarga: 'Kepala Keluarga', Jenis_Kelamin: document.getElementById('bk_jk_kk').value, Tanggal_Lahir: document.getElementById('bk_tgl_kk').value, Pekerjaan: document.getElementById('bk_pek_kk').value, Kondisi: "Hidup" });
 
-    safeSetHTML('modalTitleJemaat', '<i class="fas fa-user-plus text-emerald-500 mr-2"></i> Tambah Anggota (KK: ' + noKK + ')');
-    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Selesai');
-    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
-  }
+      const anggotaRows = document.getElementById('containerAnggotaKeluarga').children;
+      for(let i=0; i<anggotaRows.length; i++) {
+          const row = anggotaRows[i];
+          arrData.push({ No_KK: no_kk, Wilayah: wil, Resort: finalRes, Nama_Gereja: finalGer, Nama_Lengkap: row.querySelector('.input-nama').value, Status_Keluarga: row.querySelector('.input-hub').value, Jenis_Kelamin: row.querySelector('.input-jk').value, Tanggal_Lahir: row.querySelector('.input-tgl').value, Pekerjaan: row.querySelector('.input-pek').value, Kondisi: "Hidup" });
+      }
 
-  // --- SIMPAN MAJELIS ---
-  function handleSimpan(e, tipe) {
-    e.preventDefault(); 
-    const payload = Object.fromEntries(new FormData(e.target));
-    const btn = e.target.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
-    
-    let fr = document.getElementById('formResort');
-    let tipeGereja = fr ? fr.options[fr.selectedIndex]?.getAttribute('data-tipe') : '';
-    if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
-    
-    const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
-    const isDuplicate = DATA_MASTER.majelis.some(m => { const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; return existingNama === inputNama; });
-    if (isDuplicate) { Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama tersebut sudah terdaftar!', confirmButtonColor: '#f59e0b' }); btn.disabled = false; btn.innerHTML = originalText; return; }
-       
-    if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
-    let action = payload.ID_Majelis ? 'updateMajelis' : 'simpanMajelis'; 
-    
-    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-    apiCall(action, payload).then(res => { closeModal('modalForm'); Swal.fire('Sukses', 'Data tersimpan.', 'success'); btn.disabled = false; btn.innerHTML = originalText; loadData(); }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
-  }
+      const btn = document.getElementById('btnSubmitKeluarga');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENYIMPAN...';
+      Swal.fire({ title: 'Menyimpan Keluarga...', didOpen: () => Swal.showLoading() });
+      
+      apiCall('importJemaatMassal', {excelData: arrData, userRole: USER_NOW.role})
+        .then(res => {
+            if(res.status === 'success') { Swal.fire('Berhasil', 'Keluarga berhasil disimpan!', 'success'); closeModal('modalTambahKeluarga'); loadData(); } 
+            else { Swal.fire('Gagal', res.message, 'error'); }
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan Seluruh Keluarga';
+        }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan Seluruh Keluarga'; });
+  };
 
-  // --- SIMPAN JEMAAT ---
-  function handleSimpanJemaat(e) {
-    e.preventDefault(); 
-    const payload = Object.fromEntries(new FormData(e.target)); 
-    const btn = document.getElementById('btnSubmitJemaat'); 
-    const originalText = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...'; 
-    
-    let fr = document.getElementById('j_resort');
-    const tipeGereja = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
-    if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
-    
-    const action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat';
-    const isTambahLagi = window.tambahLagi || false;
-    window.tambahLagi = false; // Reset trigger
-    
-    Swal.fire({ title: 'Menyimpan Jemaat...', didOpen: () => Swal.showLoading() });
-    apiCall(action, payload).then(res => { 
-        if (res.status === 'success') {
-            if (isTambahLagi) {
-                safeSetValue('j_nama', '');
-                safeSetValue('j_tgl', '');
-                safeSetValue('j_pekerjaan', '');
-                safeSetValue('j_status', 'Anak');
-                if (res.no_kk) safeSetValue('j_kk', res.no_kk); 
-                Swal.fire('Tersimpan!', 'Anggota berhasil ditambahkan. Silakan isi anggota selanjutnya.', 'success');
-            } else {
-                closeModal('modalFormJemaat'); 
-                Swal.fire('Tersimpan!', 'Data Jemaat berhasil disimpan.', 'success');
-            }
-            loadData(); 
-        } else {
-            Swal.fire('Gagal', res.message, 'error');
-        }
-        btn.disabled = false; btn.innerHTML = originalText; 
-    }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
-  }
-
-  // --- EDIT MAJELIS ---
-  function editDataMajelis(id) {
-    const m = DATA_MASTER.majelis.find(i => i.ID_Majelis == id); if (!m) return; 
-    EDIT_MODE_ID = id; safeSetValue('m_id', id);
-    
-    const inputNama = document.querySelector('#formInputMajelis [name="Nama_Lengkap"]');
-    if(inputNama) inputNama.value = m.Nama_Lengkap || ''; 
-    
-    safeSetValue('formJabatan', m.Jabatan || ''); cekJabatan(); 
-    safeSetValue('formWilayah', m.Wilayah || ''); syncFormResort(); 
-    
-    const formResort = document.getElementById('formResort');
-    if(formResort) formResort.value = m.Resort ? String(m.Resort).trim() : String(m.Nama_Gereja).trim(); syncFormGereja(); 
-    
-    const formGereja = document.getElementById('formGereja');
-    if(formGereja) formGereja.value = String(m.Nama_Gereja || '').trim(); 
-    
-    let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; 
-    const inputHp = document.querySelector('#formInputMajelis [name="No_HP"]');
-    if(inputHp) inputHp.value = hp;
-    
-    safeSetHTML('modalTitle', '<i class="fas fa-id-badge text-amber-500 mr-2"></i> Edit Personil'); 
-    safeSetHTML('btnSubmit', '<i class="fas fa-save mr-2"></i> Simpan Perubahan'); 
-    if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden');
-  }
-
-  // --- EDIT JEMAAT KELUARGA ---
+  // --- EDIT JEMAAT INDIVIDU ---
   function editDataJemaatItem(id) {
     const j = DATA_MASTER.jemaat.find(i => i.ID_Jemaat == id); if (!j) return; 
     safeSetValue('j_id', id); safeSetValue('j_kk', j.No_KK || ''); 
@@ -1162,140 +997,48 @@
     safeSetValue('j_kondisi', j.Kondisi || ''); safeSetValue('j_pekerjaan', j.Pekerjaan || '');
     safeSetValue('j_wilayah', j.Wilayah || ''); syncFormResortJemaatEdit(); 
     
-    setTimeout(() => {
-       safeSetValue('j_resort', j.Resort ? String(j.Resort).trim() : String(j.Nama_Gereja).trim()); syncFormGerejaJemaatEdit(); 
-       setTimeout(() => { safeSetValue('j_gereja', String(j.Nama_Gereja || '').trim()); }, 50);
-    }, 50);
-    
-    safeSetHTML('modalTitleJemaat', '<i class="fas fa-users-cog text-amber-500 mr-2"></i> Edit Data Jemaat'); 
-    safeSetHTML('btnSubmitJemaat', '<i class="fas fa-save mr-2"></i> Simpan Perubahan'); 
+    setTimeout(() => { safeSetValue('j_resort', j.Resort ? String(j.Resort).trim() : String(j.Nama_Gereja).trim()); syncFormGerejaJemaatEdit(); setTimeout(() => { safeSetValue('j_gereja', String(j.Nama_Gereja || '').trim()); }, 50); }, 50);
     if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden');
+  }
+
+  function handleSimpanJemaat(e) {
+    e.preventDefault(); 
+    const payload = Object.fromEntries(new FormData(e.target)); 
+    const btn = document.getElementById('btnEditJemaatIndividu'); const originalText = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...'; 
+    
+    let fr = document.getElementById('j_resort'); const tipeGereja = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
+    if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
+    
+    const action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat';
+    
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+    apiCall(action, payload).then(res => { closeModal('modalFormJemaat'); btn.disabled = false; btn.innerHTML = originalText; loadData(); }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
+  }
+
+  function tambahAnggotaKeluarga(noKK, wilayah, resort, gereja) {
+    if(document.getElementById('formEditJemaat')) document.getElementById('formEditJemaat').reset(); 
+    safeSetValue('j_id', ''); safeSetValue('j_kk', noKK); safeSetValue('j_status', 'Anak'); 
+    safeSetValue('j_wilayah', wilayah); syncFormResortJemaatEdit(); 
+    
+    setTimeout(() => { safeSetValue('j_resort', resort); syncFormGerejaJemaatEdit(); setTimeout(() => { safeSetValue('j_gereja', gereja); }, 50); }, 50);
+    safeSetHTML('modalTitleJemaat', '<i class="fas fa-user-plus text-amber-500 mr-2"></i> Tambah Anggota (KK: ' + noKK + ')');
+    if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
   }
 
   function konfirmasiHapus(id) { Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusMajelis', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } }); }
   function konfirmasiHapusJemaat(id) { Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusJemaat', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); }); } }); }
 
-  // --- DOWNLOAD TEMPLATE & IMPORT EXCEL ---
-  function downloadTemplateImport() { 
-      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
-      if (isJemaat) {
-         const templateData = [{"No_KK": "KK00001 (Kosongkan jika KK Baru)", "Nama_Lengkap": "Budi Santoso", "Status_Keluarga": "Kepala Keluarga", "Jenis_Kelamin": "Laki-laki", "Tanggal_Lahir": "12/05/1980", "Pekerjaan": "Pegawai Swasta", "Kondisi": "Hidup", "Wilayah": "1", "Resort": "Medan", "Nama_Gereja": "GKPI Medan Kota"}];
-         const ws = XLSX.utils.json_to_sheet(templateData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template_Jemaat"); XLSX.writeFile(wb, "Template_Import_Jemaat.xlsx"); 
-      } else {
-         const templateData = [{"Nama_Lengkap": "Contoh: Budi Santoso", "Jenis_Kelamin": "Laki-laki", "Jabatan": "Penatua", "Status_Aktif": "Aktif", "Tgl_Tahbisan": "12/05/2010", "Wilayah": "1", "Resort": "Medan", "Nama_Gereja": "GKPI Medan Kota", "No_HP": "081234567890"}]; 
-         const ws = XLSX.utils.json_to_sheet(templateData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Template_Majelis"); XLSX.writeFile(wb, "Template_Import_Majelis.xlsx"); 
-      }
-  }
-
-  function klikImportExcelSmart() { 
-      const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
-      if (!role.includes('admin') && !role.includes('editor')) return Swal.fire('Akses Ditolak', 'Hanya Admin & Editor yang bisa import.', 'error'); 
-      Swal.fire({ title: 'Import Excel Massal', text: "Pilih file Excel, atau unduh template terlebih dahulu.", icon: 'question', showCancelButton: true, showDenyButton: true, confirmButtonText: '<i class="fas fa-upload mr-2"></i> Upload File', denyButtonText: '<i class="fas fa-download mr-2"></i> Download Template', cancelButtonText: 'Batal', confirmButtonColor: '#4f46e5', denyButtonColor: '#10b981' }).then((result) => { if (result.isConfirmed) { document.getElementById('inputExcelImport').click(); } else if (result.isDenied) { downloadTemplateImport(); } }); 
-  }
-  function klikImportJemaatExcelSmart() { 
-      const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
-      if (!role.includes('admin') && !role.includes('editor')) return Swal.fire('Akses Ditolak', 'Hanya Admin yang bisa import.', 'error'); 
-      Swal.fire({ title: 'Import Jemaat Massal', text: "Pilih file Excel, atau unduh template terlebih dahulu.", icon: 'question', showCancelButton: true, showDenyButton: true, confirmButtonText: '<i class="fas fa-upload mr-2"></i> Upload File', denyButtonText: '<i class="fas fa-download mr-2"></i> Download Template', cancelButtonText: 'Batal', confirmButtonColor: '#059669', denyButtonColor: '#10b981' }).then((result) => { if (result.isConfirmed) { document.getElementById('inputExcelImportJemaat').click(); } else if (result.isDenied) { downloadTemplateImport(); } }); 
-  }
-
-  function prosesImportExcel(event) { 
-    const file = event.target.files[0]; if (!file) return; 
-    Swal.fire({ title: 'Membaca Excel...', didOpen: () => { Swal.showLoading() } }); 
-    const reader = new FileReader(); 
-    reader.onload = function(e) { 
-        try { 
-            const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); 
-            const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
-            if(excelData.length === 0) return Swal.fire('Kosong', 'Excel kosong.', 'warning'); 
-            Swal.fire({ title: 'Menyuntikkan API...', didOpen: () => Swal.showLoading() }); 
-            apiCall('importMajelisMassal', {excelData: excelData, userRole: USER_NOW.role}).then(res => { 
-                document.getElementById('inputExcelImport').value = ""; 
-                if (res.status === 'success') { Swal.fire('Selesai!', `<b>${res.added}</b> data ditambah.`, 'success'); loadData(); } else { Swal.fire('Gagal', res.message, 'error'); } 
-            }).catch(err => Swal.fire('Error', String(err), 'error')); 
-        } catch(error) { document.getElementById('inputExcelImport').value = ""; Swal.fire('Error', 'Gagal membaca format Excel.', 'error'); } 
-    }; reader.readAsArrayBuffer(file); 
-  }
-
-  function prosesImportJemaatExcel(event) { 
-    const file = event.target.files[0]; if (!file) return; 
-    Swal.fire({ title: 'Membaca Excel...', didOpen: () => { Swal.showLoading() } }); 
-    const reader = new FileReader(); 
-    reader.onload = function(e) { 
-        try { 
-            const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'}); 
-            const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
-            if(excelData.length === 0) return Swal.fire('Kosong', 'Excel kosong.', 'warning'); 
-            Swal.fire({ title: 'Menyuntikkan API...', didOpen: () => Swal.showLoading() }); 
-            apiCall('importJemaatMassal', {excelData: excelData, userRole: USER_NOW.role}).then(res => { 
-                document.getElementById('inputExcelImportJemaat').value = ""; 
-                if (res.status === 'success') { Swal.fire('Selesai!', `<b>${res.added}</b> data ditambah.`, 'success'); loadData(); } else { Swal.fire('Gagal', res.message, 'error'); } 
-            }).catch(err => Swal.fire('Error', String(err), 'error')); 
-        } catch(error) { document.getElementById('inputExcelImportJemaat').value = ""; Swal.fire('Error', 'Gagal membaca format Excel.', 'error'); } 
-    }; reader.readAsArrayBuffer(file); 
-  }
-
-  function exportToExcel() { 
-      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
-      const isGereja = !document.getElementById('kontenGereja').classList.contains('hidden');
-      let dataToExport = isJemaat ? window.currentFilteredJemaat : (isGereja ? window.currentFilteredGereja : window.currentFilteredList);
-      
-      if (!dataToExport || dataToExport.length === 0) return Swal.fire('Data Kosong', 'Tidak ada data untuk diekspor.', 'info');
-      Swal.fire({ icon: 'success', title: 'Menyusun Excel...', timer: 1500, showConfirmButton: false });
-      
-      try { 
-          const ws = XLSX.utils.json_to_sheet(dataToExport); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Data_Export"); 
-          const namaFile = isJemaat ? "Data_Keluarga_Jemaat_GKPI.xlsx" : (isGereja ? "Data_Unit_Gereja_GKPI.xlsx" : "Data_Personil_Majelis_GKPI.xlsx"); 
-          XLSX.writeFile(wb, namaFile); 
-      } catch (error) { console.error(error); Swal.fire('Gagal', 'Terjadi kesalahan saat membuat file Excel.', 'error'); }
-  }
-
-  // FUNGSI PROFIL & WHATSAPP BLAST
-  function bukaProfil(id) { const m = DATA_MASTER.majelis.find(x => x.ID_Majelis === id); if(!m) return; safeSetText('profNama', m.Nama_Lengkap || '-'); safeSetText('profJabatan', m.Jabatan || '-'); safeSetText('profGereja', m.Nama_Gereja || 'Tingkat Resort'); safeSetText('profWilayah', m.Resort ? `${m.Resort} (W-${m.Wilayah||'-'})` : `Wilayah ${m.Wilayah||'-'}`); let hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '-'; safeSetText('profWA', hp); safeSetText('profID', id); let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean; const btnChat = document.getElementById('btnChatProf'); if(hpClean.length >= 9) { btnChat.href = "https://wa.me/" + hpClean; btnChat.style.display = "flex"; } else { btnChat.style.display = "none"; } if(document.getElementById('modalProfil')) document.getElementById('modalProfil').classList.remove('hidden'); }
-  function tutupProfil() { if(document.getElementById('modalProfil')) document.getElementById('modalProfil').classList.add('hidden'); }
-  
-  function openBlastModal() { if(!window.currentFilteredList || window.currentFilteredList.length === 0) return Swal.fire('Data Kosong', 'Pilih minimal satu personil.', 'info'); safeSetText('countPenerima', window.currentFilteredList.length); if(document.getElementById('modalBlastFonte')) document.getElementById('modalBlastFonte').classList.remove('hidden'); }
-  function closeBlastModal() { if(document.getElementById('modalBlastFonte')) document.getElementById('modalBlastFonte').classList.add('hidden'); }
-  
-  function kirimBlastSekarang() { 
-    const list = window.currentFilteredList; const pesan = document.getElementById('pesanFonte').value; const fileInput = document.getElementById('fileBlast'); 
-    if(!pesan) return Swal.fire('Pesan Kosong', 'Mohon ketik isi pesan.', 'warning'); 
-    const btn = document.getElementById('btnEksekusiBlast'); btn.disabled = true; 
-    Swal.fire({ title: 'Kirim via API...', text: 'Tergantung limit hosting Anda.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } }); 
-    if(fileInput && fileInput.files.length > 0) { 
-      const reader = new FileReader(); reader.onload = function(e) { 
-        const f = { content: e.target.result.split(',')[1], name: fileInput.files[0].name, type: fileInput.files[0].type }; 
-        apiCall('processBlastFonteWithFile', {list: list, pesan: pesan, fileObj: f}).then(msg => { Swal.fire('Selesai API', msg.message, 'success'); closeBlastModal(); btn.disabled=false; fileInput.value=''; }).catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
-      }; reader.readAsDataURL(fileInput.files[0]); 
-    } else { 
-      apiCall('processBlastFonteWithFile', {list: list, pesan: pesan, fileObj: null}).then(msg => { Swal.fire('Selesai API', msg.message, 'success'); closeBlastModal(); btn.disabled=false; }).catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
-    } 
-  }
-
-  function editDataGerejaItem(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng, noReg, tglBerdiri) {
-    let lat = parseFloat(curLat) || 2.9614; let lng = parseFloat(curLng) || 99.0655;
-    noReg = (noReg !== 'undefined' && noReg !== 'null') ? noReg : '';
-    tglBerdiri = (tglBerdiri !== 'undefined' && tglBerdiri !== 'null') ? tglBerdiri : '';
-
-    Swal.fire({ title: 'Update Data & Lokasi Unit', width: '600px', html: `<div class="text-left space-y-4 mt-2"><p class="text-sm font-bold text-indigo-600 border-b pb-2"><i class="fas fa-church"></i> ${namaGereja}</p><div class="grid grid-cols-3 gap-3"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Status</label><select id="inputStatusGrj" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs"><option value="Sabungan" ${currentStatus.includes('SABUNGAN') || currentStatus.includes('RESORT') ? 'selected' : ''}>Sabungan</option><option value="Pagaran" ${currentStatus.includes('PAGARAN') ? 'selected' : ''}>Pagaran</option><option value="Jemaat Khusus" ${currentStatus.includes('JEMAAT KHUSUS') ? 'selected' : ''}>Jemaat Khusus</option></select></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total RT</label><input id="inputRT" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-amber-700 font-bold" value="${currentRT}"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total Jiwa</label><input id="inputJiwa" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-emerald-700 font-bold" value="${currentJiwa}"></div></div><div class="grid grid-cols-2 gap-3 mt-3"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">No Register</label><input id="inputNoReg" type="text" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs" value="${noReg}" placeholder="Opsional"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Berdiri</label><input id="inputTglBerdiri" type="date" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs" value="${tglBerdiri}"></div></div><div class="space-y-2 pt-3 border-t border-slate-100"><label class="text-[10px] font-bold text-slate-500 uppercase">Titik Peta (Digunakan di Dashboard)</label><div class="flex gap-2"><input id="searchMapInput" type="text" placeholder="Cari nama jalan atau daerah..." class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:border-indigo-500 transition-colors"><button onclick="cariLokasiPeta()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-900 transition"><i class="fas fa-search"></i> Cari</button></div><div id="miniMapEdit" class="w-full h-[200px] rounded-xl border border-slate-300 z-0"></div><div class="flex gap-2"><input id="inputLat" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLat}" placeholder="Latitude" readonly><input id="inputLng" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLng}" placeholder="Longitude" readonly></div><p class="text-[9px] text-slate-400 leading-tight"><i class="fas fa-info-circle"></i> Geser jarum merah di peta untuk mengubah titik koordinat secara akurat.</p></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan Data', confirmButtonColor: '#4f46e5', didOpen: () => { window.miniMapInst = L.map('miniMapEdit').setView([lat, lng], curLat ? 16 : 8); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.miniMapInst); window.miniPin = L.marker([lat, lng], { draggable: true }).addTo(window.miniMapInst); window.miniPin.on('dragend', function(e) { const pos = window.miniPin.getLatLng(); document.getElementById('inputLat').value = pos.lat.toFixed(6); document.getElementById('inputLng').value = pos.lng.toFixed(6); }); window.miniMapInst.on('click', function(e) { window.miniPin.setLatLng(e.latlng); document.getElementById('inputLat').value = e.latlng.lat.toFixed(6); document.getElementById('inputLng').value = e.latlng.lng.toFixed(6); }); setTimeout(() => { window.miniMapInst.invalidateSize(); }, 300); }, preConfirm: () => { return { Nama_Gereja: namaGereja, Total_RT: document.getElementById('inputRT').value, Total_Jiwa: document.getElementById('inputJiwa').value, Status_Gereja: document.getElementById('inputStatusGrj').value, Latitude: document.getElementById('inputLat').value, Longitude: document.getElementById('inputLng').value, No_Register: document.getElementById('inputNoReg').value, Tanggal_Berdiri: document.getElementById('inputTglBerdiri').value } } }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menyimpan API...', didOpen: () => { Swal.showLoading() } }); apiCall('updateDataGereja', {obj: result.value, userRole: USER_NOW.role}).then(res => { if(res.status==='success'){ Swal.fire('Berhasil!', res.message, 'success'); loadData(); setTimeout(() => { switchDataTab('gereja'); }, 1000); } else { Swal.fire('Gagal', res.message, 'error'); } }); } });
-  }
-
-  function cariLokasiPeta() { const query = document.getElementById('searchMapInput').value; if (!query) return; const btn = document.querySelector('#searchMapInput + button'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; if (data && data.length > 0) { const lat = parseFloat(data[0].lat); const lng = parseFloat(data[0].lon); window.miniMapInst.setView([lat, lng], 15); window.miniPin.setLatLng([lat, lng]); document.getElementById('inputLat').value = lat.toFixed(6); document.getElementById('inputLng').value = lng.toFixed(6); } else { Swal.showValidationMessage('Lokasi tidak ditemukan! Coba ketik nama kota.'); } }).catch(err => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; console.error(err); }); }
-
-  // ==========================================
-  // FITUR GENERATE TRUE PDF DARI 0
-  // ==========================================
+  // --- MENDAPATKAN BASE64 IMAGE UNTUK PDF ---
   function getBase64ImageFromURL(url) {
       return new Promise((resolve, reject) => {
         var img = new Image(); img.setAttribute("crossOrigin", "anonymous");
-        img.onload = () => {
-          var canvas = document.createElement("canvas"); canvas.width = img.width; canvas.height = img.height;
-          var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
+        img.onload = () => { var canvas = document.createElement("canvas"); canvas.width = img.width; canvas.height = img.height; var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png")); };
         img.onerror = error => { resolve(null); }; img.src = url;
       });
   }
 
+  // --- GENERATOR TRUE PDF (VECTOR) ---
   window.generateTruePDF = async function(customTitle) {
       const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
       const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
@@ -1361,7 +1104,7 @@
       Swal.close();
   };
 
-  // CETAK PDF KARTU KELUARGA (TRUE PDF)
+  // --- CETAK PDF KARTU KELUARGA (TRUE PDF) ---
   window.cetakPDFKeluarga = async function(noKK) {
      let family = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === noKK);
      if(!family || family.length === 0) return;
