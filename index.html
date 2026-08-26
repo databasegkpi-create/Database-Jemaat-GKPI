@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF">
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF">
   <title>GKPI Data Hub</title>
   
@@ -12,8 +17,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- SCRIPT GENERATOR PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -32,11 +40,15 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     div:where(.swal2-container) div:where(.swal2-popup) { border-radius: 1.5rem !important; font-family: 'Plus Jakarta Sans', sans-serif; }
-    .leaflet-container { z-index: 10 !important; } .leaflet-top, .leaflet-bottom { z-index: 10 !important; }
+    
+    .leaflet-container { z-index: 10 !important; }
+    .leaflet-top, .leaflet-bottom { z-index: 10 !important; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .animate-zoom { animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
     .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loadingSkeleton 1.5s infinite; border-radius: 8px; }
     @keyframes loadingSkeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .page-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 800; font-size: 11px; transition: all 0.2s; }
@@ -45,7 +57,6 @@
     .page-btn.inactive:hover { background-color: #e2e8f0; color: #334155; transform: translateY(-1px); }
     details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
 
-    /* Dark Mode */
     html.dark { background-color: #0f172a; color: #f8fafc; } html.dark body { background-color: #0f172a; color: #f8fafc; } html.dark .bg-white { background-color: #1e293b !important; } html.dark .bg-slate-50 { background-color: #0f172a !important; } html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; } html.dark .text-slate-600 { color: #cbd5e1 !important; } html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; } html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; } html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; } html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; } html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; } html.dark th, html.dark td { border-color: #334155 !important; } html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; } html.dark .bg-indigo-50 { background-color: rgba(79, 70, 229, 0.2) !important; } html.dark .text-indigo-600 { color: #818cf8 !important; } html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.2) !important; } html.dark .text-emerald-600 { color: #34d399 !important; } html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.2) !important; } html.dark .text-amber-600 { color: #fbbf24 !important; } html.dark .bg-rose-50 { background-color: rgba(225, 29, 72, 0.2) !important; } html.dark .text-rose-600 { color: #fb7185 !important; } html.dark .text-slate-50 { color: #0f172a !important; } html.dark .text-indigo-500 { color: #818cf8 !important; } html.dark .text-emerald-500 { color: #34d399 !important; } html.dark .text-amber-500 { color: #fbbf24 !important; } html.dark .page-btn.inactive { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
   </style>
 </head>
@@ -128,7 +139,6 @@
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-user-friends"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Jiwa</p><h4 id="statTotalJiwa" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-user-friends"></i></div></div>
           </div>
           
-          <!-- FITUR ULANG TAHUN GEREJA -->
           <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 mt-6">
               <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-birthday-cake text-rose-500"></i> Cari Gereja Berulang Tahun</h3>
               <div class="flex flex-col md:flex-row gap-3 mb-6 items-end">
@@ -303,7 +313,7 @@
          <button type="button" onclick="tambahBarisAnggota()" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-lg hover:bg-emerald-500 hover:text-white transition-colors shadow-sm"><i class="fas fa-plus mr-1"></i> Tambah Anggota</button>
       </div>
       <div id="containerAnggotaKeluarga" class="space-y-3 mb-8">
-          <!-- Rows will be added here -->
+          <!-- Baris Anggota Akan Muncul Disini -->
       </div>
 
       <button type="submit" id="btnSubmitKeluarga" class="w-full bg-slate-800 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Seluruh Keluarga</button>
@@ -311,7 +321,7 @@
   </div>
 </div>
 
-<!-- MODAL EDIT INDIVIDU (JEMAAT) -->
+<!-- MODAL EDIT INDIVIDU JEMAAT -->
 <div id="modalFormJemaat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[91] flex items-center justify-center p-4">
   <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
     <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10">
@@ -339,8 +349,8 @@
     <form id="formInputMajelis" onsubmit="handleSimpan(event, 'majelis')" class="p-8 space-y-5">
       <input type="hidden" name="ID_Majelis" id="m_id">
       <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" name="Nama_Lengkap" id="m_nama" placeholder="Masukkan nama" required class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></div></div>
-      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jabatan</label><select name="Jabatan" id="formJabatan" onchange="cekJabatan()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="formWilayah" onchange="syncFormResort('m')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div></div>
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Resort / Jemaat Khusus</label><select name="Resort" id="formResort" onchange="syncFormGereja('m')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
+      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jabatan</label><select name="Jabatan" id="formJabatan" onchange="cekJabatan()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="formWilayah" onchange="syncFormResortMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div></div>
+      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Resort / Jemaat Khusus</label><select name="Resort" id="formResort" onchange="syncFormGerejaMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
       <div class="space-y-1.5" id="wadahGereja"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit Nama Gereja</label><select name="Nama_Gereja" id="formGereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
       <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nomor WhatsApp Aktif <span class="text-emerald-500 font-bold">(Opsional)</span></label><div class="relative"><i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i><input type="number" name="No_HP" id="m_hp" placeholder="Contoh: 628123456789" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"></div></div>
       <div class="pt-4"><button type="submit" id="btnSubmit" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Simpan ke Database</button></div>
@@ -378,7 +388,7 @@
   </div>
 </div>
 
-<!-- ================= AREA SCRIPT ================= -->
+<!-- ================= AREA SCRIPT (REST API & LOGIC) ================= -->
 <script>
   // -------------------------------------------------------------
   // GANTI SCRIPT_URL DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA!
@@ -398,7 +408,7 @@
   function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
   function safeSetValue(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 
-  // FUNGSI JEMBATAN API (ANTI BADAI GOOGLE)
+  // --- FUNGSI JEMBATAN API (ANTI BADAI & FAST FALLBACK) ---
   async function apiCall(action, payload = {}) {
     try {
       payload.api_key = SECRET_API_KEY; 
@@ -409,8 +419,14 @@
          const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
          let response = await fetch(url, { method: 'GET', redirect: 'follow' });
          let textResult = await response.text();
+         
          if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google! Pastikan deploy ke 'Anyone'.");
-         return JSON.parse(textResult);
+         
+         try {
+             return JSON.parse(textResult);
+         } catch(err) {
+             throw new Error("Server gagal mengurai data. Pastikan Google Apps Script (Kode.gs) sudah di-Deploy ke 'New version' (Versi Baru).");
+         }
       } 
       else {
          let response = await fetch(SCRIPT_URL, {
@@ -424,9 +440,15 @@
             const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
             response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
             textResult = await response.text();
+            
             if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
          }
-         return JSON.parse(textResult);
+         
+         try {
+             return JSON.parse(textResult);
+         } catch(err) {
+             throw new Error("Server gagal mengurai data. Pastikan Google Apps Script (Kode.gs) sudah di-Deploy ke 'New version' (Versi Baru).");
+         }
       }
     } catch (error) { throw new Error(error.message); }
   }
@@ -434,11 +456,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark');
     updateDarkModeIcon();
-    
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       const btnInstall = document.getElementById('btnInstallApp'); if (btnInstall) btnInstall.style.display = 'none';
     }
-
     const saved = sessionStorage.getItem('si_majelis_user');
     if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
   });
@@ -473,9 +493,9 @@
   function loadData() {
     Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data terbaru dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
     
-    safeSetHTML('majelisAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
-    safeSetHTML('jemaatAccordionContainer', Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join(''));
-    safeSetHTML('gerejaTableBody', Array(5).fill(`<tr><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-8 w-full"></div></td></tr>`).join(''));
+    if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
+    if(document.getElementById('jemaatAccordionContainer')) document.getElementById('jemaatAccordionContainer').innerHTML = Array(5).fill(`<div class="skeleton h-16 w-full rounded-2xl mb-3"></div>`).join('');
+    if(document.getElementById('gerejaTableBody')) document.getElementById('gerejaTableBody').innerHTML = Array(5).fill(`<tr><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-10 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-6 w-full"></div></td><td class="p-5"><div class="skeleton h-8 w-full"></div></td></tr>`).join('');
     
     const curW = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value : "";
     const curR = document.getElementById('filterResort') ? document.getElementById('filterResort').value : "";
@@ -492,12 +512,12 @@
         renderHomeStats(); 
         setupFilters(); 
 
-        if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
-        if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
-        if(curG) safeSetValue('filterGereja', curG);
-        if(curJ) safeSetValue('filterJabatan', curJ);
+        if(curW && document.getElementById('filterWilayah')) document.getElementById('filterWilayah').value = curW; syncFilterResort();
+        if(curR && document.getElementById('filterResort')) document.getElementById('filterResort').value = curR; syncFilterGereja();
+        if(curG && document.getElementById('filterGereja')) document.getElementById('filterGereja').value = curG;
+        if(curJ && document.getElementById('filterJabatan')) document.getElementById('filterJabatan').value = curJ;
 
-        if(curWJ) safeSetValue('f_wil_j', curWJ); syncResortJemaatPage();
+        if(curWJ && document.getElementById('f_wil_j')) document.getElementById('f_wil_j').value = curWJ; syncResortJemaatPage();
 
         filterTabel(); 
         filterTabelJemaat();
@@ -506,8 +526,12 @@
         Swal.close(); const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
       })
       .catch(err => { 
-        Swal.fire('Koneksi Gagal', String(err), 'error'); 
-        safeSetHTML('majelisAccordionContainer', '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data dari server.</div>');
+        Swal.fire({
+          icon: 'error',
+          title: 'Koneksi Gagal',
+          html: String(err)
+        });
+        if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = '<div class="text-center p-10 text-rose-500 font-bold border-2 border-dashed border-rose-200 rounded-xl">Gagal memuat data dari server.</div>';
       });
   }
   
@@ -541,8 +565,6 @@
     safeSetText('statTotalJiwa', totJiwa.toLocaleString('id-ID'));
     
     const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; }); DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
-    if(document.getElementById('jobStatsGrid')) safeSetHTML('jobStatsGrid', Object.keys(statsJ).map(k => `<div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:shadow-md transition-shadow"><p class="text-[10px] font-bold text-slate-500 uppercase leading-tight w-2/3">${k}</p><p class="text-xl font-black text-indigo-600 bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center">${statsJ[k]}</p></div>`).join(''));
-    
     const statsW = Array(12).fill(0); DATA_MASTER.majelis.forEach(m => { const w = parseInt(m.Wilayah); if(w >= 1 && w <= 12) statsW[w-1]++; });
     initCharts(statsW, statsJ); renderMap();
   }
@@ -559,19 +581,22 @@
     }
   }
 
-  // FUNGSI MEMBACA TANGGAL SECARA AMAN DARI EXCEL
+  // --- FUNGSI PARSE TANGGAL EXCEL/ISO ---
   function parseDateSafe(tgl) {
       if (!tgl) return null;
-      if (tgl instanceof Date) return tgl;
+      let d = new Date(tgl);
+      if (!isNaN(d.getTime())) return d; 
+      
       if (typeof tgl === 'number') return new Date(Math.round((tgl - 25569) * 86400 * 1000));
+      
       let str = String(tgl).trim();
-      let parts = str.includes('/') ? str.split('/') : str.includes('-') ? str.split('-') : [];
-      if (parts.length === 3) {
-          if (parts[2].length === 4) return new Date(parts[2], parts[1] - 1, parts[0]);
-          if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+      let parts = str.split(/[-/]/);
+      if (parts.length >= 3) {
+          let p0 = parseInt(parts[0]); let p1 = parseInt(parts[1]); let p2 = parseInt(parts[2]);
+          if (parts[2].length === 4) return new Date(p2, p1 - 1, p0); 
+          if (parts[0].length === 4) return new Date(p0, p1 - 1, p2); 
       }
-      let d = new Date(str);
-      return isNaN(d.getTime()) ? null : d;
+      return null;
   }
 
   function hitungUmur(tgl) {
@@ -579,7 +604,6 @@
       if(!d || isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
   }
 
-  // --- MENU SWITCHING ---
   function switchTab(tab) {
     ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
     ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
@@ -666,6 +690,22 @@
     filterTabelJemaat(); 
   }
   
+  function syncFormResortBulk() { 
+    const w = document.getElementById('bk_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+    const fr = document.getElementById('bk_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+    const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+    const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+    resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+    syncFormGerejaBulk(); 
+  }
+  function syncFormGerejaBulk() { 
+    const resSelect = document.getElementById('bk_resort'); const fg = document.getElementById('bk_gereja'); if(!fg || !resSelect) return; 
+    const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
+    if (tipe === "RESORT" || (!tipe && val)) { DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
+    else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } 
+    else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
+  }
+
   function syncFormResortMajelis() { 
     const w = document.getElementById('formWilayah')?.value || document.getElementById('m_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
     const fr = document.getElementById('formResort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
@@ -714,8 +754,11 @@
     let filteredMajelis = DATA_MASTER.majelis.filter(m => {
       const safeG = String(m.Nama_Gereja || '').trim().toLowerCase(); 
       const safeR = String(m.Resort || '').trim().toLowerCase(); 
-      let passG = (!g || safeG === g);
-      return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && (!r || safeR === r || safeG === r) && passG && (!j || String(m.Jabatan || '').trim().toLowerCase() === j) && (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
+      return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
+             (!r || safeR === r || safeG === r) && 
+             (!g || safeG === g) && 
+             (!j || String(m.Jabatan || '').trim().toLowerCase() === j) && 
+             (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
     });
     filteredMajelis.sort((a, b) => { if (modeSort === 'hierarki') { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); } return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); });
     renderTabelReal(filteredMajelis, true); renderTabelIndividu(filteredMajelis, true); window.currentFilteredList = filteredMajelis;
@@ -762,6 +805,8 @@
          
          let btnEditKpl = (idKpl && (role.includes('admin') || role.includes('editor'))) ? `<button onclick="editDataJemaatItem('${idKpl}')" class="text-amber-500 hover:text-amber-700 ml-3" title="Edit KK"><i class="fas fa-edit"></i></button>` : '';
          let btnHapusKpl = (idKpl && role.includes('admin')) ? `<button onclick="konfirmasiHapusJemaat('${idKpl}')" class="text-rose-500 hover:text-rose-700 ml-2" title="Hapus KK"><i class="fas fa-trash"></i></button>` : '';
+         
+         // TOMBOL CETAK PDF KELUARGA BARU (TRUE PDF)
          let btnCetakPDF = `<button onclick="cetakPDFKeluarga('${g.kk}')" class="text-indigo-500 hover:text-indigo-700 ml-3" title="Cetak Kartu Keluarga PDF"><i class="fas fa-print"></i></button>`;
          let btnTambahAnggota = (role.includes('admin') || role.includes('editor')) ? `<button onclick="tambahAnggotaKeluarga('${g.kk}', '${g.wil}', '${g.res}', '${g.grj}')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold shadow-sm border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors ml-3"><i class="fas fa-plus mr-1"></i> Anggota</button>` : '';
 
@@ -784,11 +829,12 @@
   function renderTabelReal(data, resetPage = true) {
     if (resetPage) currentPageMajelis = 1; window.currentFilteredList = data; 
     const grouped = {};
-
-    data.forEach(m => {
+    
+    // Grouping murni berdasarkan Nama_Gereja / Resort di tabel Majelis (Menghapus cloning pintar yang bikin dobel)
+    data.forEach(m => { 
       let g = m.Nama_Gereja || 'Tingkat Resort'; 
-      if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] };
-      grouped[g].majelis.push(m);
+      if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
+      grouped[g].majelis.push(m); 
     });
 
     const groupArray = Object.keys(grouped).map(k => ({ namaGereja: k, ...grouped[k] })).sort((a, b) => a.namaGereja.localeCompare(b.namaGereja));
@@ -852,9 +898,7 @@
       const namaG = g.Nama_Gereja || g['Nama Gereja'] || '-'; const res = g.Induk_Resort || g.Resort || 'Jemaat Khusus'; const wil = g.Wilayah || '-'; 
       const rt = parseInt(g.Total_RT) || 0; const jiwa = parseInt(g.Total_Jiwa) || 0; const statusGrj = g.Status_Gereja || g['Status Gereja'] || g.Tipe_Gereja || g['Tipe Gereja'] || 'Pagaran';
       
-      let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.');
-      let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
-
+      let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.'); let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
       let pdt = DATA_MASTER.majelis.find(m => String(m.Resort).trim() === String(res).trim() && (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')));
       let gr = DATA_MASTER.majelis.find(m => String(m.Nama_Gereja).trim() === String(namaG).trim() && String(m.Jabatan).toLowerCase().includes('guru'));
       
@@ -865,7 +909,13 @@
       const noReg = g.No_Register || g['No Register'] || '';
       const tglBerdiri = g.Tanggal_Berdiri || g['Tanggal Berdiri'] || '';
       let tglFormatForm = '';
-      if(tglBerdiri) { let d = parseDateSafe(tglBerdiri); if(d && !isNaN(d.getTime())) tglFormatForm = d.toISOString().split('T')[0]; }
+      if(tglBerdiri) { 
+          let d = parseDateSafe(tglBerdiri); 
+          if(d && !isNaN(d.getTime())) {
+              let y = d.getFullYear(); let m = String(d.getMonth() + 1).padStart(2, '0'); let d_day = String(d.getDate()).padStart(2, '0');
+              tglFormatForm = `${y}-${m}-${d_day}`;
+          }
+      }
 
       let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataGerejaItem('${namaG.replace(/'/g, "\\'")}', ${rt}, ${jiwa}, '${badgeText}', '${rawLat}', '${rawLng}', '${noReg}', '${tglFormatForm}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all"><i class="fas fa-edit"></i></button>` : '';
       const clickName = `<a href="javascript:void(0)" onclick="showDetailGereja('${encodeURIComponent(namaG)}')" class="text-indigo-600 hover:text-indigo-800 transition-colors font-bold flex items-center gap-1.5" title="Klik untuk lihat info gereja">${namaG} <i class="fas fa-info-circle text-[10px] opacity-60"></i></a>`;
@@ -879,7 +929,7 @@
   }
 
   function renderPaginationUI(totalItems, currentPg, containerId, type, perPage) {
-    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId);
+    const totalPages = Math.ceil(totalItems / perPage); const container = document.getElementById(containerId); if(!container) return;
     if (totalPages <= 1) { container.innerHTML = ''; return; }
     let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${currentPg} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Data</span></span><div class="flex items-center gap-1">`;
     if (currentPg > 1) html += `<button onclick="ubahHalaman('${type}', ${currentPg - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
@@ -908,6 +958,7 @@
     if(document.getElementById('formKeluargaBulk')) document.getElementById('formKeluargaBulk').reset(); 
     document.getElementById('containerAnggotaKeluarga').innerHTML = ''; 
     counterAnggota = 0;
+    syncFormResortBulk(); // Sinkron dropdown langsung saat dibuka
     if(document.getElementById('modalTambahKeluarga')) document.getElementById('modalTambahKeluarga').classList.remove('hidden'); 
   }
 
@@ -917,8 +968,8 @@
     EDIT_MODE_ID = null;
     safeSetHTML('modalTitle', '<i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis');
     safeSetHTML('btnSubmit', '<i class="fas fa-save mr-2"></i> Simpan Majelis');
+    cekJabatan(); syncFormResortMajelis(); 
     if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden'); 
-    cekJabatan(); 
   }
   
   function closeModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('hidden'); }
@@ -973,7 +1024,7 @@
         }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan Seluruh Keluarga'; });
   };
 
-  // --- EDIT JEMAAT INDIVIDU & TAMBAH 1 ANAK ---
+  // --- EDIT JEMAAT INDIVIDU (FORM SATUAN DIHAPUS TOMBOL TAMBAH LAGINYA) ---
   function editDataJemaatItem(id) {
     const j = DATA_MASTER.jemaat.find(i => i.ID_Jemaat == id); if (!j) return; 
     safeSetValue('j_id', id); safeSetValue('j_kk', j.No_KK || ''); 
@@ -981,14 +1032,15 @@
     safeSetValue('j_jk', j.Jenis_Kelamin || '');
     
     let tgl = j.Tanggal_Lahir;
-    if (tgl && String(tgl).includes('/')) { let p = String(tgl).split('/'); if(p.length===3) tgl = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`; } 
-    else if (tgl) { try { tgl = new Date(tgl).toISOString().split('T')[0]; } catch(e){} }
-    safeSetValue('j_tgl', tgl || '');
+    if (tgl) { let d = parseDateSafe(tgl); if(d && !isNaN(d.getTime())) { let y = d.getFullYear(); let m = String(d.getMonth() + 1).padStart(2, '0'); let d_day = String(d.getDate()).padStart(2, '0'); safeSetValue('j_tgl', `${y}-${m}-${d_day}`); } }
     
     safeSetValue('j_kondisi', j.Kondisi || ''); safeSetValue('j_pekerjaan', j.Pekerjaan || '');
     safeSetValue('j_wilayah', j.Wilayah || ''); syncFormResortJemaatEdit(); 
     
     setTimeout(() => { safeSetValue('j_resort', j.Resort ? String(j.Resort).trim() : String(j.Nama_Gereja).trim()); syncFormGerejaJemaatEdit(); setTimeout(() => { safeSetValue('j_gereja', String(j.Nama_Gereja || '').trim()); }, 50); }, 50);
+    
+    safeSetHTML('modalTitleJemaat', '<i class="fas fa-user-edit text-amber-500 mr-2"></i> Edit Data Jemaat');
+    safeSetHTML('btnEditJemaatIndividu', '<i class="fas fa-save"></i> Simpan Data');
     if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden');
   }
 
@@ -1002,7 +1054,6 @@
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
     
     const action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat';
-    
     Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
     apiCall(action, payload).then(res => { closeModal('modalFormJemaat'); btn.disabled = false; btn.innerHTML = originalText; loadData(); }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
   }
@@ -1014,6 +1065,7 @@
     
     setTimeout(() => { safeSetValue('j_resort', resort); syncFormGerejaJemaatEdit(); setTimeout(() => { safeSetValue('j_gereja', gereja); }, 50); }, 50);
     safeSetHTML('modalTitleJemaat', '<i class="fas fa-user-plus text-amber-500 mr-2"></i> Tambah Anggota (KK: ' + noKK + ')');
+    safeSetHTML('btnEditJemaatIndividu', '<i class="fas fa-save"></i> Simpan Anggota Baru');
     if(document.getElementById('modalFormJemaat')) document.getElementById('modalFormJemaat').classList.remove('hidden'); 
   }
 
@@ -1151,181 +1203,7 @@
     } 
   }
 
-  function editDataGerejaItem(namaGereja, currentRT, currentJiwa, currentStatus, curLat, curLng, noReg, tglBerdiri) {
-    let lat = parseFloat(curLat) || 2.9614; let lng = parseFloat(curLng) || 99.0655;
-    noReg = (noReg !== 'undefined' && noReg !== 'null') ? noReg : '';
-    tglBerdiri = (tglBerdiri !== 'undefined' && tglBerdiri !== 'null') ? tglBerdiri : '';
-
-    Swal.fire({ title: 'Update Data & Lokasi Unit', width: '600px', html: `<div class="text-left space-y-4 mt-2"><p class="text-sm font-bold text-indigo-600 border-b pb-2"><i class="fas fa-church"></i> ${namaGereja}</p><div class="grid grid-cols-3 gap-3"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Status</label><select id="inputStatusGrj" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs"><option value="Sabungan" ${currentStatus.includes('SABUNGAN') || currentStatus.includes('RESORT') ? 'selected' : ''}>Sabungan</option><option value="Pagaran" ${currentStatus.includes('PAGARAN') ? 'selected' : ''}>Pagaran</option><option value="Jemaat Khusus" ${currentStatus.includes('JEMAAT KHUSUS') ? 'selected' : ''}>Jemaat Khusus</option></select></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total RT</label><input id="inputRT" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-amber-700 font-bold" value="${currentRT}"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Total Jiwa</label><input id="inputJiwa" type="number" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs text-emerald-700 font-bold" value="${currentJiwa}"></div></div><div class="grid grid-cols-2 gap-3 mt-3"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">No Register</label><input id="inputNoReg" type="text" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs" value="${noReg}" placeholder="Opsional"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Berdiri</label><input id="inputTglBerdiri" type="date" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none text-xs" value="${tglBerdiri}"></div></div><div class="space-y-2 pt-3 border-t border-slate-100"><label class="text-[10px] font-bold text-slate-500 uppercase">Titik Peta (Digunakan di Dashboard)</label><div class="flex gap-2"><input id="searchMapInput" type="text" placeholder="Cari nama jalan atau daerah..." class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:border-indigo-500 transition-colors"><button onclick="cariLokasiPeta()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-900 transition"><i class="fas fa-search"></i> Cari</button></div><div id="miniMapEdit" class="w-full h-[200px] rounded-xl border border-slate-300 z-0"></div><div class="flex gap-2"><input id="inputLat" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLat}" placeholder="Latitude" readonly><input id="inputLng" type="text" class="w-1/2 p-2 rounded-lg border border-slate-200 bg-slate-100 outline-none text-[10px] text-slate-500" value="${curLng}" placeholder="Longitude" readonly></div><p class="text-[9px] text-slate-400 leading-tight"><i class="fas fa-info-circle"></i> Geser jarum merah di peta untuk mengubah titik koordinat secara akurat.</p></div></div>`, showCancelButton: true, confirmButtonText: 'Simpan Data', confirmButtonColor: '#4f46e5', didOpen: () => { window.miniMapInst = L.map('miniMapEdit').setView([lat, lng], curLat ? 16 : 8); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.miniMapInst); window.miniPin = L.marker([lat, lng], { draggable: true }).addTo(window.miniMapInst); window.miniPin.on('dragend', function(e) { const pos = window.miniPin.getLatLng(); document.getElementById('inputLat').value = pos.lat.toFixed(6); document.getElementById('inputLng').value = pos.lng.toFixed(6); }); window.miniMapInst.on('click', function(e) { window.miniPin.setLatLng(e.latlng); document.getElementById('inputLat').value = e.latlng.lat.toFixed(6); document.getElementById('inputLng').value = e.latlng.lng.toFixed(6); }); setTimeout(() => { window.miniMapInst.invalidateSize(); }, 300); }, preConfirm: () => { return { Nama_Gereja: namaGereja, Total_RT: document.getElementById('inputRT').value, Total_Jiwa: document.getElementById('inputJiwa').value, Status_Gereja: document.getElementById('inputStatusGrj').value, Latitude: document.getElementById('inputLat').value, Longitude: document.getElementById('inputLng').value, No_Register: document.getElementById('inputNoReg').value, Tanggal_Berdiri: document.getElementById('inputTglBerdiri').value } } }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menyimpan API...', didOpen: () => { Swal.showLoading() } }); apiCall('updateDataGereja', {obj: result.value, userRole: USER_NOW.role}).then(res => { if(res.status==='success'){ Swal.fire('Berhasil!', res.message, 'success'); loadData(); setTimeout(() => { switchDataTab('gereja'); }, 1000); } else { Swal.fire('Gagal', res.message, 'error'); } }); } });
-  }
-
-  function cariLokasiPeta() { const query = document.getElementById('searchMapInput').value; if (!query) return; const btn = document.querySelector('#searchMapInput + button'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; if (data && data.length > 0) { const lat = parseFloat(data[0].lat); const lng = parseFloat(data[0].lon); window.miniMapInst.setView([lat, lng], 15); window.miniPin.setLatLng([lat, lng]); document.getElementById('inputLat').value = lat.toFixed(6); document.getElementById('inputLng').value = lng.toFixed(6); } else { Swal.showValidationMessage('Lokasi tidak ditemukan! Coba ketik nama kota.'); } }).catch(err => { btn.innerHTML = '<i class="fas fa-search"></i> Cari'; console.error(err); }); }
-
-  // --- FUNGSI ULANG TAHUN DI DASHBOARD ---
-  window.cariUlangTahunGereja = function() {
-      const startVal = document.getElementById('ultahStart').value;
-      const endVal = document.getElementById('ultahEnd').value;
-      const container = document.getElementById('ultahResultGrid');
-
-      if(!startVal || !endVal) {
-          Swal.fire('Perhatian', 'Silakan pilih rentang tanggal terlebih dahulu.', 'warning');
-          return;
-      }
-
-      const d1 = new Date(startVal); d1.setHours(0,0,0,0);
-      const d2 = new Date(endVal); d2.setHours(23,59,59,999);
-      const sTime = d1.getTime(); const eTime = d2.getTime();
-
-      let results = [];
-      DATA_MASTER.gereja.forEach(g => {
-          let bDate = parseDateSafe(g.Tanggal_Berdiri || g['Tanggal Berdiri']);
-          if(!bDate) return;
-
-          let month = bDate.getMonth(); let date = bDate.getDate();
-          let yStart = d1.getFullYear(); let yEnd = d2.getFullYear();
-
-          let anniv1 = new Date(yStart, month, date).getTime();
-          let anniv2 = new Date(yEnd, month, date).getTime();
-
-          let isMatch = false; let matchAnniv = null;
-          if(anniv1 >= sTime && anniv1 <= eTime) { isMatch = true; matchAnniv = anniv1; }
-          else if(anniv2 >= sTime && anniv2 <= eTime) { isMatch = true; matchAnniv = anniv2; }
-
-          if(isMatch) {
-              let age = new Date(matchAnniv).getFullYear() - bDate.getFullYear();
-              results.push({ gereja: g.Nama_Gereja || g['Nama Gereja'], resort: g.Induk_Resort || g.Resort || 'Jemaat Khusus', tglBerdiriAsli: bDate, tglUltahTahunIni: new Date(matchAnniv), usia: age });
-          }
-      });
-
-      results.sort((a,b) => a.tglUltahTahunIni.getTime() - b.tglUltahTahunIni.getTime());
-
-      if(results.length === 0) {
-          container.innerHTML = `<div class="p-6 text-center text-slate-400 font-medium text-sm col-span-full border-2 border-dashed border-slate-200 rounded-2xl">Tidak ada unit gereja yang berulang tahun di rentang tanggal tersebut.</div>`;
-          return;
-      }
-
-      container.innerHTML = results.map(r => {
-          let tglStr = r.tglBerdiriAsli.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-          let ultahStr = r.tglUltahTahunIni.toLocaleDateString('id-ID', {day:'numeric', month:'long'});
-          return `<div class="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"><div class="absolute -right-4 -top-4 text-rose-50 opacity-50 text-7xl"><i class="fas fa-birthday-cake"></i></div><div class="relative z-10"><span class="px-2 py-1 bg-rose-100 text-rose-700 text-[9px] font-black rounded uppercase tracking-wider mb-2 inline-block">${ultahStr}</span><h4 class="font-bold text-slate-800 text-sm leading-tight mb-1 truncate" title="${r.gereja}">${r.gereja}</h4><p class="text-[10px] text-slate-500 font-semibold mb-3 truncate">${r.resort}</p><div class="flex items-end justify-between border-t border-slate-100 pt-3"><div><p class="text-[9px] text-slate-400 uppercase font-bold">Berdiri Sejak</p><p class="text-[11px] font-bold text-slate-700">${tglStr}</p></div><div class="text-right"><p class="text-[9px] text-rose-400 uppercase font-bold">Ulang Tahun Ke</p><p class="text-lg font-black text-rose-600 leading-none">${r.usia} <span class="text-[10px]">Thn</span></p></div></div></div></div>`;
-      }).join('');
-  };
-
-  // ==========================================
-  // FITUR GENERATE TRUE PDF DARI 0 (VECTOR BASED)
-  // ==========================================
-  function getBase64ImageFromURL(url) {
-      return new Promise((resolve, reject) => {
-        var img = new Image(); img.setAttribute("crossOrigin", "anonymous");
-        img.onload = () => { var canvas = document.createElement("canvas"); canvas.width = img.width; canvas.height = img.height; var ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png")); };
-        img.onerror = error => { resolve(null); }; img.src = url;
-      });
-  }
-
-  window.generateTruePDF = async function(customTitle) {
-      const isMajelis = !document.getElementById('kontenMajelis').classList.contains('hidden');
-      const isIndividu = !document.getElementById('kontenIndividu').classList.contains('hidden');
-      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
-      
-      const dataList = isJemaat ? window.currentFilteredJemaat : ((isMajelis || isIndividu) ? window.currentFilteredList : window.currentFilteredGereja);
-      
-      if (!dataList || dataList.length === 0) { return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak.', 'info'); }
-      
-      Swal.fire({ title: 'Menyusun Dokumen PDF...', html: 'Mohon tunggu sebentar.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a4');
-      
-      let imgData = null;
-      try { imgData = await getBase64ImageFromURL('https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF'); } catch(e) {}
-
-      let columns = []; let rows = [];
-
-      if (isJemaat) {
-          columns = ['No', 'No KK', 'Nama Lengkap', 'Hubungan', 'L/P', 'Usia', 'Pekerjaan'];
-          rows = dataList.map((j, i) => [
-              i+1, j.No_KK||'-', j.Nama_Lengkap||'-', j.Status_Keluarga||'-', j.Jenis_Kelamin||'-', hitungUmur(j.Tanggal_Lahir), j.Pekerjaan||'-'
-          ]);
-      } else if (isMajelis) {
-          columns = ['No', 'Nama Lengkap', 'Jabatan', 'No. WA', 'Penempatan Unit', 'Wilayah'];
-          rows = dataList.map((m, i) => [
-              i+1, m.Nama_Lengkap||'-', m.Jabatan||'-', m.No_HP||'-', m.Nama_Gereja||'Tingkat Resort', m.Wilayah||'-'
-          ]);
-      } else if (isIndividu) {
-          columns = ['No', 'Nama Lengkap', 'Jabatan', 'Penempatan Unit', 'Resort/Wilayah', 'No. WA'];
-          rows = dataList.map((m, i) => [
-              i+1, m.Nama_Lengkap||'-', m.Jabatan||'-', m.Nama_Gereja||'Tingkat Resort', (m.Resort||'JK') + ' (W-'+(m.Wilayah||'-')+')', m.No_HP||'-'
-          ]);
-      } else {
-          columns = ['No', 'Nama Unit Gereja', 'Status', 'Wilayah', 'Induk Resort / JK', 'Total RT', 'Total Jiwa'];
-          rows = dataList.map((g, i) => [
-              i+1, g.Nama_Gereja||'-', g.Status_Gereja || g.Tipe_Gereja || 'Pagaran', g.Wilayah||'-', g.Induk_Resort || g.Resort || 'JK', parseInt(g.Total_RT)||0, parseInt(g.Total_Jiwa)||0
-          ]);
-      }
-
-      doc.autoTable({
-          head: [columns], body: rows, startY: 110, theme: 'grid',
-          headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
-          bodyStyles: { fontSize: 9 }, alternateRowStyles: { fillColor: [241, 245, 249] },
-          margin: { top: 110, left: 30, right: 30, bottom: 40 },
-          didDrawPage: function (data) {
-              if (imgData) { doc.addImage(imgData, 'PNG', 30, 30, 45, 45); }
-              doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
-              doc.text("SINODE GEREJA KRISTEN PROTESTAN INDONESIA", 85, 48);
-              doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
-              doc.text("SISTEM INFORMASI DATA HUB GKPI", 85, 62);
-              doc.setDrawColor(203, 213, 225); doc.setLineWidth(1); doc.line(30, 80, doc.internal.pageSize.width - 30, 80);
-              doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(79, 70, 229);
-              doc.text(customTitle, 30, 98);
-              
-              doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont("helvetica", "normal");
-              doc.text("Halaman " + data.pageNumber, 30, doc.internal.pageSize.height - 20);
-              doc.text("© 2026 GKPI Data Hub. Dicetak: " + new Date().toLocaleString('id-ID'), doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 20, { align: 'right' });
-          }
-      });
-      doc.save(customTitle.replace(/\s+/g, '_') + '.pdf');
-      Swal.close();
-  };
-
-  // --- CETAK PDF KARTU KELUARGA (TRUE PDF) ---
-  window.cetakPDFKeluarga = async function(noKK) {
-     let family = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === noKK);
-     if(!family || family.length === 0) return;
-     let kk = family.find(f => String(f.Status_Keluarga).toLowerCase() === 'kepala keluarga') || family[0];
-     
-     Swal.fire({ title: 'Menyusun PDF Keluarga...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-     const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape', 'pt', 'a4');
-     let imgData = null; try { imgData = await getBase64ImageFromURL('https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF'); } catch(e) {}
-
-     const columns = ['No', 'Nama Lengkap', 'Status Hubungan', 'L/P', 'Tgl Lahir', 'Usia', 'Pekerjaan', 'Kondisi'];
-     const rows = family.map((f, i) => [ i + 1, f.Nama_Lengkap, f.Status_Keluarga, f.Jenis_Kelamin === 'Laki-laki' ? 'L' : 'P', f.Tanggal_Lahir ? new Date(f.Tanggal_Lahir).toLocaleDateString('id-ID') : '-', hitungUmur(f.Tanggal_Lahir), f.Pekerjaan || '-', f.Kondisi || '-' ]);
-
-     doc.autoTable({
-        head: [columns], body: rows, startY: 155, theme: 'grid', headStyles: { fillColor: [16, 185, 129] },
-        didDrawPage: function (data) {
-            if (imgData) { doc.addImage(imgData, 'PNG', 30, 30, 45, 45); }
-            doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
-            doc.text("KARTU KELUARGA JEMAAT", 85, 48);
-            doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
-            doc.text("GKPI " + (kk.Nama_Gereja || '-'), 85, 62);
-            doc.setDrawColor(203, 213, 225); doc.setLineWidth(1); doc.line(30, 80, doc.internal.pageSize.width - 30, 80);
-
-            doc.setFontSize(11); doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold");
-            doc.text("No. KK : " + noKK, 30, 105);
-            doc.text("Kepala Keluarga : " + kk.Nama_Lengkap, 30, 120);
-            doc.text("Wilayah / Resort : W-" + kk.Wilayah + " / " + (kk.Resort || '-'), 30, 135);
-            
-            doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont("helvetica", "normal");
-            doc.text("Halaman " + data.pageNumber, 30, doc.internal.pageSize.height - 20);
-            doc.text("© 2026 GKPI Data Hub", doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 20, { align: 'right' });
-        }
-     });
-     doc.save('Kartu_Keluarga_' + noKK + '.pdf');
-     Swal.close();
-  };
-
-  // ADMIN PETUGAS & LAINNYA
+  // ADMIN PETUGAS
   function loadListPetugas() { const container = document.getElementById('adminTablePetugas'); container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat API Admin...</div>'; apiCall('getListPetugas').then(res => { if (!res || res.length === 0) { container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center p-6 text-slate-400 font-medium">Belum ada data petugas.</div>'; return; } container.innerHTML = res.map(p => { const nama = p.Nama || p.nama || 'Petugas', user = p.Username || p.username || '-', role = p.Role || p.Level || p.role || 'Viewer', inisial = nama ? String(nama).charAt(0).toUpperCase() : 'U'; return `<div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors shadow-sm hover:shadow-md"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg font-bold">${inisial}</div><div><p class="font-bold text-slate-800 text-sm leading-tight">${nama}</p><p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">${role} • @${user}</p></div></div><button onclick="hapusAkun('${user}')" title="Hapus Petugas" class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash-alt"></i></button></div>`; }).join(''); }).catch(err => { container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center p-4 text-rose-500 font-medium">Gagal API: ${err}</div>`; }); }
   function handleSavePetugas(e) { e.preventDefault(); Swal.fire({ title: 'Mengirim...', didOpen: () => { Swal.showLoading() } }); apiCall('simpanPetugas', Object.fromEntries(new FormData(e.target))).then(msg => { Swal.fire('Sukses', msg.message, 'success'); e.target.reset(); loadListPetugas(); }); }
   function hapusAkun(un) { Swal.fire({ title: 'Cabut akses petugas?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((r) => { if (r.isConfirmed) { Swal.fire({ title: 'Mencabut...', didOpen: () => { Swal.showLoading() } }); apiCall('hapusPetugas', {username: un}).then(() => { Swal.fire('Dihapus!', 'Akses telah dicabut.', 'success'); loadListPetugas(); }); } }); }
