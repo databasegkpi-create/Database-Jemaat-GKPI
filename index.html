@@ -165,8 +165,25 @@
     <div class="flex-1 overflow-y-auto flex flex-col relative z-0">
       <div class="p-6 md:p-10 flex-1">
         
-        <!-- HALAMAN DASHBOARD -->
+    <!-- HALAMAN DASHBOARD -->
         <div id="pageHome" class="space-y-6 animate-fade">
+          
+          <!-- BANNER SELAMAT DATANG (HERO SECTION) -->
+          <div class="relative w-full rounded-[2rem] overflow-hidden shadow-lg mb-6 flex items-center justify-center min-h-[220px] md:min-h-[260px] group">
+            <!-- Background Foto Hitam Putih -->
+            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/d/1gfQScz4lmHm1BepM0Rd7ElQN7X9SLLon'); filter: grayscale(100%) contrast(120%);"></div>
+            <!-- Overlay Gelap (Agar Teks Putih Terbaca Jelas) -->
+            <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/85 to-slate-900/80 backdrop-blur-[2px]"></div>
+            
+            <!-- Konten Teks -->
+            <div class="relative z-10 text-center px-6 py-8 animate-zoom">
+              <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 drop-shadow-2xl">
+              <h1 class="text-2xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">Selamat Datang di Database GKPI Hub</h1>
+              <p class="text-indigo-100 text-sm md:text-base mt-2 font-medium tracking-wide">Sistem Informasi Terpadu Majelis & Unit Gereja</p>
+            </div>
+          </div>
+
+          <div class="flex justify-end items-center mb-2"><button onclick="openPdfPreview()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Unduh Laporan PDF</button></div>
           <div class="flex justify-end items-center mb-2"><button onclick="openPdfPreview()" class="bg-rose-50 text-rose-600 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-file-pdf"></i> Unduh Laporan PDF</button></div>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             <div class="bg-white rounded-3xl p-8 soft-shadow border border-slate-100 flex items-center justify-between relative overflow-hidden group"><div class="absolute -right-6 -bottom-6 text-slate-50 text-9xl group-hover:scale-110 transition-transform duration-500"><i class="fas fa-church"></i></div><div class="relative z-10"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unit Gereja</p><h4 id="statTotalGereja" class="text-4xl font-black text-slate-800">0</h4></div><div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl relative z-10"><i class="fas fa-place-of-worship"></i></div></div>
