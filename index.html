@@ -114,7 +114,7 @@
       <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800">GKPI Data Hub</h2>
       <p class="text-slate-500 font-medium text-xs md:text-sm mt-1 md:mt-2">Sistem Informasi Majelis Pusat</p>
     </div>
-    <form onsubmit="handleLogin(event)" class="space-y-4 md:space-y-5">
+    <form onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4 md:space-y-5">
       <div class="space-y-1"><label class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Username</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="text" id="user" required class="w-full py-3 md:py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700 text-sm"></div></div>
       <div class="space-y-1"><label class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Password</label><div class="relative"><i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i><input type="password" id="pass" required class="w-full py-3 md:py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-700 text-sm"></div></div>
       <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3.5 md:py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all mt-2">MASUK SISTEM</button>
@@ -680,18 +680,38 @@
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
   function updateDarkModeIcon() { const btn = document.getElementById('btnDarkMode'); const icon = btn.querySelector('i'); if(document.documentElement.classList.contains('dark')) { icon.className = 'fas fa-sun text-amber-400'; } else { icon.className = 'fas fa-moon'; } }
 
-  function handleLogin(e) {
-    e.preventDefault(); const u = document.getElementById('user').value; const p = document.getElementById('pass').value; const btn = document.getElementById('btnLogin');
-    btn.disabled = true; safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
+function handleLogin(e) {
+    if(e && e.preventDefault) e.preventDefault(); 
+    
+    const u = document.getElementById('user').value; 
+    const p = document.getElementById('pass').value; 
+    const btn = document.getElementById('btnLogin');
+    
+    btn.disabled = true; 
+    safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
     
     apiCall('checkLogin', {username: u, password: p})
       .then(res => { 
         if (res.status === 'success') { 
-            USER_NOW = res; sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
-            showMainApp(); loadData(); 
-        } else { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); } 
+            // Jika sukses, masuk ke Dashboard
+            USER_NOW = res; 
+            sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
+            showMainApp(); 
+            loadData(); 
+        } else if (res.status === 'fail') { 
+            // Jika Password/Username terbukti salah
+            Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); 
+            btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); 
+        } else {
+            // Jika terjadi error dari sisi server/database
+            Swal.fire('Error Server', res.message || 'Database Petugas bermasalah.', 'error'); 
+            btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); 
+        }
       })
-      .catch(err => { Swal.fire('Error Server', String(err), 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); });
+      .catch(err => { 
+          Swal.fire('Error Koneksi', String(err), 'error'); 
+          btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); 
+      });
   }
 
   function handleLogout() { Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'Ya, Keluar!' }).then((result) => { if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); } }); }
