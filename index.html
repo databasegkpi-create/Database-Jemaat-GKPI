@@ -61,6 +61,23 @@
 
     /* Dark Mode */
     html.dark { background-color: #0f172a; color: #f8fafc; } html.dark body { background-color: #0f172a; color: #f8fafc; } html.dark .bg-white { background-color: #1e293b !important; } html.dark .bg-slate-50 { background-color: #0f172a !important; } html.dark .text-slate-800, html.dark .text-slate-700 { color: #f8fafc !important; } html.dark .text-slate-600 { color: #cbd5e1 !important; } html.dark .text-slate-500, html.dark .text-slate-400 { color: #94a3b8 !important; } html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; } html.dark .glass-card { background: rgba(15, 23, 42, 0.95) !important; border-color: #334155 !important; } html.dark input, html.dark select, html.dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; } html.dark .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; } html.dark th, html.dark td { border-color: #334155 !important; } html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; } html.dark .bg-indigo-50 { background-color: rgba(79, 70, 229, 0.2) !important; } html.dark .text-indigo-600 { color: #818cf8 !important; } html.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.2) !important; } html.dark .text-emerald-600 { color: #34d399 !important; } html.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.2) !important; } html.dark .text-amber-600 { color: #fbbf24 !important; } html.dark .bg-rose-50 { background-color: rgba(225, 29, 72, 0.2) !important; } html.dark .text-rose-600 { color: #fb7185 !important; } html.dark .text-slate-50 { color: #0f172a !important; } html.dark .text-indigo-500 { color: #818cf8 !important; } html.dark .text-emerald-500 { color: #34d399 !important; } html.dark .text-amber-500 { color: #fbbf24 !important; } html.dark .page-btn.inactive { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+
+    /* Tampilan Premium Sidebar & Navigasi */
+    .nav-active { 
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); 
+        color: #4f46e5 !important; 
+        font-weight: 800; 
+        box-shadow: 0 4px 20px -5px rgba(79, 70, 229, 0.15); 
+        border: 1px solid rgba(79, 70, 229, 0.1); 
+        border-left: 4px solid #4f46e5; 
+    }
+    .nav-active i { color: #4f46e5; transform: scale(1.1); }
+    .sidebar-link-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .sidebar-link-hover:hover { background-color: #f8fafc; color: #4f46e5; transform: translateX(6px); }
+    .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+  
   </style>
 </head>
 <body class="antialiased">
@@ -88,47 +105,62 @@
   </div>
 </div>
 
-<div id="mainApp" class="hidden h-screen flex flex-col md:flex-row bg-slate-50">
-  <!-- SIDEBAR NAVIGASI -->
-  <aside class="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col z-20 flex-shrink-0 h-auto md:h-full">
-    <div class="p-6 md:p-8 flex items-center gap-4 border-b border-slate-100">
-      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-12 h-12 object-contain drop-shadow-sm" onerror="this.outerHTML='<div class=\\'w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl shadow-md\\'><i class=\\'fas fa-church\\'></i></div>'">
-      <div><h1 class="font-extrabold text-xl text-slate-800 leading-none tracking-tight">SINODE GKPI</h1><span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Database GKPI</span></div>
+<!-- GANTI MULAI DARI SINI (<div id="mainApp"...>) SAMPAI PENUTUP </header> -->
+<div id="mainApp" class="hidden h-screen flex bg-[#f4f7fb] overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900">
+  
+  <!-- OVERLAY GELAP UNTUK MOBILE -->
+  <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+  <!-- SIDEBAR NAVIGASI (MEWAH & AUTO-HIDE) -->
+  <aside id="sidebar" class="fixed md:relative z-50 w-[280px] shrink-0 h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200/70 flex flex-col transition-all duration-500 ease-in-out transform -translate-x-full md:translate-x-0 shadow-[8px_0_30px_rgba(0,0,0,0.03)]">
+    <div class="p-6 flex items-center gap-4 border-b border-slate-100/80 bg-gradient-to-b from-slate-50/50 to-transparent">
+      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-12 h-12 object-contain drop-shadow-md">
+      <div><h1 class="font-black text-xl text-slate-800 leading-none tracking-tight">SINODE GKPI</h1><span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-full mt-1 inline-block">Database Hub</span></div>
     </div>
-    <nav class="flex-1 px-4 py-6 overflow-y-auto flex flex-row md:flex-col gap-2 md:gap-0 overflow-x-auto border-b md:border-none">
-      <div class="flex flex-row md:flex-col gap-2 md:mb-auto">
-        <button onclick="switchTab('home')" id="btnHome" class="nav-active flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all whitespace-nowrap w-full"><i class="fas fa-layer-group w-5 text-center"></i> Dashboard Pusat</button>
-        <button onclick="switchTab('jemaat')" id="btnJemaat" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-emerald-600 whitespace-nowrap w-full"><i class="fas fa-users-cog w-5 text-center"></i> Data Jemaat</button>
-        <button onclick="switchTab('search')" id="btnSearch" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-indigo-600 whitespace-nowrap w-full"><i class="fas fa-sitemap w-5 text-center"></i> Data Internal</button>
+    
+    <nav class="flex-1 px-4 py-6 overflow-y-auto flex flex-col gap-1.5 custom-scrollbar">
+      <div class="flex flex-col gap-1.5 mb-6">
+        <button onclick="switchTab('home')" id="btnHome" class="nav-active flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-layer-group w-5 text-center group-hover:text-indigo-500 transition-colors"></i> Dashboard Pusat</button>
+        <button onclick="switchTab('jemaat')" id="btnJemaat" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-users-cog w-5 text-center group-hover:text-emerald-500 transition-colors"></i> Data Jemaat</button>
+        <button onclick="switchTab('search')" id="btnSearch" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-sitemap w-5 text-center group-hover:text-indigo-500 transition-colors"></i> Data Internal</button>
       </div>
       
-      <div class="flex flex-row md:flex-col gap-2 md:mt-auto md:pt-6 md:border-t md:border-slate-200">
-        <div class="px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest hidden md:block">🔗 Tautan Aplikasi Lain</div>
-        <a href="https://script.google.com/macros/s/AKfycbx-uXm8JEdQWS_kO_bSRbzn_4WGb3uJzqMKqnc3Xp_8PWq4pNenEH8VWWdhI_LN3eh2VQ/exec?p=admin" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-emerald-600 whitespace-nowrap group w-full"><i class="fas fa-fingerprint w-5 text-center text-slate-400 group-hover:text-emerald-500 transition-colors"></i> Absensi Pegawai</a>
-        <a href="https://script.google.com/macros/s/AKfycbyqaaqf4jdwjJYfduiwttFDRipT2b9suUKVveJeElC7SsIbiRF242_H08DBp4i62P9L/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-blue-600 whitespace-nowrap group w-full"><i class="fas fa-user-tie w-5 text-center text-slate-400 group-hover:text-blue-500 transition-colors"></i> Database Pendeta</a>
-        <a href="https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-indigo-600 whitespace-nowrap group w-full"><i class="fas fa-church w-5 text-center text-slate-400 group-hover:text-indigo-500 transition-colors"></i> Database Jemaat</a>
-        <a href="https://script.google.com/macros/s/AKfycbwiI5UpSuOMctYhEHSFZM1a9gaslLbeP9QBbCUehdQisZXNhOWeNo97mtgVlROvTxG8BQ/exec" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-slate-50 hover:text-amber-600 whitespace-nowrap group w-full"><i class="fas fa-folder-open w-5 text-center text-slate-400 group-hover:text-amber-500 transition-colors"></i> E-Arsip GKPI</a>
-        <div class="md:mt-4 pt-4 border-t border-slate-200 hidden md:block" id="adminDivider"></div>
-        <button onclick="switchTab('admin')" id="btnAdmin" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all hover:bg-rose-50 hover:text-rose-600 hidden whitespace-nowrap"><i class="fas fa-shield-alt w-5 text-center"></i> Akses Admin</button>
-      </div>
+      <div class="px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1 relative"><span class="bg-white pr-2 relative z-10">Tautan Aplikasi</span><div class="absolute left-0 top-1/2 w-full h-[1px] bg-slate-100 z-0"></div></div>
+      <a href="https://script.google.com/macros/s/AKfycbx-uXm8JEdQWS_kO_bSRbzn_4WGb3uJzqMKqnc3Xp_8PWq4pNenEH8VWWdhI_LN3eh2VQ/exec?p=admin" target="_blank" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-500 font-medium text-xs sidebar-link-hover w-full group"><i class="fas fa-fingerprint w-5 text-center text-slate-300 group-hover:text-emerald-500 transition-colors"></i> Absensi Pegawai</a>
+      <a href="https://script.google.com/macros/s/AKfycbyqaaqf4jdwjJYfduiwttFDRipT2b9suUKVveJeElC7SsIbiRF242_H08DBp4i62P9L/exec" target="_blank" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-500 font-medium text-xs sidebar-link-hover w-full group"><i class="fas fa-user-tie w-5 text-center text-slate-300 group-hover:text-blue-500 transition-colors"></i> Database Pendeta</a>
+      <a href="https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec" target="_blank" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-500 font-medium text-xs sidebar-link-hover w-full group"><i class="fas fa-church w-5 text-center text-slate-300 group-hover:text-indigo-500 transition-colors"></i> Database Jemaat</a>
+      <a href="https://script.google.com/macros/s/AKfycbwiI5UpSuOMctYhEHSFZM1a9gaslLbeP9QBbCUehdQisZXNhOWeNo97mtgVlROvTxG8BQ/exec" target="_blank" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-500 font-medium text-xs sidebar-link-hover w-full group"><i class="fas fa-folder-open w-5 text-center text-slate-300 group-hover:text-amber-500 transition-colors"></i> E-Arsip GKPI</a>
+      <div class="mt-4 pt-4 border-t border-slate-100 hidden md:block" id="adminDivider"></div>
+      <button onclick="switchTab('admin')" id="btnAdmin" class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-500 font-semibold text-xs transition-all hover:bg-rose-50 hover:text-rose-600 hidden group"><i class="fas fa-shield-alt w-5 text-center group-hover:text-rose-500"></i> Akses Admin</button>
     </nav>
-    <div class="p-6 mt-auto hidden md:block border-t border-slate-100">
-      <div class="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100 flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold"><i class="fas fa-user-check"></i></div><div class="overflow-hidden"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Petugas Aktif</p><p id="userNameLabel" class="font-bold text-slate-800 text-sm truncate">-</p></div></div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 py-3 bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+    
+    <div class="p-5 mt-auto border-t border-slate-100/80 bg-slate-50/30">
+      <div class="bg-white rounded-2xl p-3.5 mb-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-200"><i class="fas fa-user"></i></div>
+        <div class="overflow-hidden flex-1"><p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">Petugas Aktif</p><p id="userNameLabel" class="font-bold text-slate-700 text-xs truncate">-</p></div>
+      </div>
+      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 py-3 bg-white border border-rose-100 text-rose-600 hover:bg-rose-500 hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm hover:shadow-rose-200"><i class="fas fa-sign-out-alt"></i> Keluar</button>
     </div>
   </aside>
 
   <!-- KONTEN UTAMA -->
-  <main class="flex-1 flex flex-col h-full overflow-hidden relative">
-    <header class="glass-card sticky top-0 z-20 px-6 md:px-10 py-5 border-b border-slate-200 flex justify-between items-center">
-      <h2 id="pageTitle" class="text-xl md:text-2xl font-extrabold text-slate-800 capitalize tracking-tight">Dashboard Pusat</h2>
-     <div class="flex items-center gap-2 md:gap-3">
-        <button onclick="toggleDarkMode()" id="btnDarkMode" class="bg-slate-100 text-slate-600 px-3 md:px-4 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-slate-200 transition-all flex items-center justify-center w-10 md:w-auto"><i class="fas fa-moon"></i></button>
-        <button onclick="loadData()" class="bg-emerald-50 text-emerald-600 px-3 md:px-5 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-sync-alt"></i> <span class="hidden md:inline">Refresh</span></button>
-        <button onclick="openModalSmart()" class="bg-indigo-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-plus"></i> <span class="hidden md:inline">Tambah Data</span><span class="md:hidden">Tambah</span></button>
-        <button onclick="handleLogout()" class="bg-rose-50 text-rose-600 px-3 md:px-5 py-2.5 md:py-3 rounded-xl font-bold text-xs md:text-sm shadow-sm hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-power-off"></i> <span class="hidden md:inline">Keluar</span></button>
+  <main id="mainContent" class="flex-1 flex flex-col h-full overflow-hidden relative transition-all w-full bg-[#f4f7fb]">
+    <header class="glass-header sticky top-0 z-30 px-6 md:px-8 py-4 flex justify-between items-center shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+      <div class="flex items-center gap-4">
+        <!-- TOMBOL HAMBURGER HIDE/SHOW -->
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95 focus:ring-2 focus:ring-indigo-500/50">
+          <i class="fas fa-bars text-sm"></i>
+        </button>
+        <h2 id="pageTitle" class="text-xl md:text-2xl font-black text-slate-800 capitalize tracking-tight drop-shadow-sm">Dashboard Pusat</h2>
+      </div>
+      <div class="flex items-center gap-2 md:gap-3">
+        <button onclick="toggleDarkMode()" id="btnDarkMode" class="bg-white text-slate-600 border border-slate-200 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center w-10 md:w-auto"><i class="fas fa-moon"></i></button>
+        <button onclick="loadData()" class="bg-emerald-50 text-emerald-600 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide border border-emerald-100/50"><i class="fas fa-sync-alt"></i> <span class="hidden md:inline">Refresh</span></button>
+        <button onclick="openModalSmart()" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-plus"></i> <span class="hidden md:inline">Tambah Data</span><span class="md:hidden">Tambah</span></button>
+        <button onclick="handleLogout()" class="bg-rose-50 text-rose-600 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide border border-rose-100/50"><i class="fas fa-power-off"></i> <span class="hidden md:inline">Keluar</span></button>
       </div>
     </header>
+<!-- ================= SAMPAI SINI ================= -->
 
     <div class="flex-1 overflow-y-auto flex flex-col relative z-0">
       <div class="p-6 md:p-10 flex-1">
@@ -1588,6 +1620,36 @@
 
   let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
   function promptInstallPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { deferredPrompt = null; }); } else { const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; let instruksi = ""; if (isIOS) { instruksi = `<div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300"><p>Untuk menginstal di <b>iPhone/iPad</b>:</p><ol class="list-decimal pl-5 space-y-3"><li>Ketuk ikon <b>Share</b> <i class="fas fa-share-square text-blue-500 text-lg"></i> di bagian bawah Safari.</li><li>Gulir ke bawah dan ketuk <b>"Add to Home Screen"</b> <i class="far fa-plus-square"></i>.</li><li>Ketuk <b>"Add"</b> (Tambah) di pojok kanan atas.</li></ol></div>`; } else { instruksi = `<div class="text-left space-y-3 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300"><p>Cara Pintar Menginstal Aplikasi:</p><ol class="list-decimal pl-5 space-y-3"><li>Ketuk <b>Menu (Tiga Titik)</b> <i class="fas fa-ellipsis-v"></i> di pojok kanan atas browser Chrome Anda.</li><li>Pilih opsi <b>"Install aplikasi"</b> atau <b>"Tambahkan ke Layar Utama"</b>.</li><li>Ikuti petunjuk singkat di layar.</li></ol></div>`; } Swal.fire({ title: 'Install Aplikasi', html: instruksi, confirmButtonText: 'Saya Mengerti', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]' } }); } }
+// --- FUNGSI TOGGLE SIDEBAR (AUTO HIDE) ---
+  window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+          // Logika Layar HP (Slide Over)
+          if (sidebar.classList.contains('-translate-x-full')) {
+              sidebar.classList.remove('-translate-x-full');
+              overlay.classList.remove('hidden');
+              setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+          } else {
+              sidebar.classList.add('-translate-x-full');
+              overlay.classList.add('opacity-0');
+              setTimeout(() => overlay.classList.add('hidden'), 300);
+          }
+      } else {
+          // Logika Layar Desktop/Laptop (Margin Negatif agar Konten Utama Melebar)
+          sidebar.classList.toggle('md:-ml-[280px]');
+      }
+  };
+
+  // Menutup overlay otomatis jika layar dibesarkan
+  window.addEventListener('resize', () => {
+      if(window.innerWidth >= 768) {
+          document.getElementById('sidebarOverlay').classList.add('hidden');
+      }
+  });
+
 </script>
 </body>
 </html>
