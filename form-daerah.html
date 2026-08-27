@@ -247,19 +247,20 @@
       else { wadah.classList.remove('hidden'); g.required = true; } 
     }
 
-    // --- RIWAYAT & LOCAL STORAGE LOGIC ---
+   // --- RIWAYAT & SESSION STORAGE LOGIC ---
     function tambahKeRiwayat(nama, gereja) {
-        let riwayat = JSON.parse(localStorage.getItem('gkpi_riwayat_daerah')) || [];
+        // Menggunakan sessionStorage agar otomatis terhapus saat tab ditutup
+        let riwayat = JSON.parse(sessionStorage.getItem('gkpi_riwayat_daerah')) || [];
         if(!riwayat.some(r => r.nama === nama && r.gereja === gereja)) {
             riwayat.unshift({ idTemp: Date.now() + Math.floor(Math.random()*100), nama: nama, gereja: gereja, waktu: new Date().toLocaleString('id-ID') });
-            localStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat));
+            sessionStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat));
         }
     }
 
     function loadRiwayat(paksaSync = false) {
        const wadah = document.getElementById('wadahRiwayat');
-       let riwayat = JSON.parse(localStorage.getItem('gkpi_riwayat_daerah')) || [];
-       if(riwayat.length === 0) { wadah.innerHTML = '<div class="text-center p-6 text-slate-400 text-sm font-medium border-2 border-dashed border-slate-200 rounded-xl">Belum ada riwayat input di perangkat ini.</div>'; return; }
+       let riwayat = JSON.parse(sessionStorage.getItem('gkpi_riwayat_daerah')) || [];
+       if(riwayat.length === 0) { wadah.innerHTML = '<div class="text-center p-6 text-slate-400 text-sm font-medium border-2 border-dashed border-slate-200 rounded-xl">Belum ada riwayat input di sesi ini (Akan ter-reset jika Tab ditutup).</div>'; return; }
        
        if(paksaSync) {
            Swal.fire({ title: 'Menyinkronkan Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
@@ -272,12 +273,19 @@
        riwayat.forEach(item => {
            let majelisData = DATA_MASTER.majelis.find(m => String(m.Nama_Lengkap).trim().toLowerCase() === String(item.nama).trim().toLowerCase() && (String(m.Nama_Gereja).trim() === String(item.gereja).trim() || String(m.Resort).trim() === String(item.gereja).trim()));
            let btnHtml = ""; let statusHtml = "";
+           
            if(majelisData) {
                statusHtml = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold rounded uppercase">Tersimpan</span>`;
-               btnHtml = `<button onclick="bukaEdit('${item.idTemp}', '${majelisData.ID_Majelis}')" class="bg-amber-100 text-amber-600 p-2 rounded-lg hover:bg-amber-500 hover:text-white transition-colors text-xs font-bold"><i class="fas fa-edit"></i> Edit</button>`;
+               btnHtml = `
+                  <button onclick="bukaEdit('${item.idTemp}', '${majelisData.ID_Majelis}')" class="bg-amber-100 text-amber-600 p-2 rounded-lg hover:bg-amber-500 hover:text-white transition-colors text-xs font-bold mr-1" title="Edit Data"><i class="fas fa-edit"></i></button>
+                  <button onclick="hapusRiwayatMajelis('${item.idTemp}', '${majelisData.ID_Majelis}')" class="bg-rose-100 text-rose-600 p-2 rounded-lg hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold" title="Hapus Permanen"><i class="fas fa-trash"></i></button>
+               `;
            } else {
                statusHtml = `<span class="px-2 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-bold rounded uppercase">Sinkronisasi...</span>`;
-               btnHtml = `<button onclick="Swal.fire('Data Belum Muncul', 'Silakan klik tombol Sync (Putaran) di atas untuk menarik ID dari server pusat.', 'info')" class="bg-slate-100 text-slate-400 p-2 rounded-lg text-xs font-bold"><i class="fas fa-edit"></i> Edit</button>`;
+               btnHtml = `
+                  <button onclick="Swal.fire('Data Belum Muncul', 'Silakan klik tombol Sync (Putaran) di atas untuk menarik ID dari server pusat.', 'info')" class="bg-slate-100 text-slate-400 p-2 rounded-lg text-xs font-bold mr-1"><i class="fas fa-edit"></i></button>
+                  <button onclick="hapusRiwayatMajelis('${item.idTemp}', null)" class="bg-rose-100 text-rose-600 p-2 rounded-lg hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold" title="Hapus dari Riwayat"><i class="fas fa-trash"></i></button>
+               `;
            }
 
            wadah.innerHTML += `
@@ -287,10 +295,46 @@
                     <p class="text-[10px] text-slate-400 mt-1"><i class="fas fa-church text-indigo-400"></i> ${item.gereja}</p>
                     <div class="mt-2 flex gap-2 items-center"><i class="far fa-clock text-slate-300 text-[10px]"></i> <span class="text-[9px] text-slate-400 font-mono">${item.waktu}</span> ${statusHtml}</div>
                  </div>
-                 <div>${btnHtml}</div>
+                 <div class="flex">${btnHtml}</div>
               </div>
            `;
        });
+    }
+
+    // FUNGSI BARU: HAPUS DATA DARI SERVER & RIWAYAT
+    window.hapusRiwayatMajelis = function(idTemp, idMajelis) {
+        Swal.fire({
+            title: 'Hapus Data Ini?',
+            text: 'Data ini akan dibuang secara permanen dari server agar Anda bisa menginput ulang.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Hapus!'
+        }).then((result) => {
+            if(result.isConfirmed) {
+                Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+                
+                if(idMajelis && idMajelis !== 'null') {
+                    // Eksekusi API Hapus di Server Pusat
+                    apiCall('hapusMajelis', {id: idMajelis}).then(() => {
+                        hapusDariSessionStorage(idTemp);
+                        Swal.fire('Terhapus!', 'Data berhasil dihapus dari sistem.', 'success');
+                        loadRiwayat(true); // Memanggil sync otomatis
+                    }).catch(err => Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus di server.', 'error'));
+                } else {
+                    // Jika data belum tersync (belum ada ID), hapus dari riwayat lokal saja
+                    hapusDariSessionStorage(idTemp);
+                    Swal.fire('Terhapus!', 'Data dihapus dari riwayat.', 'success');
+                    loadRiwayat(false);
+                }
+            }
+        });
+    };
+
+    function hapusDariSessionStorage(idTemp) {
+        let riwayat = JSON.parse(sessionStorage.getItem('gkpi_riwayat_daerah')) || [];
+        riwayat = riwayat.filter(r => String(r.idTemp) !== String(idTemp));
+        sessionStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat));
     }
 
     // --- LOGIC KIRIM INDIVIDU ---
@@ -441,7 +485,7 @@
 
     function tutupEdit() { document.getElementById('modalEdit').classList.add('hidden'); }
 
-    function simpanEditMajelis(e) {
+   function simpanEditMajelis(e) {
        e.preventDefault();
        Swal.fire({ title: 'Menyimpan Perubahan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
        
@@ -461,15 +505,20 @@
 
        apiCall('updateMajelis', payload).then(res => {
           if(res) {
-             let riwayat = JSON.parse(localStorage.getItem('gkpi_riwayat_daerah')) || [];
+             // MENGGUNAKAN SESSION STORAGE PADA EDIT
+             let riwayat = JSON.parse(sessionStorage.getItem('gkpi_riwayat_daerah')) || [];
              const idTemp = document.getElementById('e_id_temp').value;
              let idx = riwayat.findIndex(r => String(r.idTemp) === String(idTemp));
-             if(idx !== -1) { riwayat[idx].nama = payload.Nama_Lengkap; riwayat[idx].gereja = payload.Nama_Gereja || payload.Resort; localStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat)); }
+             if(idx !== -1) { 
+                 riwayat[idx].nama = payload.Nama_Lengkap; 
+                 riwayat[idx].gereja = payload.Nama_Gereja || payload.Resort; 
+                 sessionStorage.setItem('gkpi_riwayat_daerah', JSON.stringify(riwayat)); 
+             }
              
              tutupEdit();
              Swal.fire({ title: 'Selesai!', text: 'Perbaikan berhasil dikirim.', icon: 'success', timer: 1500, showConfirmButton: false});
              loadRiwayat(true); 
-          } else { Swal.fire('Gagal', 'Terjadi kesalahan.', 'error'); }
+          } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
        });
     }
   </script>
