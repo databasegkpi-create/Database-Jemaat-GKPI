@@ -1216,7 +1216,7 @@ function handleLogin(e) {
       document.getElementById('modalCetakData').classList.remove('hidden');
   };
 
-  // --- HAPUS KELUARGA MASSAL ---
+// --- HAPUS KELUARGA MASSAL ---
   window.konfirmasiHapusKeluarga = function(noKK) {
       Swal.fire({
           title: 'Hapus Seluruh Keluarga?',
@@ -1229,11 +1229,17 @@ function handleLogin(e) {
           if (result.isConfirmed) {
               Swal.fire({ title: 'Menghapus Keluarga...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
               let members = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === String(noKK).trim());
-          for (let m of members) { 
+              
+              for (let m of members) { 
                   if (m.ID_Jemaat) { 
                       try { await apiCall('hapusJemaat', {id: m.ID_Jemaat, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}); } catch(e) {} 
                   } 
               }
+              
+              // TANDA } DAN DUA BARIS INI YANG SEBELUMNYA TIDAK SENGAJA TERHAPUS
+              Swal.fire('Terhapus!', 'Seluruh data keluarga berhasil dihapus.', 'success');
+              loadData();
+          } 
       });
   };
 
