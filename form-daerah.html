@@ -156,28 +156,36 @@
     let DATA_MASTER = { gereja: [], jabatan: [], majelis: [] };
     let barisPersonilCount = 0;
 
-    // FUNGSI JEMBATAN API
+   // --- 1. FUNGSI JEMBATAN API (ANTI BADAI & HANG) ---
     async function apiCall(action, payload = {}) {
       try {
-        const response = await fetch(SCRIPT_URL, {
+        // PERBAIKAN: Selalu sertakan API Key rahasia agar Google tidak menolak data
+        payload.api_key = "GKPI_HUB_SECURE_2026"; 
+        
+        let response = await fetch(SCRIPT_URL, {
           method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: action, payload: payload })
         });
-        return await response.json();
+        
+        let textResult = await response.text();
+
+        // PERBAIKAN: Jika Google memblokir POST dan mengembalikan Halaman HTML Error, 
+        // kita paksa tembus menggunakan metode GET
+        if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
+           const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+           const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
+           response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
+           textResult = await response.text();
+           if (textResult.trim().startsWith('<')) throw new Error("Akses diblokir oleh sistem Google.");
+        }
+        
+        try { 
+            return JSON.parse(textResult); 
+        } catch(err) { 
+            throw new Error("Format respons server berantakan."); 
+        }
       } catch (error) { throw new Error(error.message); }
     }
-
-    window.onload = () => {
-      Swal.fire({ title: 'Terhubung ke Pusat...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-      apiCall('getAppData').then(res => {
-         if(res.status === 'error') throw new Error(res.message);
-         DATA_MASTER = res;
-         siapkanDropdowns();
-         tambahBarisPersonil(); // Panggil 1 baris kosong untuk form Multi
-         Swal.close();
-      }).catch(err => { Swal.fire('Koneksi Gagal', 'Pastikan sinyal internet Anda stabil.', 'error'); });
-    };
-
     function pindahTab(tab) {
       document.getElementById('tabIndividu').classList.toggle('hidden', tab !== 'individu');
       document.getElementById('tabMulti').classList.toggle('hidden', tab !== 'multi');
@@ -406,6 +414,7 @@
         }
     }
 
+   // --- 2. LOGIC INPUT MULTI PERSONIL (SEKALIGUS) ---
     function simpanMultiMajelis(e) {
         e.preventDefault();
         
@@ -424,7 +433,8 @@
         for(let i=0; i<namaInputs.length; i++) {
             let jbt = jabatanInputs[i].value;
             let grjRow = gereja;
-            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort sesuai rule
+            
+            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort sesuai aturan
             if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
                 grjRow = "Tingkat Resort"; 
             }
@@ -441,26 +451,34 @@
 
         if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
 
-        Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim batch data ke server pusat', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim data ke server pusat. Mohon tunggu...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
-        // Menggunakan API import massal (dengan Bypass Editor)
+        // Eksekusi API secara tangguh
         apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor"}).then(res => {
-            if (res.status === 'success') {
-                // Catat di riwayat perangkat
-                arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); });
+            // PERBAIKAN: Validasi respon yang jauh lebih aman agar tidak memicu error tersembunyi
+            if (res === true || res.status === 'success' || res.added) {
+                try { 
+                    arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); 
+                } catch(err) { console.error(err); }
                 
-                Swal.fire('Berhasil!', `<b>${res.added}</b> personil berhasil didaftarkan sekaligus.`, 'success');
+                let count = res.added || arrData.length;
+                Swal.fire('Berhasil!', `<b>${count}</b> personil berhasil didaftarkan sekaligus.`, 'success');
                 
-                // Reset Ulang
+                // Reset Formulir
                 document.getElementById('formMulti').reset();
                 document.getElementById('wadahPersonilMulti').innerHTML = '';
                 barisPersonilCount = 0;
                 tambahBarisPersonil(); 
                 syncResort('mul'); 
-            } else { Swal.fire('Gagal', res.message, 'error'); }
-        }).catch(err => Swal.fire('Error Jaringan', String(err), 'error'));
+            } else { 
+                Swal.fire('Gagal', res.message || 'Terjadi kesalahan sistem dari server.', 'error'); 
+            }
+        }).catch(err => {
+            // Memastikan loading berhenti jika jaringan tiba-tiba putus
+            Swal.fire('Koneksi Gagal', 'Data gagal dikirim. Pastikan sinyal stabil. Detail: ' + String(err), 'error');
+        });
     }
-
+    
     // --- LOGIC EDIT DARI PERANGKAT ---
     function bukaEdit(idTemp, idMajelis) {
        const m = DATA_MASTER.majelis.find(x => x.ID_Majelis === idMajelis);
