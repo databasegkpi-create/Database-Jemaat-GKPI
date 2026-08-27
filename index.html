@@ -28,9 +28,20 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
-  /* --- BACKGROUND FOTO ASLI & TRANSPARAN --- */
+
+    /* 1. Warna dasar diletakkan di paling belakang */
+    html {
+        background-color: #f4f7fb;
+    }
+
+    /* 2. Paksa wadah aplikasi menjadi transparan agar foto bisa tembus */
+    body, #mainApp, #mainContent {
+        background-color: transparent !important;
+    }
+
+    /* 3. --- BACKGROUND FOTO ASLI & TRANSPARAN --- */
     body::before {
         content: "";
         position: fixed;
@@ -38,11 +49,11 @@
         background-image: url('https://lh3.googleusercontent.com/d/114SI02s0zIxdYeS2dy0NO4gqeLryd7TX');
         background-size: cover;
         background-position: center;
-        /* Baris filter hitam-putih telah dihapus */
-        opacity: 0.1; /* Transparansi disetel 10% agar warna asli tipis-tipis terlihat rapi */
+        opacity: 0.15; /* Saya naikkan sedikit ke 15% agar warna aslinya lebih keluar */
         z-index: -1; 
         pointer-events: none; 
     }
+
     .hidden { display: none !important; }
     .nav-active { background-color: #e0e7ff; color: #4f46e5 !important; font-weight: 700; }
     .nav-active i { color: #4f46e5; }
