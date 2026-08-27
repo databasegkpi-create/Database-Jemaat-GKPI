@@ -1231,6 +1231,22 @@ function renderTabelLogAktivitas() {
       } 
   };
 
+  // --- SMART ADD BUTTONS ---
+  function openModalSmart() {
+    const isHome = !document.getElementById('pageHome').classList.contains('hidden');
+    if (isHome) {
+      Swal.fire({
+          title: 'Tambah Data Baru', text: 'Pilih jenis data yang ingin ditambahkan:', showCancelButton: true, showDenyButton: true,
+          confirmButtonText: '<i class="fas fa-users-cog"></i> Data Jemaat', denyButtonText: '<i class="fas fa-id-badge"></i> Data Majelis', cancelButtonText: 'Batal', confirmButtonColor: '#10b981', denyButtonColor: '#4f46e5'
+      }).then((result) => {
+          if (result.isConfirmed) { openFormJemaatBulk(); } else if (result.isDenied) { openFormMajelis(); }
+      });
+    } else {
+      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
+      if(isJemaat) { openFormJemaatBulk(); } else { openFormMajelis(); }
+    }
+  }
+
   function openFormJemaatBulk() {
     if(document.getElementById('formKeluargaBulk')) document.getElementById('formKeluargaBulk').reset(); 
     document.getElementById('containerAnggotaKeluarga').innerHTML = ''; 
