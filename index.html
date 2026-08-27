@@ -740,7 +740,7 @@
     } catch (e) {}
   }
 
-  function renderHomeStats() {
+ function renderHomeStats() {
     let totRT = 0, totJiwa = 0; 
     DATA_MASTER.gereja.forEach(g => { 
         totRT += parseInt(g.Total_RT)||0; 
@@ -752,20 +752,29 @@
     safeSetText('statTotalRT', totRT.toLocaleString('id-ID')); 
     safeSetText('statTotalJiwa', totJiwa.toLocaleString('id-ID'));
 
-    
-    
     safeSetText('pdfTotalGereja', DATA_MASTER.gereja.length); 
     safeSetText('pdfTotalMajelis', DATA_MASTER.majelis.length);
     safeSetText('pdfTotalKK', totRT.toLocaleString('id-ID')); 
     safeSetText('pdfTotalJiwa', totJiwa.toLocaleString('id-ID'));
     safeSetText('previewDate', "Diperbarui pada: " + new Date().toLocaleString('id-ID'));
 
-    // --- LOGIKA PROGRESS BAR DATA MAJELIS ---
-    const TARGET_MAJELIS = 10000; // <-- Bapak bisa mengubah angka target ini kapan saja
+    // --- LOGIKA PROGRESS BAR DATA MAJELIS (TARGET DINAMIS) ---
+    // Menghitung jumlah seluruh unit gereja
+    let totalUnitGereja = DATA_MASTER.gereja.length;
+    
+    // Menghitung jumlah jenis jabatan yang ada di database
+    let totalJenisJabatan = DATA_MASTER.jabatan.filter(j => j.Nama_Jabatan).length;
+    
+    // Target = Jumlah unit gereja dikali jumlah jenis jabatan
+    let TARGET_MAJELIS = totalUnitGereja * totalJenisJabatan;
+    
+    // Pengaman agar tidak terjadi error dibagi nol (0) jika database sedang kosong
+    if(TARGET_MAJELIS === 0) TARGET_MAJELIS = 1; 
+
     let totalMajelisSekarang = DATA_MASTER.majelis.length;
     let persentase = (totalMajelisSekarang / TARGET_MAJELIS) * 100;
     
-    // Cegah bar melebihi 100% jika data melebihi target
+    // Cegah bar melebihi 100% jika data personil ternyata lebih banyak dari estimasi target
     if(persentase > 100) persentase = 100; 
 
     // Menggerakkan Bar dan Angka di layar
