@@ -16,7 +16,21 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background-color: #f8fafc; color: #0f172a; }
+  body { background-color: #f8fafc; color: #0f172a; position: relative; z-index: 0; min-height: 100vh; }
+    
+    /* --- BACKGROUND FOTO HITAM PUTIH & TRANSPARAN --- */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0; /* Mengisi seluruh layar */
+        background-image: url('https://lh3.googleusercontent.com/d/1gfQScz4lmHm1BepM0Rd7ElQN7X9SLLon');
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(100%) contrast(110%); /* Hitam putih dengan kontras tajam */
+        opacity: 0.08; /* Transparansi 8% agar tulisan tetap super jelas */
+        z-index: -1; /* Berada paling belakang */
+        pointer-events: none; /* Agar tidak memblokir klik tombol di depannya */
+    }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
     .tab-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
     .tab-btn.inactive { background-color: #f1f5f9; color: #64748b; }
