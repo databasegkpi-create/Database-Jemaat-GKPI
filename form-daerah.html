@@ -415,7 +415,7 @@
     }
 
    // --- 2. LOGIC INPUT MULTI PERSONIL (SEKALIGUS) ---
-    function simpanMultiMajelis(e) {
+    window.simpanMultiMajelis = function(e) {
         e.preventDefault();
         
         const wilayah = document.getElementById('mul_wilayah').value;
@@ -434,7 +434,7 @@
             let jbt = jabatanInputs[i].value;
             let grjRow = gereja;
             
-            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort sesuai aturan
+            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort
             if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
                 grjRow = "Tingkat Resort"; 
             }
@@ -451,30 +451,42 @@
 
         if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
 
-        Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim data ke server pusat. Mohon tunggu...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim data ke server pusat...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
         // Eksekusi API secara tangguh
         apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor"}).then(res => {
-            // PERBAIKAN: Validasi respon yang jauh lebih aman agar tidak memicu error tersembunyi
-            if (res === true || res.status === 'success' || res.added) {
-                try { 
-                    arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); 
-                } catch(err) { console.error(err); }
+            if (res === true || res.status === 'success' || res.added !== undefined) {
                 
-                let count = res.added || arrData.length;
-                Swal.fire('Berhasil!', `<b>${count}</b> personil berhasil didaftarkan sekaligus.`, 'success');
-                
-                // Reset Formulir
-                document.getElementById('formMulti').reset();
-                document.getElementById('wadahPersonilMulti').innerHTML = '';
-                barisPersonilCount = 0;
-                tambahBarisPersonil(); 
-                syncResort('mul'); 
+                // Menarik angka pasti dari respon server
+                let count = parseInt(res.added);
+                if (isNaN(count)) count = arrData.length; 
+
+                // PERBAIKAN: Jika server merespon 0, artinya data DITOLAK (karena Duplikat)
+                if (count === 0) {
+                    Swal.fire({
+                        title: 'Data Sudah Ada!',
+                        html: 'Server menolak penyimpanan karena <b>personil tersebut sudah pernah terdaftar (Duplikat)</b> di database pusat.',
+                        icon: 'info'
+                    });
+                } else {
+                    // Jika data benar-benar baru dan berhasil masuk
+                    try { 
+                        arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); 
+                    } catch(err) {}
+                    
+                    Swal.fire('Berhasil!', `<b>${count}</b> personil baru berhasil didaftarkan sekaligus.`, 'success');
+                    
+                    // Reset Formulir kembali bersih
+                    document.getElementById('formMulti').reset();
+                    document.getElementById('wadahPersonilMulti').innerHTML = '';
+                    barisPersonilCount = 0;
+                    tambahBarisPersonil(); 
+                    syncResort('mul'); 
+                }
             } else { 
                 Swal.fire('Gagal', res.message || 'Terjadi kesalahan sistem dari server.', 'error'); 
             }
         }).catch(err => {
-            // Memastikan loading berhenti jika jaringan tiba-tiba putus
             Swal.fire('Koneksi Gagal', 'Data gagal dikirim. Pastikan sinyal stabil. Detail: ' + String(err), 'error');
         });
     }
