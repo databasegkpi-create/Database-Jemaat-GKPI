@@ -30,7 +30,19 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background-color: #f1f5f9; color: #0f172a; margin: 0; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+  /* --- BACKGROUND FOTO ASLI & TRANSPARAN --- */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url('https://lh3.googleusercontent.com/d/114SI02s0zIxdYeS2dy0NO4gqeLryd7TX');
+        background-size: cover;
+        background-position: center;
+        /* Baris filter hitam-putih telah dihapus */
+        opacity: 0.1; /* Transparansi disetel 10% agar warna asli tipis-tipis terlihat rapi */
+        z-index: -1; 
+        pointer-events: none; 
+    }
     .hidden { display: none !important; }
     .nav-active { background-color: #e0e7ff; color: #4f46e5 !important; font-weight: 700; }
     .nav-active i { color: #4f46e5; }
