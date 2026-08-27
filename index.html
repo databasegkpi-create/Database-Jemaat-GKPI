@@ -1178,6 +1178,24 @@
      renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
   }
 
+  // --- FUNGSI CETAK KARTU KELUARGA (PDF) ---
+  window.bukaPreviewCetakKeluarga = function(noKK) {
+      let members = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === String(noKK).trim());
+      if (members.length === 0) return Swal.fire('Error', 'Data keluarga tidak ditemukan', 'error');
+      
+      let kpl = members.find(m => String(m.Status_Keluarga).toLowerCase() === 'kepala keluarga') || members[0];
+      
+      safeSetText('judulCetakPdf', 'KARTU KELUARGA JEMAAT');
+      safeSetText('tglCetakPdf', 'No. KK: ' + noKK);
+      safeSetHTML('infoFilterCetak', `<div><b>Kepala Keluarga:</b> ${kpl.Nama_Lengkap}</div><div><b>Unit Gereja:</b> ${kpl.Nama_Gereja}</div><div><b>Resort:</b> ${kpl.Resort} (W-${kpl.Wilayah})</div>`);
+      
+      safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Status Hubungan</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Tgl Lahir</th><th style="border: 1px solid #cbd5e1; padding: 6px;">Pekerjaan</th></tr>`);
+      
+      safeSetHTML('bodyTabelCetak', members.map((m, i) => `<tr><td style="border: 1px solid #cbd5e1; padding: 5px; text-align:center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight:bold;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align:center;">${m.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Tanggal_Lahir||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Pekerjaan||'-'}</td></tr>`).join(''));
+      
+      document.getElementById('modalCetakData').classList.remove('hidden');
+  };
+
   // --- HAPUS KELUARGA MASSAL ---
   window.konfirmasiHapusKeluarga = function(noKK) {
       Swal.fire({
@@ -1191,10 +1209,11 @@
           if (result.isConfirmed) {
               Swal.fire({ title: 'Menghapus Keluarga...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
               let members = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() === String(noKK).trim());
-              for (let m of members) { if (m.ID_Jemaat) { try { await apiCall('hapusJemaat', {id: m.ID_Jemaat}); } catch(e) {} } }
-              Swal.fire('Terhapus!', 'Seluruh data keluarga berhasil dihapus.', 'success');
-              loadData();
-          }
+          for (let m of members) { 
+                  if (m.ID_Jemaat) { 
+                      try { await apiCall('hapusJemaat', {id: m.ID_Jemaat, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}); } catch(e) {} 
+                  } 
+              }
       });
   };
 
@@ -1443,6 +1462,10 @@
     
     let fr = document.getElementById('j_resort'); const tipeGereja = fr.options[fr.selectedIndex]?.getAttribute('data-tipe');
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; } 
+
+    // --- TAMBAHKAN DUA BARIS INI ---
+    payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer';
+    payload.sumberAsal = "Dashboard Pusat";
     
     const action = payload.ID_Jemaat ? 'updateJemaat' : 'simpanJemaat';
     Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
@@ -1471,6 +1494,10 @@
     let fr = document.getElementById('formResort') || document.getElementById('m_resort');
     let tipeGereja = fr ? fr.options[fr.selectedIndex]?.getAttribute('data-tipe') : '';
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
+
+    // --- TAMBAHKAN DUA BARIS INI ---
+    payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer';
+    payload.sumberAsal = "Dashboard Pusat";
     
     const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
     const isDuplicate = DATA_MASTER.majelis.some(m => { const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; return existingNama === inputNama; });
@@ -1494,10 +1521,29 @@
     safeSetHTML('modalTitle', '<i class="fas fa-id-badge text-amber-500 mr-2"></i> Edit Personil'); safeSetHTML('btnSubmit', '<i class="fas fa-save mr-2"></i> Simpan Perubahan'); 
     if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden');
   }
+function konfirmasiHapus(id) { 
+      Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { 
+          if (result.isConfirmed) { 
+              Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); 
+              // UBAH BARIS API CALL DI BAWAH INI:
+              apiCall('hapusMajelis', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { 
+                  Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); 
+              }); 
+          } 
+      }); 
+  }
 
-  function konfirmasiHapus(id) { Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusMajelis', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } }); }
-  function konfirmasiHapusJemaat(id) { Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusJemaat', {id: id}).then(() => { Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); }); } }); }
-
+  function konfirmasiHapusJemaat(id) { 
+      Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { 
+          if (result.isConfirmed) { 
+              Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); 
+              // UBAH BARIS API CALL DI BAWAH INI:
+              apiCall('hapusJemaat', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { 
+                  Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); 
+              }); 
+          } 
+      }); 
+  }
   // --- DOWNLOAD TEMPLATE & IMPORT EXCEL ---
   function downloadTemplateImport() { 
       const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
