@@ -146,6 +146,7 @@
         <button onclick="switchTab('home')" id="btnHome" class="nav-active flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-layer-group w-5 text-center group-hover:text-indigo-500 transition-colors"></i> Dashboard Pusat</button>
         <button onclick="switchTab('jemaat')" id="btnJemaat" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-users-cog w-5 text-center group-hover:text-emerald-500 transition-colors"></i> Data Jemaat</button>
         <button onclick="switchTab('search')" id="btnSearch" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-sitemap w-5 text-center group-hover:text-indigo-500 transition-colors"></i> Data Internal</button>
+        <button onclick="switchTab('log')" id="btnLog" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm sidebar-link-hover w-full group"><i class="fas fa-history w-5 text-center group-hover:text-amber-500 transition-colors"></i> Log Aktivitas</button>
       </div>
       
       <div class="px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1 relative"><span class="bg-white pr-2 relative z-10">Tautan Aplikasi</span><div class="absolute left-0 top-1/2 w-full h-[1px] bg-slate-100 z-0"></div></div>
@@ -377,7 +378,31 @@
             <div id="paginationGereja" class="p-4 bg-slate-50 border-t border-slate-200 flex justify-center items-center"></div>
           </div>
         </div>
-
+    <!-- HALAMAN LOG AKTIVITAS -->
+        <div id="pageLog" class="hidden space-y-6 animate-fade">
+          <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-clipboard-list text-amber-500"></i> Riwayat Aktivitas Sistem</h3>
+                <span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-200">Audit Trail</span>
+            </div>
+            <div class="overflow-y-auto flex-1 custom-scrollbar border border-slate-100 rounded-2xl">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Timestamp</th>
+                            <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sumber Lokasi</th>
+                            <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Tindakan</th>
+                            <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Detail Informasi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLogAktivitas" class="divide-y divide-slate-50 text-sm">
+                        <tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl">Menunggu sinkronisasi dari server...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+        
         <!-- HALAMAN ADMIN -->
         <div id="pageAdmin" class="hidden space-y-6 animate-fade">
           <div class="bg-white p-8 md:p-10 rounded-3xl soft-shadow border border-slate-100 max-w-4xl mx-auto">
@@ -709,6 +734,9 @@
         filterTabel(); 
         filterTabelJemaat();
 
+        if(!DATA_MASTER.log) DATA_MASTER.log = []; // Pengaman
+        renderTabelLogAktivitas(); // <-- Tambahkan baris ini
+
         if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
         
         Swal.close(); 
@@ -803,9 +831,10 @@
   }
 
   // --- MENU SWITCHING ---
-  function switchTab(tab) {
-    ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
-    ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
+ function switchTab(tab) {
+    ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
+    ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
+  
     if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
     if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
     
@@ -978,7 +1007,38 @@
     });
     renderTabelJemaat(fj, true); window.currentFilteredJemaat = fj;
   }
+function renderTabelLogAktivitas() {
+      const tbody = document.getElementById('tableLogAktivitas');
+      if(!tbody) return;
+      
+      // Jika data log kosong atau belum dibuat di server
+      if(!DATA_MASTER.log || DATA_MASTER.log.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl">Data log masih kosong.</td></tr>';
+          return;
+      }
 
+      // Render 50 log terakhir (dibalik agar yang terbaru di atas)
+      let logTerbaru = [...DATA_MASTER.log].reverse().slice(0, 50);
+
+      tbody.innerHTML = logTerbaru.map(L => {
+          let aksi = String(L.Aksi || L.aksi || '').toUpperCase();
+          let badgeWarna = 'bg-slate-100 text-slate-600';
+          if(aksi.includes('TAMBAH') || aksi.includes('INPUT')) badgeWarna = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+          else if(aksi.includes('EDIT') || aksi.includes('UPDATE')) badgeWarna = 'bg-amber-100 text-amber-700 border-amber-200';
+          else if(aksi.includes('HAPUS') || aksi.includes('DELETE')) badgeWarna = 'bg-rose-100 text-rose-700 border-rose-200';
+
+          let sumber = String(L.Lokasi_Input || L.Sumber || 'Pusat Aplikasi').toUpperCase();
+          let ikonSumber = sumber.includes('DAERAH') ? '<i class="fas fa-mobile-alt text-indigo-400 w-4 text-center"></i>' : '<i class="fas fa-desktop text-blue-400 w-4 text-center"></i>';
+
+          return `
+          <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 text-[11px] font-mono font-bold text-slate-500">${L.Waktu || L.Timestamp || '-'}</td>
+              <td class="p-4 text-xs font-bold text-slate-700 flex items-center gap-2">${ikonSumber} ${sumber}</td>
+              <td class="p-4 text-center"><span class="px-2.5 py-1 border ${badgeWarna} rounded-md text-[9px] font-black tracking-widest">${aksi}</span></td>
+              <td class="p-4 text-xs font-semibold text-slate-700 max-w-md truncate whitespace-normal">${L.Detail || L.Keterangan || '-'}</td>
+          </tr>`;
+      }).join('');
+  }
   // --- TABEL JEMAAT KELUARGA ---
   function renderTabelJemaat(data, resetPage = true) {
      if(resetPage) currentPageJemaat = 1; const container = document.getElementById('jemaatAccordionContainer'); if(!container) return;
