@@ -696,6 +696,8 @@ function handleLogin(e) {
             // Jika sukses, masuk ke Dashboard
             USER_NOW = res; 
             sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
+          // ---> CATAT LOG AKTIVITAS LOGIN <---
+            apiCall('catatLogEvent', { aksi: "LOGIN", sumber: "Sistem Auth", detail: "Akun berhasil masuk: " + res.nama }).catch(e=>{});
             showMainApp(); 
             loadData(); 
         } else if (res.status === 'fail') { 
@@ -714,14 +716,26 @@ function handleLogin(e) {
       });
   }
 
-  function handleLogout() { Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'Ya, Keluar!' }).then((result) => { if (result.isConfirmed) { sessionStorage.removeItem('si_majelis_user'); location.reload(); } }); }
-
+function handleLogout() { 
+      Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'Ya, Keluar!' }).then((result) => { 
+          if (result.isConfirmed) { 
+              Swal.fire({ title: 'Menutup sesi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+              if(USER_NOW) {
+                  // ---> CATAT LOG AKTIVITAS LOGOUT <---
+                  apiCall('catatLogEvent', { aksi: "LOGOUT", sumber: "Sistem Auth", detail: "Akun telah keluar: " + USER_NOW.nama })
+                  .finally(() => { sessionStorage.removeItem('si_majelis_user'); location.reload(); });
+              } else {
+                  sessionStorage.removeItem('si_majelis_user'); location.reload();
+              }
+          } 
+      }); 
+  }
 function showMainApp() {
     if(document.getElementById('loginPage')) document.getElementById('loginPage').classList.add('hidden'); 
     if(document.getElementById('mainApp')) document.getElementById('mainApp').classList.remove('hidden'); 
     safeSetText('userNameLabel', USER_NOW.nama || 'Pengguna');
     
-    // ==========================================
+  // ==========================================
     // SISTEM KEAMANAN LAYER 1 (UI RESTRICTION)
     // ==========================================
     const roleSafe = String(USER_NOW.role).toLowerCase(); 
@@ -733,27 +747,20 @@ function showMainApp() {
         else { btnAdmin.classList.add('hidden'); } 
     }
 
-    // 2. Daftar Tombol Aksi yang HARAM dilihat oleh Viewer
-    const elemenDilarangUntukViewer = [
-        'btnTopTambah', 
-        'btnTabTambahJemaat', 
-        'btnTabImportJemaat', 
-        'btnTabImportMajelis', 
-        'btnTabBlastWA'
-    ];
+    // 2. Otorisasi Menu Log Aktivitas (HANYA ADMIN)
+    const btnLog = document.getElementById('btnLog');
+    if (btnLog) {
+        if (roleSafe.includes('admin')) { btnLog.classList.remove('hidden'); }
+        else { btnLog.classList.add('hidden'); }
+    }
 
-    // 3. Eksekusi Penyembunyian Tombol jika rolenya adalah "Viewer"
+    // 3. Daftar Tombol Aksi yang HARAM dilihat oleh Viewer
+    const elemenDilarangUntukViewer = ['btnTopTambah', 'btnTabTambahJemaat', 'btnTabImportJemaat', 'btnTabImportMajelis', 'btnTabBlastWA'];
+
     if (roleSafe === 'viewer') {
-        elemenDilarangUntukViewer.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none'; // Paksa hilangkan dari layar
-        });
+        elemenDilarangUntukViewer.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
     } else {
-        // Jika Admin atau Editor, tampilkan kembali
-        elemenDilarangUntukViewer.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'flex'; 
-        });
+        elemenDilarangUntukViewer.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'flex'; });
     }
   }
 
@@ -1296,8 +1303,8 @@ function showMainApp() {
     container.innerHTML = paginatedGroups.map(g => {
       let trs = g.majelis.map((m, idx) => {
         let hpClean = String(m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '').replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
-        let btnP = `<button onclick="bukaProfil('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-id-badge"></i></button>`;
-        let btnW = (hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WA tidak valid.', 'info')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200"><i class="fab fa-whatsapp"></i></button>`;
+        let btnP = (role.includes('admin') || role.includes('editor')) ? `<button onclick="bukaProfil('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-id-badge"></i></button>` : '';
+        let btnW = (role.includes('admin') || role.includes('editor')) ? ((hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WA tidak valid.', 'info')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200"><i class="fab fa-whatsapp"></i></button>`) : '';
         let btnE = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
         let btnH = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
         return `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"><td class="p-4 text-center text-slate-400 font-bold text-xs">${idx + 1}</td><td class="p-4"><div class="font-bold text-slate-800 text-sm">${m.Nama_Lengkap||'-'}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${m.ID_Majelis||''}</div></td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-4 text-center"><div class="inline-flex gap-2">${btnP}${btnW}${btnE}${btnH}</div></td></tr>`;
@@ -1320,8 +1327,8 @@ function showMainApp() {
         const hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; const id = m.ID_Majelis || ''; const nama = m.Nama_Lengkap || '-'; 
         let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
         
-        let btnProfil = `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>`;
-        let btnWA = (hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`;
+        let btnProfil = (role.includes('admin') || role.includes('editor')) ? `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all" title="Lihat Profil"><i class="fas fa-id-badge"></i></button>` : '';
+        let btnWA = (role.includes('admin') || role.includes('editor')) ? ((hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`) : '';
         let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
         let btnHapus = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
         
