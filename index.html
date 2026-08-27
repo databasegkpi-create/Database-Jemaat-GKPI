@@ -1069,6 +1069,48 @@
 
       renderPaginationLogUI(allLogs.length);
   }
+
+  // --- FUNGSI HAPUS LOG AKTIVITAS (KHUSUS ADMIN) ---
+  window.konfirmasiHapusLog = function() {
+      const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : '';
+      if (!role.includes('admin')) {
+          return Swal.fire('Akses Ditolak', 'Hanya akun dengan level Admin yang dapat membersihkan log aktivitas.', 'error');
+      }
+
+      Swal.fire({
+          title: 'Bersihkan Seluruh Log?',
+          text: 'Riwayat Audit Trail di database pusat akan dihapus secara permanen!',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: 'Ya, Bersihkan!',
+          cancelButtonText: 'Batal'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire({ 
+                  title: 'Membersihkan Log...', 
+                  html: 'Menghapus data di server...', 
+                  allowOutsideClick: false, 
+                  didOpen: () => Swal.showLoading() 
+              });
+
+              apiCall('bersihkanLog', { userRole: USER_NOW ? USER_NOW.role : '' })
+                  .then(res => {
+                      if (res && res.status === 'success') {
+                          DATA_MASTER.log = []; // Kosongkan tampilan log di browser
+                          renderTabelLogAktivitas(); // Refresh tabel jadi kosong
+                          Swal.fire('Berhasil!', 'Seluruh riwayat log aktivitas telah dibersihkan.', 'success');
+                      } else {
+                          Swal.fire('Gagal', res.message || 'Terjadi kesalahan sistem.', 'error');
+                      }
+                  })
+                  .catch(err => {
+                      Swal.fire('Error Server', String(err), 'error');
+                  });
+          }
+      });
+  };
  
   function renderPaginationLogUI(totalItems) {
       const totalPages = Math.ceil(totalItems / itemsPerLogPage); 
