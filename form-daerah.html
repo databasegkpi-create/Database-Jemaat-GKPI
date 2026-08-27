@@ -170,36 +170,24 @@
     let DATA_MASTER = { gereja: [], jabatan: [], majelis: [] };
     let barisPersonilCount = 0;
 
-   // --- 1. FUNGSI JEMBATAN API (ANTI BADAI & HANG) ---
-    async function apiCall(action, payload = {}) {
+async function apiCall(action, payload = {}) {
       try {
-        // PERBAIKAN: Selalu sertakan API Key rahasia agar Google tidak menolak data
-        payload.api_key = "GKPI_HUB_SECURE_2026"; 
+        payload.api_key = "GKPI_HUB_SECURE_2026"; // Kunci satpam pusat
         
-        let response = await fetch(SCRIPT_URL, {
+        const response = await fetch(SCRIPT_URL, {
           method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: action, payload: payload })
         });
         
         let textResult = await response.text();
-
-        // PERBAIKAN: Jika Google memblokir POST dan mengembalikan Halaman HTML Error, 
-        // kita paksa tembus menggunakan metode GET
-        if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
-           const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-           const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-           response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' });
-           textResult = await response.text();
-           if (textResult.trim().startsWith('<')) throw new Error("Akses diblokir oleh sistem Google.");
-        }
-        
         try { 
             return JSON.parse(textResult); 
         } catch(err) { 
-            throw new Error("Format respons server berantakan."); 
+            throw new Error("Respon server tidak valid."); 
         }
       } catch (error) { throw new Error(error.message); }
     }
+    
     function pindahTab(tab) {
       document.getElementById('tabIndividu').classList.toggle('hidden', tab !== 'individu');
       document.getElementById('tabMulti').classList.toggle('hidden', tab !== 'multi');
@@ -565,6 +553,41 @@
           } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
        });
     }
+
+    // --- PEMUATAN AWAL DATA MASTER SAAT HALAMAN DIBUKA ---
+    document.addEventListener('DOMContentLoaded', () => {
+        Swal.fire({ 
+            title: 'Menghubungkan ke Pusat...', 
+            html: 'Mengambil data wilayah & jabatan...', 
+            allowOutsideClick: false, 
+            didOpen: () => { Swal.showLoading(); } 
+        });
+
+        // Mengambil data dari server pusat menggunakan API Hub
+        apiCall('getAppData').then(res => {
+            if(res.status === 'error') throw new Error(res.message);
+            
+            // Menyimpan data ke variabel global DATA_MASTER
+            DATA_MASTER = res; 
+            if(!DATA_MASTER.gereja) DATA_MASTER.gereja = [];
+            if(!DATA_MASTER.jabatan) DATA_MASTER.jabatan = [];
+            if(!DATA_MASTER.majelis) DATA_MASTER.majelis = [];
+
+            // Membangun isi dropdown wilayah dan jabatan secara otomatis
+            siapkanDropdowns();
+            
+            // Memunculkan baris input pertama di tab "Input Sekaligus"
+            tambahBarisPersonil(); 
+            
+            Swal.close();
+        }).catch(err => { 
+            Swal.fire({
+                icon: 'error',
+                title: 'Koneksi Gagal',
+                text: 'Gagal menyinkronkan data dengan pusat. Detail: ' + String(err)
+            }); 
+        });
+    });
   </script>
 </body>
 </html>
