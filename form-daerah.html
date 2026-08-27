@@ -165,7 +165,7 @@
     // ==========================================
     // PASTE URL SCRIPT ANDA DI BAWAH INI
     // ==========================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOnaTcwjyY1QYxs_gpKSCePhIAmyfyWWZG_J-0XILWUTLPm4hnlHw5tJjCczChM3LE/exec";
     
     let DATA_MASTER = { gereja: [], jabatan: [], majelis: [] };
     let barisPersonilCount = 0;
@@ -326,7 +326,7 @@ async function apiCall(action, payload = {}) {
                 
                 if(idMajelis && idMajelis !== 'null') {
                     // Eksekusi API Hapus di Server Pusat
-                    apiCall('hapusMajelis', {id: idMajelis}).then(() => {
+                    apiCall('hapusMajelis', {id: idMajelis, sumberAsal: "PORTAL DAERAH"}).then(() => {
                         hapusDariSessionStorage(idTemp);
                         Swal.fire('Terhapus!', 'Data berhasil dihapus dari sistem.', 'success');
                         loadRiwayat(true); // Memanggil sync otomatis
@@ -352,13 +352,14 @@ async function apiCall(action, payload = {}) {
       e.preventDefault();
       Swal.fire({ title: 'Mendaftarkan Personil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
       
-      const payload = {
+    const payload = {
           Nama_Lengkap: document.getElementById('m_nama').value,
           Jabatan: document.getElementById('m_jabatan').value,
           Wilayah: document.getElementById('m_wilayah').value,
           Resort: document.getElementById('m_resort').value,
           Nama_Gereja: document.getElementById('m_gereja').value,
-          No_HP: document.getElementById('m_hp').value
+          No_HP: document.getElementById('m_hp').value,
+          sumberAsal: "PORTAL DAERAH" // <--- TAMBAHKAN BARIS INI
       };
 
       const fr = document.getElementById('m_resort');
@@ -456,7 +457,7 @@ async function apiCall(action, payload = {}) {
         Swal.fire({ title: 'Menyimpan Personil...', html: 'Mengirim data ke server pusat...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
         // Eksekusi API secara tangguh
-        apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor"}).then(res => {
+        apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor", sumberAsal: "PORTAL DAERAH"}).then(res => {
             if (res === true || res.status === 'success' || res.added !== undefined) {
                 
                 // Menarik angka pasti dari respon server
