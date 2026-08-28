@@ -41,6 +41,21 @@
   </style>
 </head>
 <body class="antialiased pb-10">
+  <!-- LAYAR GEMBOK PIN -->
+<div id="pinScreen" class="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+   <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center border-t-4 border-blue-600">
+      <h2 class="text-2xl font-bold mb-2 text-slate-800">Portal Privat GKPI</h2>
+      <p class="text-slate-500 mb-6 text-sm">Masukkan PIN Otorisasi untuk mengakses formulir pendaftaran.</p>
+      
+      <input type="password" id="inputPinAkses" class="w-full border-2 border-slate-200 p-4 rounded-xl mb-6 text-center text-3xl tracking-[0.5em] font-mono focus:border-blue-600 focus:outline-none transition-all" placeholder="••••••" maxlength="6">
+      
+      <button onclick="verifikasiPin()" class="w-full bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 font-bold transition-all shadow-lg shadow-blue-200">
+         Buka Portal
+      </button>
+   </div>
+</div>
+
+  <div id="mainPortalApp" class="hidden">
 
   <!-- HEADER HERO -->
   <header class="bg-gradient-to-br from-indigo-600 to-blue-600 text-white pt-12 pb-20 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
@@ -160,7 +175,7 @@
       </div>
     </div>
   </div>
-
+  </div>
   <script>
     // ==========================================
     // PASTE URL SCRIPT ANDA DI BAWAH INI
@@ -213,6 +228,31 @@ async function apiCall(action, payload = {}) {
       document.getElementById('m_jabatan').innerHTML = jHtml;
       document.getElementById('e_jabatan').innerHTML = jHtml;
     }
+
+    // Variabel penyimpan PIN yang sah
+let PIN_TERVERIFIKASI = ""; 
+
+function verifikasiPin() {
+   let pin = document.getElementById('inputPinAkses').value;
+   if(!pin) return Swal.fire('Perhatian', 'Harap masukkan PIN terlebih dahulu.', 'warning');
+
+   Swal.fire({ title: 'Memeriksa Izin...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+   // Memanggil API yang baru kita buat di Kode.gs
+   apiCall('cekPinPortal', { pin: pin }).then(res => {
+       if(res.status === 'success') {
+           PIN_TERVERIFIKASI = pin; // Simpan ke memori lokal
+           document.getElementById('pinScreen').classList.add('hidden'); // Hilangkan Gembok
+           document.getElementById('mainPortalApp').classList.remove('hidden'); // Tampilkan Form
+           Swal.close();
+       } else {
+           Swal.fire('Akses Ditolak', 'PIN Otorisasi salah!', 'error');
+           document.getElementById('inputPinAkses').value = ''; // Kosongkan input
+       }
+   }).catch(err => {
+       Swal.fire('Error Koneksi', 'Gagal terhubung ke server pusat.', 'error');
+   });
+}
 
     function syncResort(prefix) {
       const w = document.getElementById(prefix + '_wilayah').value;
