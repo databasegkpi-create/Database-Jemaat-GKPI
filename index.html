@@ -2052,21 +2052,32 @@ window.handleSimpanGereja = function(e) {
     payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer';
     payload.sumberAsal = "Dashboard Pusat";
     
-    // Pastikan di Google Apps Script (Kode.gs) sudah ada case 'updateGereja'
     Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-    apiCall('updateGereja', payload)
-      .then(res => { 
-          closeModal('modalFormGereja'); 
-          Swal.fire('Sukses', 'Data unit gereja diperbarui.', 'success'); 
-          btn.disabled = false; 
-          btn.innerHTML = originalText; 
-          loadData(); 
-      })
-      .catch(err => { 
-          Swal.fire('Error', String(err), 'error'); 
-          btn.disabled = false; 
-          btn.innerHTML = originalText; 
-      });
+    
+    // PERBAIKAN 1: Ubah nama action menjadi 'updateDataGereja' dan sesuaikan payload
+    apiCall('updateDataGereja', {
+        obj: payload,
+        userRole: payload.userRole
+    })
+    .then(res => { 
+        // PERBAIKAN 2: Berikan pengecekan status dari server
+        if (res.status === 'success') {
+            closeModal('modalFormGereja'); 
+            Swal.fire('Sukses', res.message || 'Data unit gereja diperbarui.', 'success'); 
+            loadData(); // Memanggil ulang data agar UI ter-refresh
+        } else {
+            // Jika backend menolak (misal akses ditolak atau salah nama perintah)
+            Swal.fire('Gagal', res.message || 'Gagal memperbarui data.', 'error');
+        }
+    })
+    .catch(err => { 
+        Swal.fire('Error', String(err), 'error'); 
+    })
+    .finally(() => {
+        // Mengembalikan tombol ke keadaan semula
+        btn.disabled = false; 
+        btn.innerHTML = originalText; 
+    });
 };
 
   // ADMIN PETUGAS & LAINNYA
