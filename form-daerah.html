@@ -185,23 +185,39 @@
     let DATA_MASTER = { gereja: [], jabatan: [], majelis: [] };
     let barisPersonilCount = 0;
 
-async function apiCall(action, payload = {}) {
-      try {
-        payload.api_key = "GKPI_HUB_SECURE_2026"; // Kunci satpam pusat
-        
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: action, payload: payload })
-        });
-        
-        let textResult = await response.text();
-        try { 
-            return JSON.parse(textResult); 
-        } catch(err) { 
-            throw new Error("Respon server tidak valid."); 
+async function apiCall(action, payload = {}, retries = 3) {
+    payload.api_key = "GKPI_HUB_SECURE_2026"; // Kunci satpam pusat
+    
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, payload: payload })
+            });
+            
+            let textResult = await response.text();
+            
+            // Cek jika server mengembalikan error HTML dari Google (tanda server overload)
+            if(textResult.trim().startsWith('<')) {
+                throw new Error("Server Overload");
+            }
+
+            try { 
+                return JSON.parse(textResult); 
+            } catch(err) { 
+                throw new Error("Respon server tidak valid."); 
+            }
+            
+        } catch (error) {
+            // Jika sudah percobaan terakhir (ke-3), baru lemparkan error ke layar
+            if (i === retries - 1) {
+                throw new Error("Server sedang sangat sibuk karena banyak yang mengakses. Silakan coba klik simpan lagi.");
+            }
+            // Jika belum batas maksimal, tunggu 2.5 detik lalu coba kirim lagi secara diam-diam
+            await new Promise(resolve => setTimeout(resolve, 2500));
         }
-      } catch (error) { throw new Error(error.message); }
     }
+}
     
     function pindahTab(tab) {
       document.getElementById('tabIndividu').classList.toggle('hidden', tab !== 'individu');
