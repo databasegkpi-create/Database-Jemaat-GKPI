@@ -283,34 +283,41 @@ function verifikasiPin() {
       syncGereja(prefix);
     }
 
-    function syncGereja(prefix) {
+   function syncGereja(prefix) {
       const resSelect = document.getElementById(prefix + '_resort');
       const fg = document.getElementById(prefix + '_gereja');
+      if (!fg || !resSelect) return;
+
       const val = resSelect.value;
       const tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe');
       
-      fg.innerHTML = '<option value="">Pilih Nama Gereja</option>'; 
-      if (tipe === "RESORT") { 
+      fg.innerHTML = '<option value="">Pilih Nama Gereja / PHR</option>'; 
+      
+      if (tipe === "RESORT" || (!tipe && val)) { 
+          // ---> TAMBAHAN KHUSUS PENGURUS HARIAN RESORT <---
+          fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-indigo-700 bg-indigo-50">🏢 PENGURUS HARIAN RESORT (PHR)</option>`;
+          
           DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { 
               const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
-          }); fg.disabled = false; 
+          }); 
+          fg.disabled = false; 
       } else if (tipe === "JK") { 
           const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = true; 
-      } else { fg.disabled = false; }
+      } else { 
+          fg.disabled = false; 
+      }
     }
 
-    function cekJabatan() { 
-      const j = document.getElementById('m_jabatan').value.toLowerCase();
+   function cekJabatan() { 
       const wadah = document.getElementById('wadahGerejaMajelis'); const g = document.getElementById('m_gereja');
-      if (j.includes('pendeta') || j.includes('pemimpin jemaat')) { wadah.classList.add('hidden'); g.required = false; g.value = ""; } 
-      else { wadah.classList.remove('hidden'); g.required = true; } 
+      if (wadah) wadah.classList.remove('hidden'); 
+      if (g) g.required = true; 
     }
     
     function cekJabatanEdit() { 
-      const j = document.getElementById('e_jabatan').value.toLowerCase();
       const wadah = document.getElementById('wadahGerejaEdit'); const g = document.getElementById('e_gereja');
-      if (j.includes('pendeta') || j.includes('pemimpin jemaat')) { wadah.classList.add('hidden'); g.required = false; g.value = ""; } 
-      else { wadah.classList.remove('hidden'); g.required = true; } 
+      if (wadah) wadah.classList.remove('hidden'); 
+      if (g) g.required = true; 
     }
 
    // --- RIWAYAT & SESSION STORAGE LOGIC ---
@@ -493,10 +500,6 @@ function verifikasiPin() {
             let jbt = jabatanInputs[i].value;
             let grjRow = gereja;
             
-            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort
-            if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
-                grjRow = "Tingkat Resort"; 
-            }
             
             arrData.push({
                 "Nama_Lengkap": namaInputs[i].value,
