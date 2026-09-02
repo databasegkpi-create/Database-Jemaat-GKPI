@@ -1343,8 +1343,13 @@ function syncFormGerejaMajelis() {
     if (resetPage) currentPageMajelis = 1; window.currentFilteredList = data; 
     const grouped = {};
 
-    data.forEach(m => { 
-      let g = m.Nama_Gereja || 'Tingkat Resort'; 
+   data.forEach(m => { 
+      // PENYELAMAT DATA LAMA: Jika data gereja kosong atau 'Tingkat Resort', sulap menjadi PHR
+      let g = m.Nama_Gereja;
+      if (!g || g === 'Tingkat Resort' || g === '') {
+          g = 'Pengurus Harian Resort (PHR)';
+      }
+      
       if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
       grouped[g].majelis.push(m); 
     });
