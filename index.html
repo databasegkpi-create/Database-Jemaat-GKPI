@@ -960,17 +960,17 @@ function showMainApp() {
       activeBtn.classList.add('text-indigo-600', 'border-indigo-600');
     }
 
-    // SEMBUNYIKAN FILTER DROPDOWN JIKA DI TAB STRUKTUR MAJELIS
+  // SEMBUNYIKAN FILTER TERTENTU JIKA DI TAB STRUKTUR MAJELIS
     const wrapResort = document.getElementById('filterResort')?.parentElement;
     const wrapGereja = document.getElementById('filterGereja')?.parentElement;
     const wrapJabatan = document.getElementById('filterJabatan')?.parentElement;
     const wrapSort = document.getElementById('sortData')?.parentElement;
     
     if (tabName === 'majelis') {
-        if(wrapResort) wrapResort.style.display = 'none';
-        if(wrapGereja) wrapGereja.style.display = 'none';
-        if(wrapJabatan) wrapJabatan.style.display = 'none';
-        if(wrapSort) wrapSort.style.display = 'none';
+        if(wrapResort) wrapResort.style.display = 'block'; // TETAP TAMPILKAN
+        if(wrapGereja) wrapGereja.style.display = 'block'; // TETAP TAMPILKAN
+        if(wrapJabatan) wrapJabatan.style.display = 'none'; // Sembunyikan
+        if(wrapSort) wrapSort.style.display = 'none'; // Sembunyikan
     } else {
         if(wrapResort) wrapResort.style.display = 'block';
         if(wrapGereja) wrapGereja.style.display = 'block';
@@ -980,7 +980,7 @@ function showMainApp() {
 
     filterTabel();
   }
-
+  
   function dapatkanBobotJabatan(jabatan) {
     let j = String(jabatan).toLowerCase();
     if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
@@ -1120,15 +1120,18 @@ function syncFormGerejaMajelis() {
 
     const isTabMajelis = document.getElementById('kontenMajelis') && !document.getElementById('kontenMajelis').classList.contains('hidden');
 
-    let filteredMajelis = DATA_MASTER.majelis.filter(m => {
+   let filteredMajelis = DATA_MASTER.majelis.filter(m => {
       const safeG = String(m.Nama_Gereja || '').trim().toLowerCase(); 
       const safeR = String(m.Resort || '').trim().toLowerCase(); 
       
-      // Jika di Tab Struktur Hierarki (Majelis), kita abaikan filter resort/gereja/jabatan
       if (isTabMajelis) {
+          // MODE HIERARKI: Search & Filter berdasarkan Resort / Nama Gereja
           return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
-                 (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
+                 (!r || safeR === r || safeG === r) && 
+                 (!g || safeG === g) && 
+                 (!s || safeG.includes(s) || safeR.includes(s));
       } else {
+          // MODE NORMAL: Search berdasarkan Nama Orang
           return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
                  (!r || safeR === r || safeG === r) && 
                  (!g || safeG === g) && 
@@ -2002,78 +2005,96 @@ function konfirmasiHapus(id) {
     if(isJemaat) { 
         safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No KK</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`); 
         safeSetHTML('bodyTabelCetak', dataList.map((j, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${j.No_KK||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${j.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${hitungUmur(j.Tanggal_Lahir)}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Pekerjaan||'-'}</td></tr>`).join('')); 
-    } else if (isMajelis) { 
+   } else if (isMajelis) { 
         safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`); 
         
-        const grouped = {}; 
-        const selectedGereja = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim() : '';
-        const selectedResort = document.getElementById('filterResort') ? document.getElementById('filterResort').value.trim() : '';
-
-        // 1. Kumpulkan data normal
-        dataList.forEach(m => { 
-            let g = m.Nama_Gereja;
-            if (!g || g === 'Tingkat Resort' || g === '') g = 'Pengurus Harian Resort (PHR)';
-            if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
-            grouped[g].majelis.push(m); 
-        });
-
-        // 1.5 PENYELAMAT FILTER KOSONG: Pancing agar grup terbentuk
-        if (selectedGereja && !grouped[selectedGereja] && selectedGereja !== 'Pengurus Harian Resort (PHR)') {
-            let infoG = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === selectedGereja);
-            if(infoG) grouped[selectedGereja] = { resort: infoG.Induk_Resort || infoG.Resort || '-', wilayah: infoG.Wilayah || '-', majelis: [] };
-        } else if (selectedResort && Object.keys(grouped).length === 0) {
-            let infoG = DATA_MASTER.gereja.find(x => String(x.Induk_Resort || x.Resort).trim() === selectedResort);
-            if(infoG) grouped['Pengurus Harian Resort (PHR)'] = { resort: selectedResort, wilayah: infoG.Wilayah || '-', majelis: [] };
-        }
-
-        // 2. INJEKSI PENDETA UNTUK EXPORT PDF
-        Object.keys(grouped).forEach(gName => {
-           let currentResort = grouped[gName].resort;
-           let pendetaResortList = DATA_MASTER.majelis.filter(x => 
-               String(x.Resort).trim() === String(currentResort).trim() && 
-               (String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin')) &&
-               (String(x.Nama_Gereja).includes('PHR') || String(x.Nama_Gereja) === 'Tingkat Resort' || !x.Nama_Gereja)
-           );
-           
-           if (!gName.includes('PHR')) {
-               pendetaResortList.forEach(pdt => {
-                   if (!grouped[gName].majelis.some(existing => existing.ID_Majelis === pdt.ID_Majelis)) {
-                       grouped[gName].majelis.push(pdt);
-                   }
-               });
-           }
-        });
-
-        // 2.5 HAPUS GRUP KOSONG
-        Object.keys(grouped).forEach(k => {
-            if (grouped[k].majelis.length === 0) delete grouped[k];
-        });
-
-        // Mengurutkan Pendeta di nomor 1, lalu PHR paling atas
-        Object.keys(grouped).forEach(k => { 
-            grouped[k].majelis.sort((a, b) => { 
-                let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); 
-                if(diff!==0) return diff; 
-                return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); 
-            }); 
-        }); 
+        const tree = {};
         
-        const groupArray = Object.keys(grouped).map(k => ({ namaGereja: k, ...grouped[k] })).sort((a, b) => {
-            const isAPhr = a.namaGereja.includes("PHR");
-            const isBPhr = b.namaGereja.includes("PHR");
-            if(isAPhr && !isBPhr) return -1;
-            if(!isAPhr && isBPhr) return 1;
-            return a.namaGereja.localeCompare(b.namaGereja);
-        }); 
+        // 1. Susun Data yang Difilter ke dalam Pohon
+        dataList.forEach(m => {
+            let resortName = String(m.Resort).trim();
+            let gerejaName = String(m.Nama_Gereja).trim();
+            let isJK = (!resortName || resortName.toLowerCase() === 'jemaat khusus' || gerejaName === resortName);
+            let key = isJK ? gerejaName : resortName;
+            if (!key) return;
 
-        // CEK KOSONG SETELAH INJEKSI
+            if (!tree[key]) tree[key] = { isJK: isJK, wilayah: m.Wilayah, phr: [], pagaran: {} };
+            
+            let isPhr = (!gerejaName || gerejaName === 'Tingkat Resort' || gerejaName.includes('PHR'));
+            if (isJK) {
+                tree[key].phr.push(m);
+            } else {
+                if (isPhr) tree[key].phr.push(m);
+                else {
+                    if (!tree[key].pagaran[gerejaName]) tree[key].pagaran[gerejaName] = [];
+                    tree[key].pagaran[gerejaName].push(m);
+                }
+            }
+        });
+
+        // 2. Suntik Pendeta dari DATA_MASTER ke Pagaran yang Difilter
+        let keysToDelete = [];
+        Object.keys(tree).forEach(key => {
+            let node = tree[key];
+            if (!node.isJK) {
+                // Cari pendeta resort dari master
+                let pendetaList = DATA_MASTER.majelis.filter(x => 
+                    String(x.Resort).trim() === key && 
+                    (String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin')) &&
+                    (String(x.Nama_Gereja).includes('PHR') || String(x.Nama_Gereja) === 'Tingkat Resort' || !x.Nama_Gereja)
+                );
+                // Suntikkan ke tiap pagaran yang ada di tabel PDF
+                Object.keys(node.pagaran).forEach(pagaranKey => {
+                    pendetaList.forEach(pdt => {
+                        if (!node.pagaran[pagaranKey].some(existing => existing.ID_Majelis === pdt.ID_Majelis)) {
+                            node.pagaran[pagaranKey].push(pdt);
+                        }
+                    });
+                });
+            }
+
+            // 3. Urutkan Jabatan & Buang Pohon Kosong
+            const sortMajelis = (arr) => arr.sort((a,b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); });
+            
+            if (node.phr.length === 0 && Object.keys(node.pagaran).length === 0) {
+                keysToDelete.push(key);
+            } else {
+                sortMajelis(node.phr);
+                Object.keys(node.pagaran).forEach(pk => sortMajelis(node.pagaran[pk]));
+            }
+        });
+        keysToDelete.forEach(k => delete tree[k]);
+
+        // 4. Ubah ke Array dan Render HTML PDF
+        const groupArray = Object.keys(tree).map(k => ({ name: k, ...tree[k] })).sort((a,b) => a.name.localeCompare(b.name));
+
         if (groupArray.length === 0) {
-            return Swal.fire('Data Kosong', 'Tidak ada data majelis atau pendeta untuk dicetak pada pilihan ini.', 'info');
+            return Swal.fire('Data Kosong', 'Tidak ada data majelis untuk filter ini.', 'info');
         }
-        
-        safeSetHTML('bodyTabelCetak', groupArray.map(g => `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #1e293b;"><span style="font-size: 11px;">⛪ ${g.namaGereja}</span> <span style="font-weight:normal; font-size:9px; color:#64748b; margin-left:8px;">(${g.resort || '-'})</span></td></tr>${g.majelis.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${m.Wilayah||'-'}</td></tr>`).join('')}`).join('')); 
-      
-    } else if (isIndividu) { 
+
+        let pdfHtml = groupArray.map(g => {
+            // Header Level 1 (Resort / JK)
+            let htmlBlock = `<tr style="background-color: #1e293b; color: white; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 10px; font-size: 14px;">${g.isJK ? '⛪ JEMAAT KHUSUS: ' : '🏢 RESORT: '} ${g.name} <span style="font-weight:normal; font-size:10px; color:#cbd5e1; float:right;">(Wilayah ${g.wilayah})</span></td></tr>`;
+            
+            // Header Level 2 (PHR / Susunan JK)
+            if (g.phr.length > 0) {
+                htmlBlock += `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;"><span style="font-size: 11px;">${g.isJK ? 'Susunan Majelis Jemaat Khusus' : 'Pengurus Harian Resort (PHR)'}</span></td></tr>`;
+                htmlBlock += g.phr.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">W-${m.Wilayah||'-'}</td></tr>`).join('');
+            }
+
+            // Header Level 2 (Gereja Pagaran + Injeksi Pendeta)
+            if (!g.isJK) {
+                Object.keys(g.pagaran).sort().forEach(pk => {
+                    htmlBlock += `<tr style="background-color: #f8fafc; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #4338ca;"><span style="font-size: 11px;">⛪ Gereja Pagaran: ${pk}</span></td></tr>`;
+                    htmlBlock += g.pagaran[pk].map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">W-${m.Wilayah||'-'}</td></tr>`).join('');
+                });
+            }
+            return htmlBlock;
+        }).join('');
+
+        safeSetHTML('bodyTabelCetak', pdfHtml);
+
+    } else if (isIndividu) {
         safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`); 
         safeSetHTML('bodyTabelCetak', dataList.map((m, i) => { let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td></tr>`; }).join('')); 
     } else { 
