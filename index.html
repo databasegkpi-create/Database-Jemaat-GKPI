@@ -945,20 +945,39 @@ function showMainApp() {
     if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
   }
 
-  function switchDataTab(tabName) {
+ function switchDataTab(tabName) {
     ['kontenMajelis', 'kontenIndividu', 'kontenGereja'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); });
     if(document.getElementById('konten' + tabName.charAt(0).toUpperCase() + tabName.slice(1))) document.getElementById('konten' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
-    
+
     ['Majelis', 'Individu', 'Gereja'].forEach(t => {
       const btn = document.getElementById('tabBtn'+t);
       if(btn) btn.className = "px-6 py-3 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-slate-600 focus:outline-none whitespace-nowrap transition-all";
     });
-    
+
     const activeBtn = document.getElementById('tabBtn'+ (tabName.charAt(0).toUpperCase() + tabName.slice(1)));
     if(activeBtn) {
       activeBtn.classList.remove('text-slate-400', 'border-transparent');
       activeBtn.classList.add('text-indigo-600', 'border-indigo-600');
     }
+
+    // SEMBUNYIKAN FILTER DROPDOWN JIKA DI TAB STRUKTUR MAJELIS
+    const wrapResort = document.getElementById('filterResort')?.parentElement;
+    const wrapGereja = document.getElementById('filterGereja')?.parentElement;
+    const wrapJabatan = document.getElementById('filterJabatan')?.parentElement;
+    const wrapSort = document.getElementById('sortData')?.parentElement;
+    
+    if (tabName === 'majelis') {
+        if(wrapResort) wrapResort.style.display = 'none';
+        if(wrapGereja) wrapGereja.style.display = 'none';
+        if(wrapJabatan) wrapJabatan.style.display = 'none';
+        if(wrapSort) wrapSort.style.display = 'none';
+    } else {
+        if(wrapResort) wrapResort.style.display = 'block';
+        if(wrapGereja) wrapGereja.style.display = 'block';
+        if(wrapJabatan) wrapJabatan.style.display = 'block';
+        if(wrapSort) wrapSort.style.display = 'block';
+    }
+
     filterTabel();
   }
 
@@ -1098,18 +1117,32 @@ function syncFormGerejaMajelis() {
     const j = document.getElementById('filterJabatan') ? document.getElementById('filterJabatan').value.trim().toLowerCase() : ''; 
     const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : ''; 
     const modeSort = document.getElementById('sortData') ? document.getElementById('sortData').value : 'nama_az';
-    
+
+    const isTabMajelis = document.getElementById('kontenMajelis') && !document.getElementById('kontenMajelis').classList.contains('hidden');
+
     let filteredMajelis = DATA_MASTER.majelis.filter(m => {
       const safeG = String(m.Nama_Gereja || '').trim().toLowerCase(); 
       const safeR = String(m.Resort || '').trim().toLowerCase(); 
-      return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
-             (!r || safeR === r || safeG === r) && 
-             (!g || safeG === g) && 
-             (!j || String(m.Jabatan || '').trim().toLowerCase() === j) && 
-             (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
+      
+      // Jika di Tab Struktur Hierarki (Majelis), kita abaikan filter resort/gereja/jabatan
+      if (isTabMajelis) {
+          return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
+                 (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
+      } else {
+          return (!w || String(m.Wilayah || '').trim().toLowerCase() === w) && 
+                 (!r || safeR === r || safeG === r) && 
+                 (!g || safeG === g) && 
+                 (!j || String(m.Jabatan || '').trim().toLowerCase() === j) && 
+                 (!s || String(m.Nama_Lengkap || '').toLowerCase().includes(s));
+      }
     });
+
     filteredMajelis.sort((a, b) => { if (modeSort === 'hierarki') { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if(diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); } return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); });
-    renderTabelReal(filteredMajelis, true); renderTabelIndividu(filteredMajelis, true); window.currentFilteredList = filteredMajelis;
+    
+    // Kirim data utuh ke render Struktur (tanpa pemotongan pagination awal)
+    renderTabelReal(DATA_MASTER.majelis, true); 
+    renderTabelIndividu(filteredMajelis, true); 
+    window.currentFilteredList = filteredMajelis;
 
     let filteredGereja = DATA_MASTER.gereja.filter(grj => { const safeR = String(grj.Induk_Resort || grj.Resort || '').trim().toLowerCase(); const safeG = String(grj.Nama_Gereja || '').trim().toLowerCase(); return (!w || String(grj.Wilayah || '').trim().toLowerCase() === w) && (!r || (safeR && safeR === r) || (!safeR && safeG === r)) && (!g || safeG === g) && (!s || safeG.includes(s) || safeR.includes(s)); });
     filteredGereja.sort((a, b) => { if (modeSort === 'nama_az' || modeSort === 'hierarki') return String(a.Nama_Gereja).localeCompare(String(b.Nama_Gereja)); return parseInt(a.Wilayah || 0) - parseInt(b.Wilayah || 0); });
@@ -1337,99 +1370,200 @@ function syncFormGerejaMajelis() {
       });
   };
 
- // --- TABEL MAJELIS ---
-  function renderTabelReal(data, resetPage = true) {
-    if (resetPage) currentPageMajelis = 1; window.currentFilteredList = data; 
-    const grouped = {};
+// --- TABEL MAJELIS HIERARKI (TREE VIEW) ---
+  function renderTabelReal(dataMurni, resetPage = true) {
+    if (resetPage) currentPageMajelis = 1; 
+    
+    const w = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value.trim() : '';
+    const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : '';
+    const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
 
-    const selectedGereja = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim() : '';
-    const selectedResort = document.getElementById('filterResort') ? document.getElementById('filterResort').value.trim() : '';
+    const tree = {};
 
-    // 1. Kumpulkan data normal
-    data.forEach(m => { 
-      let g = m.Nama_Gereja;
-      if (!g || g === 'Tingkat Resort' || g === '') {
-          g = 'Pengurus Harian Resort (PHR)';
-      }
-      if (!grouped[g]) grouped[g] = { resort: m.Resort || '-', wilayah: m.Wilayah || '-', majelis: [] }; 
-      grouped[g].majelis.push(m); 
+    // 1. Bangun Kerangka Pohon dari Master Gereja
+    DATA_MASTER.gereja.forEach(g => {
+        if (w && String(g.Wilayah) !== w) return;
+        let resortName = String(g.Induk_Resort || g.Resort || '').trim();
+        let gerejaName = String(g.Nama_Gereja).trim();
+        let isJK = String(g.Status_Gereja || g.Tipe_Gereja || '').toLowerCase() === 'jemaat khusus' || resortName.toLowerCase() === 'jemaat khusus' || !resortName;
+        
+        let key = isJK ? gerejaName : resortName;
+        if (!key) return;
+
+        if (!tree[key]) tree[key] = { isJK: isJK, wilayah: g.Wilayah, phr: [], pagaran: {} };
+        if (!isJK && gerejaName && gerejaName !== resortName) {
+            if (!tree[key].pagaran[gerejaName]) tree[key].pagaran[gerejaName] = [];
+        }
     });
 
-    // ========================================================
-    // 1.5 PENYELAMAT FILTER KOSONG: Pancing agar grup terbentuk
-    // ========================================================
-    if (selectedGereja && !grouped[selectedGereja] && selectedGereja !== 'Pengurus Harian Resort (PHR)') {
-        let infoG = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === selectedGereja);
-        if(infoG) grouped[selectedGereja] = { resort: infoG.Induk_Resort || infoG.Resort || '-', wilayah: infoG.Wilayah || '-', majelis: [] };
-    } else if (selectedResort && Object.keys(grouped).length === 0) {
-        let infoG = DATA_MASTER.gereja.find(x => String(x.Induk_Resort || x.Resort).trim() === selectedResort);
-        if(infoG) grouped['Pengurus Harian Resort (PHR)'] = { resort: selectedResort, wilayah: infoG.Wilayah || '-', majelis: [] };
+    // 2. Susun Majelis ke dalam Pohon
+    dataMurni.forEach(m => {
+        if (w && String(m.Wilayah) !== w) return;
+        let resortName = String(m.Resort).trim();
+        let gerejaName = String(m.Nama_Gereja).trim();
+        let isJK = (!resortName || resortName.toLowerCase() === 'jemaat khusus' || gerejaName === resortName);
+        let key = isJK ? gerejaName : resortName;
+        if (!key) return;
+
+        if (!tree[key]) tree[key] = { isJK: isJK, wilayah: m.Wilayah, phr: [], pagaran: {} };
+        
+        let isPhr = (!gerejaName || gerejaName === 'Tingkat Resort' || gerejaName.includes('PHR'));
+        if (isJK) {
+            tree[key].phr.push(m);
+        } else {
+            if (isPhr) tree[key].phr.push(m);
+            else {
+                if (!tree[key].pagaran[gerejaName]) tree[key].pagaran[gerejaName] = [];
+                tree[key].pagaran[gerejaName].push(m);
+            }
+        }
+    });
+
+    // 3. Suntik Pendeta & Logika Search Name
+    const sortMajelis = (arr) => arr.sort((a,b) => {
+        let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan);
+        if (diff !== 0) return diff;
+        return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap));
+    });
+
+    let keysToDelete = [];
+    Object.keys(tree).forEach(key => {
+        let node = tree[key];
+        
+        // A. Suntik Pendeta ke Pagaran
+        if (!node.isJK) {
+            let pendetaList = node.phr.filter(x => String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin'));
+            Object.keys(node.pagaran).forEach(pagaranKey => {
+                pendetaList.forEach(pdt => {
+                    if (!node.pagaran[pagaranKey].some(existing => existing.ID_Majelis === pdt.ID_Majelis)) {
+                        node.pagaran[pagaranKey].push(pdt);
+                    }
+                });
+            });
+        }
+
+        // B. Filter Search Berdasarkan Nama
+        if (s) {
+            node.phr = node.phr.filter(m => String(m.Nama_Lengkap).toLowerCase().includes(s));
+            let emptyPagaran = [];
+            Object.keys(node.pagaran).forEach(pagaranKey => {
+                node.pagaran[pagaranKey] = node.pagaran[pagaranKey].filter(m => String(m.Nama_Lengkap).toLowerCase().includes(s));
+                if (node.pagaran[pagaranKey].length === 0) emptyPagaran.push(pagaranKey);
+            });
+            emptyPagaran.forEach(pk => delete node.pagaran[pk]);
+        }
+
+        // C. Bersihkan Pohon Kosong & Sort
+        if (node.phr.length === 0 && Object.keys(node.pagaran).length === 0) {
+            keysToDelete.push(key);
+        } else {
+            sortMajelis(node.phr);
+            Object.keys(node.pagaran).forEach(pk => sortMajelis(node.pagaran[pk]));
+        }
+    });
+    keysToDelete.forEach(k => delete tree[k]);
+
+    // 4. Proses Pagination Level Atas (Resort / JK)
+    const groupArray = Object.keys(tree).map(k => ({ name: k, ...tree[k] })).sort((a,b) => a.name.localeCompare(b.name));
+    const paginatedGroups = groupArray.slice((currentPageMajelis - 1) * 10, ((currentPageMajelis - 1) * 10) + 10);
+    const container = document.getElementById('majelisAccordionContainer');
+
+    if (paginatedGroups.length === 0) { 
+        container.innerHTML = `<div class="text-center p-10 text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-xl">Data Tidak Ditemukan</div>`; 
+        renderPaginationUI(groupArray.length, currentPageMajelis, 'paginationMajelis', 'majelis', 10); 
+        return; 
     }
 
-    // ========================================================
-    // 2. INJEKSI PINTAR: SUNTIK PENDETA KE SEMUA GEREJA PAGARAN
-    // ========================================================
-    Object.keys(grouped).forEach(gName => {
-       let currentResort = grouped[gName].resort;
-       
-       let pendetaResortList = DATA_MASTER.majelis.filter(x => 
-           String(x.Resort).trim() === String(currentResort).trim() && 
-           (String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin')) &&
-           (String(x.Nama_Gereja).includes('PHR') || String(x.Nama_Gereja) === 'Tingkat Resort' || !x.Nama_Gereja)
-       );
+    // Fungsi Bantuan Pembuat Tabel HTML
+    const generateTableHtml = (majelisList) => {
+        if(!majelisList || majelisList.length === 0) return `<div class="p-5 text-center text-xs text-slate-400 font-bold italic">Belum ada personil di unit ini.</div>`;
+        let trs = majelisList.map((m, idx) => {
+            let hpClean = String(m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '').replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
+            let btnP = (role.includes('admin') || role.includes('editor')) ? `<button onclick="bukaProfil('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-id-badge"></i></button>` : '';
+            let btnW = (role.includes('admin') || role.includes('editor')) ? ((hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WA tidak valid.', 'info')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200"><i class="fab fa-whatsapp"></i></button>`) : '';
+            let btnE = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
+            let btnH = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
+            return `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"><td class="p-3 text-center text-slate-400 font-bold text-xs w-10">${idx + 1}</td><td class="p-3"><div class="font-bold text-slate-800 text-sm">${m.Nama_Lengkap||'-'}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${m.ID_Majelis||''}</div></td><td class="p-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-3 text-center w-32"><div class="inline-flex gap-2">${btnP}${btnW}${btnE}${btnH}</div></td></tr>`;
+        }).join('');
+        return `<div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-indigo-50/50 border-b border-indigo-100"><tr><th class="p-3 text-[10px] font-bold text-indigo-400 uppercase tracking-wider text-center">No</th><th class="p-3 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Nama Lengkap</th><th class="p-3 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Jabatan</th><th class="p-3 text-[10px] font-bold text-indigo-400 uppercase tracking-wider text-center">Tindakan</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+    };
 
-       if (!gName.includes('PHR')) {
-           pendetaResortList.forEach(pdt => {
-               if (!grouped[gName].majelis.some(existing => existing.ID_Majelis === pdt.ID_Majelis)) {
-                   grouped[gName].majelis.push(pdt);
-               }
-           });
-       }
-    });
-
-    // 2.5 HAPUS GRUP YANG BENAR-BENAR KOSONG (Tanpa Majelis Lokal & Tanpa Pendeta)
-    Object.keys(grouped).forEach(k => {
-        if (grouped[k].majelis.length === 0) delete grouped[k];
-    });
-
-    // 3. PENGURUTAN: PHR PALING ATAS, PENDETA NOMOR 1 DI TIAP GEREJA
-    const groupArray = Object.keys(grouped).map(k => {
-        grouped[k].majelis.sort((a, b) => {
-            let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); 
-            if(diff !== 0) return diff; 
-            return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap));
-        });
-        return { namaGereja: k, ...grouped[k] };
-    }).sort((a, b) => {
-        const isAPhr = a.namaGereja.includes("PHR");
-        const isBPhr = b.namaGereja.includes("PHR");
-        if(isAPhr && !isBPhr) return -1;
-        if(!isAPhr && isBPhr) return 1;
-        return a.namaGereja.localeCompare(b.namaGereja);
-    });
-    
-    const paginatedGroups = groupArray.slice((currentPageMajelis - 1) * 10, ((currentPageMajelis - 1) * 10) + 10);
-    const container = document.getElementById('majelisAccordionContainer'); const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
-
-    // CEK KOSONG BERDASARKAN HASIL AKHIR (SETELAH INJEKSI)
-    if (paginatedGroups.length === 0) { container.innerHTML = `<div class="text-center p-10 text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-xl">Data Tidak Ditemukan</div>`; renderPaginationUI(0, currentPageMajelis, 'paginationMajelis', 'majelis', 10); return; }
-
+    // 5. Render HTML Bertingkat (UI Folder Link)
     container.innerHTML = paginatedGroups.map(g => {
-      let trs = g.majelis.map((m, idx) => {
-        let hpClean = String(m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || '').replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
-        let btnP = (role.includes('admin') || role.includes('editor')) ? `<button onclick="bukaProfil('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-id-badge"></i></button>` : '';
-        let btnW = (role.includes('admin') || role.includes('editor')) ? ((hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WA tidak valid.', 'info')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200"><i class="fab fa-whatsapp"></i></button>`) : '';
-        let btnE = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
-        let btnH = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${m.ID_Majelis}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
-        return `<tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"><td class="p-4 text-center text-slate-400 font-bold text-xs">${idx + 1}</td><td class="p-4"><div class="font-bold text-slate-800 text-sm">${m.Nama_Lengkap||'-'}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${m.ID_Majelis||''}</div></td><td class="p-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-4 text-center"><div class="inline-flex gap-2">${btnP}${btnW}${btnE}${btnH}</div></td></tr>`;
-      }).join('');
-      
-      let isPhr = g.namaGereja.includes("PHR");
-      let iconGereja = isPhr ? '<i class="fas fa-sitemap mr-2 text-amber-500"></i>' : '<i class="fas fa-church mr-2 text-indigo-400 hidden group-open:block"></i>';
-      let titleClass = isPhr ? 'text-amber-700' : 'text-slate-800';
-      let bgHeaderClass = isPhr ? 'bg-amber-50/50 hover:bg-amber-50 group-open:bg-amber-100 group-open:text-amber-900' : 'bg-white hover:bg-slate-50 group-open:bg-indigo-50 group-open:text-indigo-700';
+        let badgeLvl = g.isJK ? '<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[9px] uppercase tracking-widest font-black ml-3 shadow-sm">Jemaat Khusus</span>' : '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[9px] uppercase tracking-widest font-black ml-3 shadow-sm">Resort Induk</span>';
+        let iconHeader = g.isJK ? '<i class="fas fa-church text-purple-500"></i>' : '<i class="fas fa-map-marked-alt text-blue-500"></i>';
+        let borderColor = g.isJK ? 'border-purple-200' : 'border-blue-200';
+        let openBgColor = g.isJK ? 'group-open:bg-purple-50' : 'group-open:bg-blue-50/50';
 
-      return `<details class="bg-white border ${isPhr ? 'border-amber-200' : 'border-slate-200'} rounded-2xl shadow-sm overflow-hidden group"><summary class="p-5 font-bold cursor-pointer flex justify-between items-center transition-colors ${bgHeaderClass}"><div class="flex items-center gap-4"><div class="w-8 h-8 rounded-full ${isPhr ? 'bg-amber-100 text-amber-500 group-open:bg-amber-500' : 'bg-slate-100 text-slate-400 group-open:bg-indigo-600'} flex items-center justify-center group-open:text-white group-open:rotate-90 transition-all"><i class="fas fa-chevron-right text-xs"></i></div><div><div class="text-sm font-extrabold uppercase tracking-tight flex items-center ${titleClass}">${iconGereja} ${g.namaGereja}</div><div class="text-[10px] font-semibold text-slate-500 tracking-wider mt-0.5">${g.resort} • Wilayah ${g.wilayah}</div></div></div><div class="text-xs bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full font-bold group-open:bg-indigo-200 group-open:text-indigo-800 transition-colors">${g.majelis.length} Personil</div></summary><div class="p-0 border-t border-indigo-100"><table class="w-full text-left whitespace-nowrap"><thead class="bg-indigo-50/50 border-b border-indigo-100"><tr><th class="p-4 text-[10px] font-bold text-indigo-400 uppercase tracking-wider text-center w-10">No</th><th class="p-4 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Nama Lengkap</th><th class="p-4 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Jabatan</th><th class="p-4 text-[10px] font-bold text-indigo-400 uppercase tracking-wider text-center">Tindakan</th></tr></thead><tbody>${trs}</tbody></table></div></details>`;
+        if (g.isJK) {
+            // RENDER JK (1 Level)
+            return `
+            <details class="bg-white border ${borderColor} rounded-2xl shadow-sm overflow-hidden group mb-4">
+                <summary class="p-5 font-bold cursor-pointer flex justify-between items-center transition-colors hover:bg-slate-50 ${openBgColor}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-open:bg-purple-500 group-open:text-white group-open:rotate-90 transition-all"><i class="fas fa-chevron-right text-xs"></i></div>
+                        <div>
+                            <div class="text-[15px] font-extrabold uppercase tracking-tight flex items-center text-slate-800">${iconHeader} <span class="ml-2">${g.name}</span> ${badgeLvl}</div>
+                            <div class="text-[10px] font-semibold text-slate-500 tracking-wider mt-0.5">Wilayah ${g.wilayah}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full font-bold group-open:bg-purple-200 group-open:text-purple-800 transition-colors">${g.phr.length} Personil</div>
+                </summary>
+                <div class="p-0 border-t border-purple-100 bg-white">
+                    ${generateTableHtml(g.phr)}
+                </div>
+            </details>`;
+        } else {
+            // RENDER RESORT (2 Level Hierarki)
+            let pagaranKeys = Object.keys(g.pagaran).sort();
+            let pagaranHtml = pagaranKeys.map(pk => {
+                return `
+                <details class="bg-white border border-slate-200 rounded-xl overflow-hidden group/pagaran mb-2 shadow-sm">
+                    <summary class="p-4 font-bold cursor-pointer flex justify-between items-center transition-colors hover:bg-slate-50 group-open/pagaran:bg-indigo-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-open/pagaran:bg-indigo-500 group-open/pagaran:text-white group-open/pagaran:rotate-90 transition-all shadow-sm"><i class="fas fa-caret-right text-xs"></i></div>
+                            <div class="text-[13px] font-bold text-slate-700 flex items-center"><i class="fas fa-church text-indigo-400 mr-2 opacity-60"></i> Gereja Pagaran: ${pk}</div>
+                        </div>
+                        <div class="text-[10px] bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold group-open/pagaran:bg-indigo-200 group-open/pagaran:text-indigo-800 transition-colors">${g.pagaran[pk].length} Personil</div>
+                    </summary>
+                    <div class="border-t border-indigo-100 bg-white">
+                        ${generateTableHtml(g.pagaran[pk])}
+                    </div>
+                </details>`;
+            }).join('');
+
+            let phrHtml = `
+            <details class="bg-amber-50/50 border border-amber-200 rounded-xl overflow-hidden group/phr mb-3 shadow-sm">
+                <summary class="p-4 font-bold cursor-pointer flex justify-between items-center transition-colors hover:bg-amber-50 group-open/phr:bg-amber-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center group-open/phr:bg-amber-500 group-open/phr:text-white group-open/phr:rotate-90 transition-all shadow-sm"><i class="fas fa-caret-right text-xs"></i></div>
+                        <div class="text-sm font-bold text-amber-800 flex items-center"><i class="fas fa-sitemap text-amber-500 mr-2"></i> Pengurus Harian Resort (PHR)</div>
+                    </div>
+                    <div class="text-[10px] bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-bold group-open/phr:bg-amber-200 group-open/phr:text-amber-900 transition-colors">${g.phr.length} Personil</div>
+                </summary>
+                <div class="border-t border-amber-200 bg-white">
+                    ${generateTableHtml(g.phr)}
+                </div>
+            </details>`;
+
+            return `
+            <details class="bg-slate-50/50 border ${borderColor} rounded-2xl shadow-sm overflow-hidden group mb-4">
+                <summary class="p-5 font-bold cursor-pointer flex justify-between items-center transition-colors hover:bg-slate-50 ${openBgColor}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center group-open:bg-blue-600 group-open:text-white group-open:rotate-90 transition-all"><i class="fas fa-chevron-right text-xs"></i></div>
+                        <div>
+                            <div class="text-[15px] font-extrabold uppercase tracking-tight flex items-center text-slate-800">${iconHeader} <span class="ml-2">${g.name}</span> ${badgeLvl}</div>
+                            <div class="text-[10px] font-semibold text-slate-500 tracking-wider mt-0.5">Wilayah ${g.wilayah}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full font-bold group-open:bg-blue-200 group-open:text-blue-800 transition-colors">${g.phr.length + Object.values(g.pagaran).reduce((acc, curr) => acc + curr.length, 0)} Record</div>
+                </summary>
+                <div class="p-5 border-t border-blue-100">
+                    ${phrHtml}
+                    ${pagaranHtml}
+                </div>
+            </details>`;
+        }
     }).join('');
     
     renderPaginationUI(groupArray.length, currentPageMajelis, 'paginationMajelis', 'majelis', 10);
