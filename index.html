@@ -681,29 +681,42 @@
       if(!d || isNaN(d.getTime())) return "-"; return Math.abs(new Date(Date.now() - d.getTime()).getUTCFullYear() - 1970) + " Thn";
   }
 
-  async function apiCall(action, payload = {}) {
-    try {
-      payload.api_key = SECRET_API_KEY; 
-      const isRead = ['checkLogin', 'getAppData', 'getListPetugas'].includes(action);
-      if (isRead) {
-         const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-         const url = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-         let response = await fetch(url, { method: 'GET', redirect: 'follow' });
-         let textResult = await response.text();
-         if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
-         try { return JSON.parse(textResult); } catch(err) { throw new Error("Server gagal mengurai data."); }
-      } else {
-         let response = await fetch(SCRIPT_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: action, payload: payload }) });
-         let textResult = await response.text();
-         if (textResult.trim().startsWith('<') || textResult.trim().startsWith('REST')) {
-            const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-            const fallbackUrl = `${SCRIPT_URL}?action=${action}&payload=${encodedPayload}`;
-            response = await fetch(fallbackUrl, { method: 'GET', redirect: 'follow' }); textResult = await response.text();
-            if (textResult.trim().startsWith('<')) throw new Error("Akses API Terkunci Google!");
-         }
-         try { return JSON.parse(textResult); } catch(err) { throw new Error("Server gagal mengurai data."); }
-      }
-    } catch (error) { throw new Error(error.message); }
+  // --- FUNGSI JEMBATAN API (TANGGUH & ANTI BADAI GOOGLE) ---
+  async function apiCall(action, payload = {}, retries = 3) {
+    payload.api_key = SECRET_API_KEY; 
+    
+    for (let i = 0; i < retries; i++) {
+        try {
+            // Kita paksa semua permintaan menggunakan POST agar Google tidak memblokir/mengarahkan ke halaman HTML
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST', 
+                redirect: 'follow', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: action, payload: payload })
+            });
+            
+            let textResult = await response.text();
+            
+            // Jika Google membalas dengan HTML (tanda server menolak/overload sementara)
+            if(textResult.trim().startsWith('<')) {
+                throw new Error("Server Google Overload");
+            }
+
+            try { 
+                return JSON.parse(textResult); 
+            } catch(err) { 
+                throw new Error("Server mengembalikan format data yang salah."); 
+            }
+            
+        } catch (error) {
+            // Jika sudah mencoba 3 kali dan tetap gagal
+            if (i === retries - 1) {
+                throw new Error("Akses API Terkunci Google! Pastikan deploy Apps Script diatur ke 'Execute as: Me' dan 'Who has access: Anyone'.");
+            }
+            // Tunggu 2 detik sebelum mencoba lagi agar tidak dikira spam oleh Google
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
