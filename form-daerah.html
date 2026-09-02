@@ -283,7 +283,7 @@ function verifikasiPin() {
       syncGereja(prefix);
     }
 
-   function syncGereja(prefix) {
+  function syncGereja(prefix) {
       const resSelect = document.getElementById(prefix + '_resort');
       const fg = document.getElementById(prefix + '_gereja');
       if (!fg || !resSelect) return;
@@ -294,9 +294,7 @@ function verifikasiPin() {
       fg.innerHTML = '<option value="">Pilih Nama Gereja / PHR</option>'; 
       
       if (tipe === "RESORT" || (!tipe && val)) { 
-          // ---> TAMBAHAN KHUSUS PENGURUS HARIAN RESORT <---
           fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-indigo-700 bg-indigo-50">🏢 PENGURUS HARIAN RESORT (PHR)</option>`;
-          
           DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || '').trim() === val).forEach(g => { 
               const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
           }); 
@@ -306,18 +304,44 @@ function verifikasiPin() {
       } else { 
           fg.disabled = false; 
       }
+
+      // Pastikan Auto-Select berjalan ulang saat resort dipilih
+      if (prefix === 'm') cekJabatan();
+      if (prefix === 'e') cekJabatanEdit();
     }
 
-   function cekJabatan() { 
-      const wadah = document.getElementById('wadahGerejaMajelis'); const g = document.getElementById('m_gereja');
+  function cekJabatan() { 
+      const j = document.getElementById('m_jabatan').value.toLowerCase();
+      const wadah = document.getElementById('wadahGerejaMajelis'); 
+      const g = document.getElementById('m_gereja');
+      
       if (wadah) wadah.classList.remove('hidden'); 
-      if (g) g.required = true; 
+      if (g) {
+          g.required = true; 
+          // FITUR PINTAR: Jika jabatan untuk Resort, otomatis pilih PHR
+          if (j.includes('resort')) {
+              Array.from(g.options).forEach(opt => {
+                  if(opt.value.includes('PHR')) g.value = opt.value;
+              });
+          }
+      }
     }
     
     function cekJabatanEdit() { 
-      const wadah = document.getElementById('wadahGerejaEdit'); const g = document.getElementById('e_gereja');
+      const j = document.getElementById('e_jabatan').value.toLowerCase();
+      const wadah = document.getElementById('wadahGerejaEdit'); 
+      const g = document.getElementById('e_gereja');
+      
       if (wadah) wadah.classList.remove('hidden'); 
-      if (g) g.required = true; 
+      if (g) {
+          g.required = true; 
+          // FITUR PINTAR: Jika jabatan untuk Resort, otomatis pilih PHR
+          if (j.includes('resort')) {
+              Array.from(g.options).forEach(opt => {
+                  if(opt.value.includes('PHR')) g.value = opt.value;
+              });
+          }
+      }
     }
 
    // --- RIWAYAT & SESSION STORAGE LOGIC ---
