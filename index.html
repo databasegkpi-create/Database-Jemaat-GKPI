@@ -1439,9 +1439,23 @@
     else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
   }
 
+ // --- FUNGSI CEK JABATAN & AUTO-SELECT PHR ---
   window.cekJabatan = function() { 
-      const wadah = document.getElementById('wadahGereja'); const g = document.getElementById('formGereja');
-      if(wadah) wadah.classList.remove('hidden'); if(g) g.required = true; 
+      const jSelect = document.getElementById('formJabatan');
+      const j = jSelect ? jSelect.value.toLowerCase() : '';
+      const wadah = document.getElementById('wadahGereja'); 
+      const g = document.getElementById('formGereja');
+      
+      if (wadah) wadah.classList.remove('hidden'); 
+      if (g) {
+          g.required = true; 
+          // FITUR PINTAR: Jika jabatan untuk Resort, otomatis kunci ke PHR
+          if (j.includes('resort') || j.includes('pendeta resort')) {
+              Array.from(g.options).forEach(opt => {
+                  if(opt.value.includes('PHR')) g.value = opt.value;
+              });
+          }
+      }
   };
   function openModalSmart() {
     const isHome = !document.getElementById('pageHome').classList.contains('hidden');
