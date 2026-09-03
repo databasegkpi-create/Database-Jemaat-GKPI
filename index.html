@@ -1700,7 +1700,98 @@
 
   let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
   function promptInstallPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((c) => { deferredPrompt = null; }); } else { Swal.fire({ title: 'Install Aplikasi', html: 'Gunakan fitur Add to Home Screen pada browser Anda.', confirmButtonColor: '#10b981' }); } }
-  
+  // ========================================================
+  // MESIN CETAK PDF UTAMA (Tombol Header Atas)
+  // ========================================================
+  function bukaPreviewCetakData() { 
+    const isJemaat = document.getElementById('pageJemaat') && !document.getElementById('pageJemaat').classList.contains('hidden'); 
+    const isMajelis = document.getElementById('pageSearch') && !document.getElementById('pageSearch').classList.contains('hidden') && !document.getElementById('kontenMajelis').classList.contains('hidden'); 
+    const isIndividu = document.getElementById('pageSearch') && !document.getElementById('pageSearch').classList.contains('hidden') && !document.getElementById('kontenIndividu').classList.contains('hidden'); 
+    
+    let dataList = [];
+    if(isJemaat) { dataList = window.currentFilteredJemaat || []; }
+    else if(isMajelis || isIndividu) { dataList = window.currentFilteredList || []; }
+    else { dataList = window.currentFilteredGereja || []; }
+    
+    let judul = "Data Jemaat & Unit Gereja"; 
+    if (isMajelis) judul = "Struktur Majelis Per Gereja"; 
+    if (isIndividu) judul = "Direktori Personil Majelis"; 
+    if (isJemaat) judul = "Data Keluarga Jemaat"; 
+    
+    // Khusus isMajelis (Tree Grid) dataList dibiarkan masuk dulu agar bisa diproses Pohon Hierarkinya
+    if (!isMajelis && (!dataList || dataList.length === 0)) { 
+        return Swal.fire('Data Kosong', 'Tidak ada data untuk dicetak saat ini.', 'info'); 
+    } 
+
+    safeSetText('judulCetakPdf', judul); 
+    safeSetText('tglCetakPdf', "Dicetak pada: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })); 
+
+    let fwText = "-"; let frText = "-"; let fgText = "-"; let fjText = "-";
+    try {
+        if(isJemaat) {
+            const fw = document.getElementById('f_wil_j'); const fr = document.getElementById('f_res_j'); const fg = document.getElementById('f_ger_j'); 
+            fwText = (fw && fw.selectedIndex >= 0) ? fw.options[fw.selectedIndex].text : '-'; 
+            frText = (fr && fr.selectedIndex >= 0) ? fr.options[fr.selectedIndex].text : '-'; 
+            fgText = (fg && fg.selectedIndex >= 0) ? fg.options[fg.selectedIndex].text : '-';
+            safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>`); 
+        } else {
+            const fw = document.getElementById('filterWilayah'); const fr = document.getElementById('filterResort'); const fg = document.getElementById('filterGereja'); const fj = document.getElementById('filterJabatan'); 
+            fwText = (fw && fw.selectedIndex >= 0) ? fw.options[fw.selectedIndex].text : '-'; 
+            frText = (fr && fr.selectedIndex >= 0) ? fr.options[fr.selectedIndex].text : '-'; 
+            fgText = (fg && fg.selectedIndex >= 0) ? fg.options[fg.selectedIndex].text : '-'; 
+            fjText = (fj && fj.selectedIndex >= 0) ? fj.options[fj.selectedIndex].text : '-';
+            safeSetHTML('infoFilterCetak', `<div><b>Wilayah:</b> ${fwText}</div><div><b>Resort / JK:</b> ${frText}</div><div><b>Unit Gereja:</b> ${fgText}</div>${(isMajelis || isIndividu) ? `<div><b>Jabatan:</b> ${fjText}</div>` : ''}`); 
+        }
+    } catch(e) {}
+
+    const areaTabel = document.querySelector('#areaCetakDokumen table');
+    if (areaTabel) areaTabel.style.fontSize = "9px"; 
+
+    if(isJemaat) { 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No KK</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">L/P</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Umur</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Pekerjaan</th></tr>`); 
+        safeSetHTML('bodyTabelCetak', dataList.map((j, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${j.No_KK||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Status_Keluarga||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${j.Jenis_Kelamin||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${hitungUmur(j.Tanggal_Lahir)}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${j.Pekerjaan||'-'}</td></tr>`).join('')); 
+    } else if (isMajelis) { 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 35%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 20%;">No. WA</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 15%;">Wilayah</th></tr>`); 
+        
+        let pdfTree = window.currentTreeData;
+        const groupArray = Object.keys(pdfTree).map(k => ({ name: k, ...pdfTree[k] })).sort((a,b) => a.name.localeCompare(b.name));
+
+        if (groupArray.length === 0) {
+             return Swal.fire('Data Kosong', 'Tidak ada data majelis untuk dicetak pada filter yang Anda pilih saat ini.', 'info');
+        }
+        
+        let pdfHtml = groupArray.map(g => {
+            let htmlBlock = `<tr style="background-color: #1e293b; color: white; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 10px; font-size: 14px;">${g.isJK ? '⛪ JEMAAT KHUSUS: ' : '🏢 RESORT: '} ${g.name} <span style="font-weight:normal; font-size:10px; color:#cbd5e1; float:right;">(Wilayah ${g.wilayah})</span></td></tr>`;
+            
+            if (g.phr.length > 0) {
+                htmlBlock += `<tr style="background-color: #f1f5f9; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;"><span style="font-size: 11px;">${g.isJK ? 'Susunan Majelis Jemaat Khusus' : 'Pengurus Harian Resort (PHR)'}</span></td></tr>`;
+                htmlBlock += g.phr.map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">W-${m.Wilayah||'-'}</td></tr>`).join('');
+            }
+            
+            if (!g.isJK) {
+                Object.keys(g.pagaran).sort().forEach(pk => {
+                    htmlBlock += `<tr style="background-color: #f8fafc; font-weight: bold; page-break-after: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; color: #4338ca;"><span style="font-size: 11px;">⛪ Gereja Pagaran: ${pk}</span></td></tr>`;
+                    htmlBlock += g.pagaran[pk].map((m, i) => `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">W-${m.Wilayah||'-'}</td></tr>`).join('');
+                });
+            }
+            return htmlBlock;
+        }).join('');
+
+        safeSetHTML('bodyTabelCetak', pdfHtml);
+
+    } else if (isIndividu) { 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Lengkap</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Jabatan</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Penempatan Unit</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Resort/Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">No. WA</th></tr>`); 
+        safeSetHTML('bodyTabelCetak', dataList.map((m, i) => { let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS'; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${m.Nama_Lengkap||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.Jabatan||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoGereja}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${infoResort} (W-${m.Wilayah||'-'})</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${m.No_HP||'-'}</td></tr>`; }).join('')); 
+    } else { 
+        safeSetHTML('headTabelCetak', `<tr><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 5%;">No</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Nama Unit Gereja</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 15%;">Status</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Wilayah</th><th style="border: 1px solid #cbd5e1; padding: 6px; width: 25%;">Induk Resort / JK</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total RT</th><th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; width: 10%;">Total Jiwa</th></tr>`); 
+        let totRT = 0, totJiwa = 0; 
+        safeSetHTML('bodyTabelCetak', dataList.map((g, i) => { let rt = parseInt(g.Total_RT) || 0; let jiwa = parseInt(g.Total_Jiwa) || 0; totRT += rt; totJiwa += jiwa; return `<tr style="page-break-inside: avoid;"><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; color: #0f172a;">${g.Nama_Gereja||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Status_Gereja || g.Tipe_Gereja || 'Pagaran'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${g.Wilayah||'-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${rt}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: center;">${jiwa}</td></tr>`; }).join('') + `<tr style="background-color: #f1f5f9; font-weight: bold; font-size: 10px; page-break-inside: avoid;"><td colspan="5" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">TOTAL KESELURUHAN:</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #b45309;">${totRT}</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #15803d;">${totJiwa}</td></tr>`); 
+    } 
+    
+    // Pastikan Z-Index Modal berada paling atas (110)
+    persiapkanModalCetak();
+    document.getElementById('modalCetakData').classList.remove('hidden'); 
+  }
   window.toggleSidebar = function() {
       const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); const isMobile = window.innerWidth < 768;
       if (isMobile) {
