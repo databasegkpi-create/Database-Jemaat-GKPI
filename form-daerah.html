@@ -56,6 +56,7 @@
 </div>
 
   <div id="mainPortalApp" class="hidden">
+ <datalist id="listJabatan"></datalist>
 
   <!-- HEADER HERO -->
   <header class="bg-gradient-to-br from-indigo-600 to-blue-600 text-white pt-12 pb-20 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
@@ -86,7 +87,10 @@
       <form id="formMajelis" onsubmit="simpanDataMajelis(event)" class="space-y-5">
         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap beserta Gelar</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="m_nama" required class="w-full py-3.5 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700" placeholder="Contoh: Pdt. Budi Santoso, S.Th"></div></div>
         
-        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select id="m_jabatan" required onchange="cekJabatan()" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Memuat...</option></select></div>
+        <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><div class="space-y-1.5">
+    <label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label>
+    <input type="text" id="m_jabatan" list="listJabatan" required oninput="cekJabatan()" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700" placeholder="Ketik atau pilih jabatan...">
+</div>Memuat...</option></select></div>
         
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="m_wilayah" onchange="syncResort('m')" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700"><option value="">Pilih</option></select></div>
@@ -162,7 +166,10 @@
           <input type="hidden" id="e_id_majelis">
           
           <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap</label><input type="text" id="e_nama" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"></div>
-          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select id="e_jabatan" required onchange="cekJabatanEdit()" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"></select></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><div class="space-y-1">
+    <label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label>
+    <input type="text" id="e_jabatan" list="listJabatan" required oninput="cekJabatanEdit()" autocomplete="off" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500" placeholder="Ketik atau pilih jabatan...">
+</div></div>
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="e_wilayah" onchange="syncResort('e')" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"></select></div>
             <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="e_resort" onchange="syncGereja('e')" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"></select></div>
@@ -232,18 +239,20 @@ async function apiCall(action, payload = {}, retries = 3) {
       document.getElementById('btnTabRiwayat').className = tab === 'riwayat' ? activeClass : inactiveClass;
     }
 
-    // --- LOGIC DROPDOWNS ---
-    function siapkanDropdowns() {
+   function siapkanDropdowns() {
       const wHtml = '<option value="">Pilih Wilayah</option>' + Array.from({length:12}, (_,i)=>`<option value="${i+1}">WILAYAH ${i+1}</option>`).join('');
       document.getElementById('m_wilayah').innerHTML = wHtml;
       document.getElementById('mul_wilayah').innerHTML = wHtml;
       document.getElementById('e_wilayah').innerHTML = wHtml;
 
-      let jHtml = '<option value="">Pilih Jabatan</option>';
-      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
-      document.getElementById('m_jabatan').innerHTML = jHtml;
-      document.getElementById('e_jabatan').innerHTML = jHtml;
-    }
+      // Pindahkan data jabatan ke dalam Datalist (Untuk fitur Ketik & Pilih)
+      let jHtml = '';
+      DATA_MASTER.jabatan.forEach(j => { 
+          if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">`; 
+      });
+      const datalist = document.getElementById('listJabatan');
+      if (datalist) datalist.innerHTML = jHtml;
+  }
 
     // Variabel penyimpan PIN yang sah
 let PIN_TERVERIFIKASI = ""; 
@@ -461,35 +470,31 @@ function verifikasiPin() {
       });
     }
 
-    // --- LOGIC INPUT MULTI PERSONIL (PENGGANTI EXCEL) ---
-    function tambahBarisPersonil() {
-        barisPersonilCount++;
-        const wadah = document.getElementById('wadahPersonilMulti');
-        const rowId = 'personil_row_' + barisPersonilCount;
-        
-        let jHtml = '<option value="">Pilih Jabatan</option>';
-        DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+  function tambahBarisPersonil() {
+      barisPersonilCount++;
+      const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + barisPersonilCount;
+      
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative pt-8 animate-zoom";
+      
+      let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}')" class="absolute top-3 right-3 text-rose-400 hover:text-rose-600 transition-colors" title="Hapus Baris"><i class="fas fa-times-circle text-lg"></i></button>` : '';
 
-        const div = document.createElement('div');
-        div.id = rowId;
-        div.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative pt-8 animate-zoom";
-        
-        let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}')" class="absolute top-3 right-3 text-rose-400 hover:text-rose-600 transition-colors" title="Hapus Baris"><i class="fas fa-times-circle text-lg"></i></button>` : '';
-
-        div.innerHTML = `
-            <span class="absolute top-0 left-0 bg-slate-800 text-white text-[9px] font-bold px-3 py-1 rounded-br-lg rounded-tl-2xl label-personil">Personil #${barisPersonilCount}</span>
-            ${btnHapus}
-            <div class="space-y-3">
-                <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap & Gelar</label><input type="text" name="mul_nama[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Contoh: Pdt. Budi, S.Th"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select name="mul_jabatan[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500">${jHtml}</select></div>
-                    <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA <span class="font-normal lowercase">(Opsional)</span></label><input type="number" name="mul_hp[]" class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Mulai 08 / 62"></div>
-                </div>
-            </div>
-        `;
-        wadah.appendChild(div);
-        updateLabelPersonil();
-    }
+      div.innerHTML = `
+          <span class="absolute top-0 left-0 bg-slate-800 text-white text-[9px] font-bold px-3 py-1 rounded-br-lg rounded-tl-2xl label-personil">Personil #${barisPersonilCount}</span>
+          ${btnHapus}
+          <div class="space-y-3">
+              <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap & Gelar</label><input type="text" name="mul_nama[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Contoh: Pdt. Budi, S.Th"></div>
+              <div class="grid grid-cols-2 gap-3">
+                  <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><input type="text" name="mul_jabatan[]" list="listJabatan" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Ketik atau pilih..." autocomplete="off"></div>
+                  <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA <span class="font-normal lowercase">(Opsional)</span></label><input type="number" name="mul_hp[]" class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Mulai 08 / 62"></div>
+              </div>
+          </div>
+      `;
+      wadah.appendChild(div);
+      updateLabelPersonil();
+  }
 
     function hapusBarisPersonil(rowId) {
         document.getElementById(rowId).remove();
