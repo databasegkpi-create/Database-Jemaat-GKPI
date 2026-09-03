@@ -31,6 +31,7 @@
         z-index: -1; /* Berada paling belakang */
         pointer-events: none; /* Agar tidak memblokir klik tombol di depannya */
     }
+
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
     .tab-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
     .tab-btn.inactive { background-color: #f1f5f9; color: #64748b; }
@@ -39,6 +40,18 @@
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .animate-zoom { animation: zoomIn 0.3s forwards; }
   </style>
+  <!-- Library Dropdown Modern -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<style>
+  /* Menyesuaikan TomSelect dengan desain UI Tailwind Anda */
+  .ts-control { border-radius: 0.75rem !important; background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; padding: 0.875rem 1rem !important; font-size: 0.875rem !important; font-weight: 600 !important; color: #334155 !important; }
+  .ts-wrapper.focus .ts-control { border-color: #6366f1 !important; box-shadow: 0 0 0 2px rgba(99,102,241,0.2) !important; background-color: #ffffff !important; }
+  .ts-dropdown { border-radius: 0.75rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; margin-top: 4px !important; overflow: hidden !important; z-index: 9999 !important; }
+  .ts-dropdown .option { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; }
+  .ts-dropdown .option.active, .ts-dropdown .option:hover { background-color: #e0e7ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
+</style>
 </head>
 <body class="antialiased pb-10">
   <!-- LAYAR GEMBOK PIN -->
@@ -153,7 +166,7 @@
   </main>
 
   <!-- MODAL EDIT DATA -->
-  <div id="modalEdit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+  <div id="modalEdit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden relative animate-zoom flex flex-col max-h-[90vh]">
       <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
         <div><h3 class="font-bold text-lg">Edit Kesalahan Data</h3><p class="text-[10px] text-indigo-200">Perbaiki data yang Anda input sebelumnya</p></div>
@@ -239,19 +252,29 @@ async function apiCall(action, payload = {}, retries = 3) {
       document.getElementById('btnTabRiwayat').className = tab === 'riwayat' ? activeClass : inactiveClass;
     }
 
-   function siapkanDropdowns() {
+  let tsInst = {}; // Penyimpan memori dropdown
+
+  function siapkanDropdowns() {
       const wHtml = '<option value="">Pilih Wilayah</option>' + Array.from({length:12}, (_,i)=>`<option value="${i+1}">WILAYAH ${i+1}</option>`).join('');
       document.getElementById('m_wilayah').innerHTML = wHtml;
       document.getElementById('mul_wilayah').innerHTML = wHtml;
       document.getElementById('e_wilayah').innerHTML = wHtml;
 
-      // Pindahkan data jabatan ke dalam Datalist (Untuk fitur Ketik & Pilih)
-      let jHtml = '';
-      DATA_MASTER.jabatan.forEach(j => { 
-          if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">`; 
-      });
-      const datalist = document.getElementById('listJabatan');
-      if (datalist) datalist.innerHTML = jHtml;
+      // Hancurkan UI lama jika halaman di-refresh
+      if(tsInst['m']) tsInst['m'].destroy();
+      if(tsInst['e']) tsInst['e'].destroy();
+
+      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
+      const mJab = document.getElementById('m_jabatan');
+      const eJab = document.getElementById('e_jabatan');
+      if(mJab) mJab.innerHTML = jHtml;
+      if(eJab) eJab.innerHTML = jHtml;
+
+      // Ubah dropdown menjadi Modern Searchable UI
+      if(mJab) tsInst['m'] = new TomSelect('#m_jabatan', { create: false, onChange: function() { cekJabatan(); } });
+      if(eJab) tsInst['e'] = new TomSelect('#e_jabatan', { create: false, onChange: function() { cekJabatanEdit(); } });
   }
 
     // Variabel penyimpan PIN yang sah
@@ -474,27 +497,88 @@ function verifikasiPin() {
       barisPersonilCount++;
       const wadah = document.getElementById('wadahPersonilMulti');
       const rowId = 'personil_row_' + barisPersonilCount;
-      
+      const selectId = 'mul_jabatan_' + barisPersonilCount;
+
+      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
       const div = document.createElement('div');
-      div.id = rowId;
-      div.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative pt-8 animate-zoom";
-      
+      div.id = rowId; div.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative pt-8 animate-zoom";
       let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}')" class="absolute top-3 right-3 text-rose-400 hover:text-rose-600 transition-colors" title="Hapus Baris"><i class="fas fa-times-circle text-lg"></i></button>` : '';
 
       div.innerHTML = `
           <span class="absolute top-0 left-0 bg-slate-800 text-white text-[9px] font-bold px-3 py-1 rounded-br-lg rounded-tl-2xl label-personil">Personil #${barisPersonilCount}</span>
           ${btnHapus}
           <div class="space-y-3">
-              <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap & Gelar</label><input type="text" name="mul_nama[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Contoh: Pdt. Budi, S.Th"></div>
+              <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap <span class="text-indigo-500">(Gunakan KOMA untuk input banyak nama)</span></label>
+              <input type="text" name="mul_nama[]" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Contoh: Andi, Budi, Citra"></div>
               <div class="grid grid-cols-2 gap-3">
-                  <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><input type="text" name="mul_jabatan[]" list="listJabatan" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Ketik atau pilih..." autocomplete="off"></div>
+                  <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label>
+                  <select name="mul_jabatan[]" id="${selectId}" required class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500">${jHtml}</select></div>
                   <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA <span class="font-normal lowercase">(Opsional)</span></label><input type="number" name="mul_hp[]" class="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:border-indigo-500" placeholder="Mulai 08 / 62"></div>
               </div>
           </div>
       `;
       wadah.appendChild(div);
+      
+      // Aktifkan Searchable UI di baris yang baru ditambah
+      new TomSelect(`#${selectId}`, { create: false });
       updateLabelPersonil();
   }
+
+  window.simpanMultiMajelis = function(e) {
+      e.preventDefault();
+      const wilayah = document.getElementById('mul_wilayah').value;
+      let resort = document.getElementById('mul_resort').value;
+      let gereja = document.getElementById('mul_gereja').value;
+      const fr = document.getElementById('mul_resort');
+      if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+
+      const namaInputs = document.getElementsByName('mul_nama[]');
+      const jabatanInputs = document.getElementsByName('mul_jabatan[]');
+      const hpInputs = document.getElementsByName('mul_hp[]');
+      
+      let arrData = [];
+      for(let i=0; i<namaInputs.length; i++) {
+          let jbt = jabatanInputs[i].value;
+          let grjRow = gereja;
+          
+          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
+              grjRow = "Tingkat Resort"; 
+          }
+          
+          // FITUR KOMA: Memecah 1 inputan menjadi banyak data otomatis
+          let rawNames = namaInputs[i].value;
+          let nameArray = rawNames.split(',').map(n => n.trim()).filter(n => n !== "");
+
+          nameArray.forEach(namaSatu => {
+              arrData.push({
+                  "Nama_Lengkap": namaSatu,
+                  "Jabatan": jbt,
+                  "Wilayah": wilayah,
+                  "Resort": resort,
+                  "Nama_Gereja": grjRow,
+                  "No_HP": hpInputs[i].value
+              });
+          });
+      }
+
+      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
+      Swal.fire({ title: 'Menyimpan Personil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+      apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor", sumberAsal: "PORTAL DAERAH"}).then(res => {
+          if (res === true || res.status === 'success' || res.added !== undefined) {
+              let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
+              if (count === 0) { Swal.fire({ title: 'Data Sudah Ada!', html: 'Sistem menolak karena data duplikat.', icon: 'info' }); } 
+              else {
+                  try { arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); } catch(err) {}
+                  Swal.fire('Berhasil!', `<b>${count}</b> personil baru berhasil didaftarkan.`, 'success');
+                  document.getElementById('formMulti').reset(); document.getElementById('wadahPersonilMulti').innerHTML = '';
+                  barisPersonilCount = 0; tambahBarisPersonil(); syncResort('mul'); 
+              }
+          } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan sistem dari server.', 'error'); }
+      }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
+  };
 
     function hapusBarisPersonil(rowId) {
         document.getElementById(rowId).remove();
