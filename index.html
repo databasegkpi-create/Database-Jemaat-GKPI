@@ -1709,7 +1709,64 @@
       } else { sidebar.classList.toggle('md:-ml-[280px]'); }
   };
   window.addEventListener('resize', () => { if(window.innerWidth >= 768) { document.getElementById('sidebarOverlay').classList.add('hidden'); } });
+// ========================================================
+  // PERBAIKAN FITUR WA BLAST (SINKRON DENGAN FILTER UTAMA)
+  // ========================================================
+  window.openBlastModal = function() { 
+      // 1. Ambil data yang sedang tampil di layar saat ini 
+      // (Otomatis mengikuti filter Wilayah, Resort, Gereja, dan Jabatan yang aktif)
+      const listPenerima = window.currentFilteredList;
+      
+      if(!listPenerima || listPenerima.length === 0) {
+          return Swal.fire('Data Kosong', 'Tidak ada personil yang sesuai dengan filter saat ini.', 'info'); 
+      }
+      
+      // 2. Sembunyikan filter ganda di dalam Pop-up agar tidak membingungkan
+      const filterW = document.getElementById('blastOptWilayah');
+      const filterJ = document.getElementById('blastOptJabatan');
+      if (filterW && filterW.parentElement) filterW.parentElement.style.display = 'none';
+      if (filterJ && filterJ.parentElement) filterJ.parentElement.style.display = 'none';
 
+      // 3. Tampilkan jumlah target penerima
+      window.currentBlastList = listPenerima;
+      safeSetText('countPenerima', listPenerima.length.toLocaleString('id-ID'));
+      document.getElementById('modalBlastFonte').classList.remove('hidden'); 
+  };
+  
+  window.closeBlastModal = function() { 
+      document.getElementById('modalBlastFonte').classList.add('hidden'); 
+  };
+
+  // Mencegah error jika select bawaan HTML lama tidak sengaja terklik
+  window.hitungTargetBlast = function() {};
+
+  window.kirimBlastSekarang = function() { 
+      const list = window.currentBlastList; 
+      const pesan = document.getElementById('pesanFonte').value; 
+      const fileInput = document.getElementById('fileBlast'); 
+      
+      if(!list || list.length === 0) return Swal.fire('Data Kosong', 'Tidak ada target personil.', 'warning'); 
+      if(!pesan) return Swal.fire('Pesan Kosong', 'Mohon ketik isi pesan WhatsApp terlebih dahulu.', 'warning'); 
+      
+      const btn = document.getElementById('btnEksekusiBlast'); 
+      btn.disabled = true; 
+      Swal.fire({ title: 'Kirim via API...', text: 'Memproses pengiriman pesan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } }); 
+      
+      if(fileInput && fileInput.files.length > 0) { 
+        const reader = new FileReader(); 
+        reader.onload = function(e) { 
+          const f = { content: e.target.result.split(',')[1], name: fileInput.files[0].name, type: fileInput.files[0].type }; 
+          apiCall('processBlastFonteWithFile', {list: list, pesan: pesan, fileObj: f})
+            .then(msg => { Swal.fire('Berhasil', msg.message || 'Pesan Blast terkirim', 'success'); closeBlastModal(); btn.disabled=false; fileInput.value=''; })
+            .catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
+        }; 
+        reader.readAsDataURL(fileInput.files[0]); 
+      } else { 
+        apiCall('processBlastFonteWithFile', {list: list, pesan: pesan, fileObj: null})
+            .then(msg => { Swal.fire('Berhasil', msg.message || 'Pesan Blast terkirim', 'success'); closeBlastModal(); btn.disabled=false; })
+            .catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
+      } 
+  };
 </script>
 </body>
 </html>
