@@ -467,22 +467,43 @@ function verifikasiPin() {
     }
 
     // --- LOGIC KIRIM INDIVIDU ---
-    function simpanDataMajelis(e) {
+  window.simpanDataMajelis = function(e) {
       e.preventDefault();
-      Swal.fire({ title: 'Mendaftarkan Personil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
       
-    const payload = {
+      const payload = {
           Nama_Lengkap: document.getElementById('m_nama').value,
           Jabatan: document.getElementById('m_jabatan').value,
           Wilayah: document.getElementById('m_wilayah').value,
           Resort: document.getElementById('m_resort').value,
           Nama_Gereja: document.getElementById('m_gereja').value,
           No_HP: document.getElementById('m_hp').value,
-          sumberAsal: "PORTAL DAERAH" // <--- TAMBAHKAN BARIS INI
+          sumberAsal: "PORTAL DAERAH"
       };
 
       const fr = document.getElementById('m_resort');
       if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { payload.Nama_Gereja = payload.Resort; payload.Resort = ""; }
+
+      // ==========================================
+      // VALIDASI GANDA: Cek Kombinasi Nama, Jabatan & Unit
+      // ==========================================
+      const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+      const inputJabatan = String(payload.Jabatan).trim().toLowerCase();
+      const inputGereja = String(payload.Nama_Gereja || payload.Resort).trim().toLowerCase();
+
+      const isDuplicate = DATA_MASTER.majelis.some(m => { 
+          const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); 
+          const existingJabatan = String(m.Jabatan || '').trim().toLowerCase();
+          const existingGereja = String(m.Nama_Gereja || m.Resort || '').trim().toLowerCase();
+          
+          // Dianggap duplikat HANYA JIKA ketiganya (Nama, Jabatan, Unit) sama persis
+          return existingNama === inputNama && existingJabatan === inputJabatan && existingGereja === inputGereja; 
+      });
+
+      if (isDuplicate) { 
+          return Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama dan JABATAN TERSEBUT sudah terdaftar di unit ini!', confirmButtonColor: '#f59e0b' }); 
+      }
+
+      Swal.fire({ title: 'Mendaftarkan Personil...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
       apiCall('simpanMajelis', payload).then(res => {
             if(res === true || res.status === 'success' || res) {
@@ -490,8 +511,8 @@ function verifikasiPin() {
                 Swal.fire('Pendaftaran Berhasil!', 'Data telah masuk ke sistem pusat.', 'success');
                 document.getElementById('formMajelis').reset();
             } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
-      });
-    }
+      }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
+  }
 
   function tambahBarisPersonil() {
       barisPersonilCount++;
@@ -701,9 +722,8 @@ function verifikasiPin() {
 
     function tutupEdit() { document.getElementById('modalEdit').classList.add('hidden'); }
 
-   function simpanEditMajelis(e) {
+  window.simpanEditMajelis = function(e) {
        e.preventDefault();
-       Swal.fire({ title: 'Menyimpan Perubahan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
        
        const idMajelis = document.getElementById('e_id_majelis').value;
        const payload = {
@@ -719,9 +739,31 @@ function verifikasiPin() {
        const fr = document.getElementById('e_resort');
        if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { payload.Nama_Gereja = payload.Resort; payload.Resort = ""; }
 
+       // ==========================================
+       // VALIDASI GANDA SAAT EDIT
+       // ==========================================
+       const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+       const inputJabatan = String(payload.Jabatan).trim().toLowerCase();
+       const inputGereja = String(payload.Nama_Gereja || payload.Resort).trim().toLowerCase();
+
+       const isDuplicate = DATA_MASTER.majelis.some(m => {
+           const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase();
+           const existingJabatan = String(m.Jabatan || '').trim().toLowerCase();
+           const existingGereja = String(m.Nama_Gereja || m.Resort || '').trim().toLowerCase();
+           
+           if (String(m.ID_Majelis) === String(idMajelis)) return false; // Abaikan data dirinya sendiri
+           
+           return existingNama === inputNama && existingJabatan === inputJabatan && existingGereja === inputGereja;
+       });
+
+       if (isDuplicate) {
+           return Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama dan JABATAN TERSEBUT sudah terdaftar di unit ini!', confirmButtonColor: '#f59e0b' });
+       }
+
+       Swal.fire({ title: 'Menyimpan Perubahan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
        apiCall('updateMajelis', payload).then(res => {
           if(res) {
-             // MENGGUNAKAN SESSION STORAGE PADA EDIT
              let riwayat = JSON.parse(sessionStorage.getItem('gkpi_riwayat_daerah')) || [];
              const idTemp = document.getElementById('e_id_temp').value;
              let idx = riwayat.findIndex(r => String(r.idTemp) === String(idTemp));
@@ -736,7 +778,7 @@ function verifikasiPin() {
              loadRiwayat(true); 
           } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
        });
-    }
+    };
 
     // --- PEMUATAN AWAL DATA MASTER SAAT HALAMAN DIBUKA ---
     document.addEventListener('DOMContentLoaded', () => {
