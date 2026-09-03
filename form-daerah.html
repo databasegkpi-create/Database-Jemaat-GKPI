@@ -525,18 +525,29 @@ function verifikasiPin() {
         const hpInputs = document.getElementsByName('mul_hp[]');
         
         let arrData = [];
-        for(let i=0; i<namaInputs.length; i++) {
+       for(let i=0; i<namaInputs.length; i++) {
             let jbt = jabatanInputs[i].value;
             let grjRow = gereja;
             
+            // Jika jabatan pendeta/pemimpin, paksa unit ke Tingkat Resort
+            if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin')) {
+                grjRow = "Tingkat Resort"; 
+            }
             
-            arrData.push({
-                "Nama_Lengkap": namaInputs[i].value,
-                "Jabatan": jbt,
-                "Wilayah": wilayah,
-                "Resort": resort,
-                "Nama_Gereja": grjRow,
-                "No_HP": hpInputs[i].value
+            // FITUR PEMISAH KOMA: Pecah nama jika ada tanda koma
+            let rawNames = namaInputs[i].value;
+            let nameArray = rawNames.split(',').map(n => n.trim()).filter(n => n !== "");
+
+            // Masukkan setiap nama sebagai baris data terpisah
+            nameArray.forEach(namaPecahan => {
+                arrData.push({
+                    "Nama_Lengkap": namaPecahan,
+                    "Jabatan": jbt,
+                    "Wilayah": wilayah,
+                    "Resort": resort,
+                    "Nama_Gereja": grjRow,
+                    "No_HP": hpInputs[i].value
+                });
             });
         }
 
