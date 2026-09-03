@@ -1568,10 +1568,26 @@
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
     payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer'; payload.sumberAsal = "Dashboard Pusat";
     
-    const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
-    const isDuplicate = DATA_MASTER.majelis.some(m => { const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; return existingNama === inputNama; });
-    if (isDuplicate) { Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama tersebut sudah terdaftar!', confirmButtonColor: '#f59e0b' }); btn.disabled = false; btn.innerHTML = originalText; return; }
-       
+const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+    const inputJabatan = String(payload.Jabatan).trim().toLowerCase();
+    const inputGereja = String(payload.Nama_Gereja || payload.Resort).trim().toLowerCase();
+
+    const isDuplicate = DATA_MASTER.majelis.some(m => { 
+        const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); 
+        const existingJabatan = String(m.Jabatan || '').trim().toLowerCase();
+        const existingGereja = String(m.Nama_Gereja || m.Resort || '').trim().toLowerCase();
+
+        if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; 
+        
+        // Data dianggap GANDA HANYA JIKA Nama, Jabatan, dan Unit Gerejanya sama persis!
+        return existingNama === inputNama && existingJabatan === inputJabatan && existingGereja === inputGereja; 
+    });
+
+    if (isDuplicate) { 
+        Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama dan jabatan ini sudah terdaftar di unit tersebut!', confirmButtonColor: '#f59e0b' }); 
+        btn.disabled = false; btn.innerHTML = originalText; return; 
+    }
+    
     if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
     let action = payload.ID_Majelis ? 'updateMajelis' : 'simpanMajelis'; 
     Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
