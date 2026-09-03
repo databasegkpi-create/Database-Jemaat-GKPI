@@ -115,37 +115,41 @@
       </form>
     </div>
 
-    <!-- ============================================== -->
+   <!-- ============================================== -->
     <!-- TAB 2: INPUT MULTI PERSONIL (SEKALIGUS)        -->
     <!-- ============================================== -->
     <div id="tabMulti" class="glass-card rounded-[2rem] p-6 md:p-8 animate-zoom hidden">
-      <div class="mb-6 border-b border-slate-100 pb-4 text-center md:text-left">
-        <h2 class="text-xl font-black text-slate-800"><i class="fas fa-users-cog text-emerald-500 mr-2"></i>Input Banyak Personil</h2>
-        <p class="text-xs text-slate-500 mt-1 font-medium">Pilih lokasi gereja 1 kali, lalu tambahkan banyak personil sekaligus.</p>
+      <div class="mb-6 text-center md:text-left border-b border-slate-100 pb-4">
+        <h2 class="text-xl font-black text-slate-800 flex items-center justify-center md:justify-start"><i class="fas fa-users-cog text-emerald-500 mr-2"></i>Input Banyak Personil</h2>
+        <p class="text-[11px] text-slate-500 mt-1 font-medium">Pilih lokasi gereja 1 kali, lalu tambahkan banyak personil sekaligus di bawahnya.</p>
       </div>
 
       <form id="formMulti" onsubmit="simpanMultiMajelis(event)" class="space-y-6">
         
         <!-- HEADER: LOKASI GEREJA (DIPILIH SEKALI SAJA) -->
-        <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100 shadow-inner">
-            <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-widest border-b border-emerald-200 pb-2 mb-4"><i class="fas fa-map-marker-alt mr-2 text-emerald-500"></i> 1. Tentukan Lokasi Penempatan Bersama</h3>
+        <div class="bg-emerald-50/30 p-6 rounded-[1.5rem] border border-emerald-100/60 shadow-sm">
+            <h3 class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest border-b border-emerald-100 pb-3 mb-5 flex items-center"><i class="fas fa-map-marker-alt mr-2 text-emerald-500"></i> 1. Tentukan Lokasi Penempatan Bersama</h3>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="mul_wilayah" onchange="syncResort('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Wilayah</option></select></div>
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="mul_resort" onchange="syncGereja('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Resort</option></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="mul_wilayah" onchange="syncResort('mul')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"><option value="">Pilih Wilayah</option></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="mul_resort" onchange="syncGereja('mul')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"><option value="">Pilih Resort</option></select></div>
             </div>
-            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja</label><select id="mul_gereja" onchange="updateJabatanOptions('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Gereja</option></select></div>
+            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja</label><select id="mul_gereja" onchange="updateJabatanOptions('mul')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"><option value="">Pilih Gereja</option></select></div>
         </div>
 
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-200 pb-2 pt-2"><i class="fas fa-users mr-2 text-slate-400"></i> 2. Daftar Personil (Gunakan Koma Jika Banyak)</h3>
+        <h3 class="text-[10px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-2 pt-2 flex items-center"><i class="fas fa-users-line mr-2 text-slate-400"></i> 2. Daftar Personil</h3>
         
         <!-- CONTAINER DINAMIS UNTUK DERETAN PERSONIL -->
         <div id="wadahPersonilMulti" class="space-y-5">
            <!-- Javascript akan men-generate baris input di sini -->
         </div>
 
-        <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-slate-50 text-emerald-600 border-2 border-dashed border-emerald-300 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 active:scale-95 transition-all flex justify-center items-center gap-2"><i class="fas fa-plus-circle text-lg"></i> Tambah Baris Jabatan Lain</button>
+        <!-- TOMBOL AKSI BAWAH (Disusun Rapi) -->
+        <div class="pt-2 space-y-3">
+            <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50/50 text-emerald-600 border-2 border-dashed border-emerald-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-50 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-plus-circle text-base"></i> Tambah Baris Jabatan Lain</button>
 
-        <button type="submit" class="w-full bg-emerald-600 text-white py-4.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all mt-6 flex justify-center items-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Simpan Semua Personil</button>
+            <button type="submit" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2"><i class="fas fa-cloud-upload-alt text-base"></i> Simpan Semua Personil</button>
+        </div>
       </form>
     </div>
 
@@ -570,7 +574,7 @@
       }
   };
 
-  // --- PEMBARUAN FUNGSI MULTI PERSONIL ---
+  // --- PEMBARUAN FUNGSI MULTI PERSONIL (UI SESUAI GAMBAR) ---
   window.tambahBarisPersonil = function() {
       barisPersonilCount++;
       const wadah = document.getElementById('wadahPersonilMulti');
@@ -582,7 +586,7 @@
 
       const div = document.createElement('div');
       div.id = rowId; 
-      div.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative pt-10 animate-zoom mb-4";
+      div.className = "bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all";
       
       let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors" title="Hapus Baris"><i class="fas fa-times text-lg"></i></button>` : '';
 
@@ -591,8 +595,8 @@
           ${btnHapus}
           <div class="space-y-4">
               <div class="space-y-1.5">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap <span class="text-indigo-500 normal-case font-medium ml-1">(Gunakan KOMA untuk input banyak nama)</span></label>
-                  <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Andi, Budi, Citra">
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan koma untuk input banyak nama)</span></label>
+                  <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Andi, Budi, Citra">
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-1.5">
@@ -600,8 +604,8 @@
                       <select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select>
                   </div>
                   <div class="space-y-1.5">
-                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA <span class="text-emerald-500 font-medium normal-case ml-1">(Opsional)</span></label>
-                      <input type="number" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-emerald-50/30 border border-emerald-200 text-sm font-bold text-slate-700 outline-none focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nomor WA <span class="text-slate-400 normal-case font-medium text-[9px]">(Opsional)</span></label>
+                      <input type="number" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
                   </div>
               </div>
           </div>
