@@ -94,7 +94,7 @@
               <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="m_wilayah" onchange="syncResort('m')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih</option></select></div>
               <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="m_resort" onchange="syncGereja('m')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Resort</option></select></div>
             </div>
-            <div class="space-y-1.5" id="wadahGerejaMajelis"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja Lokasi Penempatan</label><select id="m_gereja" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Gereja</option></select></div>
+            <div class="space-y-1.5" id="wadahGerejaMajelis"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja Lokasi Penempatan</label><select id="m_gereja" onchange="updateJabatanOptions('m')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm"><option value="">Pilih Gereja</option></select></div>
         </div>
 
         <!-- SEKTOR 2: IDENTITAS PERSONIL -->
@@ -133,7 +133,7 @@
               <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="mul_wilayah" onchange="syncResort('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Wilayah</option></select></div>
               <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="mul_resort" onchange="syncGereja('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Resort</option></select></div>
             </div>
-            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja</label><select id="mul_gereja" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Gereja</option></select></div>
+            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja</label><select id="mul_gereja" onchange="updateJabatanOptions('mul')" required class="w-full p-3 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-slate-700 shadow-sm"><option value="">Pilih Gereja</option></select></div>
         </div>
 
         <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-200 pb-2 pt-2"><i class="fas fa-users mr-2 text-slate-400"></i> 2. Daftar Personil (Gunakan Koma Jika Banyak)</h3>
@@ -194,7 +194,7 @@
             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="e_wilayah" onchange="syncResort('e')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"></select></div>
             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="e_resort" onchange="syncGereja('e')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"></select></div>
           </div>
-          <div class="space-y-1.5" id="wadahGerejaEdit"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Unit Gereja</label><select id="e_gereja" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"></select></div>
+          <div class="space-y-1.5" id="wadahGerejaEdit"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Unit Gereja</label><select id="e_gereja" onchange="updateJabatanOptions('e')" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"></select></div>
           <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WhatsApp</label><input type="number" id="e_hp" class="w-full p-3.5 rounded-xl bg-emerald-50/30 border border-emerald-200 text-sm font-bold text-slate-700 outline-none focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 shadow-sm"></div>
           
           <button type="submit" class="w-full bg-amber-500 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-amber-200 hover:bg-amber-600 active:scale-95 mt-4 transition-all"><i class="fas fa-save mr-2"></i> Update Perubahan</button>
@@ -358,7 +358,10 @@
 
       if (prefix === 'm') cekJabatan();
       if (prefix === 'e') cekJabatanEdit();
-    }
+      
+      // Panggil Filter Jabatan ketika Resort berubah
+      updateJabatanOptions(prefix);
+  }
 
     function cekJabatan() { 
       const jSelect = document.getElementById('m_jabatan');
@@ -518,53 +521,117 @@
         }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
     }
 
-    // --- TAB 2: INPUT MULTI PERSONIL (KOMA) ---
-    function tambahBarisPersonil() {
-        barisPersonilCount++;
-        const wadah = document.getElementById('wadahPersonilMulti');
-        const rowId = 'personil_row_' + barisPersonilCount;
-        const selectId = 'mul_jabatan_' + barisPersonilCount;
+   // --- FUNGSI PINTAR: FILTER JABATAN JIKA UNIT ADALAH PHR ---
+  window.updateJabatanOptions = function(prefix) {
+      let isPHR = false;
+      const gSelect = document.getElementById(prefix + '_gereja');
+      if (gSelect) {
+          const gerejaVal = gSelect.value.toLowerCase();
+          isPHR = gerejaVal.includes('phr');
+      }
 
-        let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
-        DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+      // Daftar eksklusif jabatan yang diizinkan untuk PHR
+      const allowedPHR = [
+          "pengurus harian jemaat resort", "pendeta diperbantukan", "kordinator sekolah minggu resort", 
+          "kordinator pemuda/i resort", "kordinator perempuan resort", "kordinator pria resort", 
+          "perwakilan penatua resort", "pengawas harta benda keuangan", "sekretaris resort", "bendahara resort",
+          "pendeta resort", "pendeta", "pemimpin jemaat"
+      ];
 
-        const div = document.createElement('div');
-        div.id = rowId; div.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative pt-10 animate-zoom mb-4";
-        let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors" title="Hapus Baris"><i class="fas fa-times text-lg"></i></button>` : '';
+      let options = [];
+      DATA_MASTER.jabatan.forEach(j => {
+          if(j.Nama_Jabatan) {
+              if (isPHR) {
+                  let jName = j.Nama_Jabatan.toLowerCase();
+                  let match = allowedPHR.some(phr => jName.includes(phr));
+                  // Hanya masukkan opsi jika cocok dengan daftar eksklusif PHR
+                  if(match) options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
+              } else {
+                  // Jika bukan PHR, tampilkan semua opsi
+                  options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
+              }
+          }
+      });
 
-        div.innerHTML = `
-            <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[10px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.3rem] label-personil tracking-widest shadow-sm">PERSONIL #${barisPersonilCount}</span>
-            ${btnHapus}
-            <div class="space-y-4">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap <span class="text-indigo-500 normal-case font-medium ml-1">(Gunakan KOMA untuk input banyak nama)</span></label>
-                    <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Andi, Budi, Citra">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
-                        <select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select>
-                    </div>
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA <span class="text-emerald-500 font-medium normal-case ml-1">(Opsional)</span></label>
-                        <input type="number" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-emerald-50/30 border border-emerald-200 text-sm font-bold text-slate-700 outline-none focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
-                    </div>
-                </div>
-            </div>
-        `;
-        wadah.appendChild(div);
-        new TomSelect(`#${selectId}`, { create: false });
-        updateLabelPersonil();
-    }
+      // Update langsung daftar TomSelect secara real-time
+      if (prefix === 'm' && tsInst['m']) {
+          let currentVal = tsInst['m'].getValue(); tsInst['m'].clearOptions(); tsInst['m'].addOptions(options);
+          if (options.some(o => o.value === currentVal)) tsInst['m'].setValue(currentVal);
+      } else if (prefix === 'e' && tsInst['e']) {
+          let currentVal = tsInst['e'].getValue(); tsInst['e'].clearOptions(); tsInst['e'].addOptions(options);
+          if (options.some(o => o.value === currentVal)) tsInst['e'].setValue(currentVal);
+      } else if (prefix === 'mul') {
+          Object.keys(tsInst).forEach(key => {
+              if (key.startsWith('mul_jabatan_')) {
+                  let currentVal = tsInst[key].getValue(); tsInst[key].clearOptions(); tsInst[key].addOptions(options);
+                  if (options.some(o => o.value === currentVal)) tsInst[key].setValue(currentVal);
+              }
+          });
+      }
+  };
 
-    function hapusBarisPersonil(rowId) { document.getElementById(rowId).remove(); updateLabelPersonil(); }
-    function updateLabelPersonil() {
-        const rows = document.getElementById('wadahPersonilMulti').children;
-        for(let i=0; i<rows.length; i++) {
-            const badge = rows[i].querySelector('.label-personil');
-            if(badge) badge.innerText = "PERSONIL #" + (i+1);
-        }
-    }
+  // --- PEMBARUAN FUNGSI MULTI PERSONIL ---
+  window.tambahBarisPersonil = function() {
+      barisPersonilCount++;
+      const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + barisPersonilCount;
+      const selectId = 'mul_jabatan_' + barisPersonilCount;
+
+      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
+      const div = document.createElement('div');
+      div.id = rowId; 
+      div.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative pt-10 animate-zoom mb-4";
+      
+      let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors" title="Hapus Baris"><i class="fas fa-times text-lg"></i></button>` : '';
+
+      div.innerHTML = `
+          <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[10px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.3rem] label-personil tracking-widest shadow-sm">PERSONIL #${barisPersonilCount}</span>
+          ${btnHapus}
+          <div class="space-y-4">
+              <div class="space-y-1.5">
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap <span class="text-indigo-500 normal-case font-medium ml-1">(Gunakan KOMA untuk input banyak nama)</span></label>
+                  <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Andi, Budi, Citra">
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
+                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select>
+                  </div>
+                  <div class="space-y-1.5">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA <span class="text-emerald-500 font-medium normal-case ml-1">(Opsional)</span></label>
+                      <input type="number" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-emerald-50/30 border border-emerald-200 text-sm font-bold text-slate-700 outline-none focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
+                  </div>
+              </div>
+          </div>
+      `;
+      wadah.appendChild(div);
+      
+      // Simpan instance TomSelect multi agar bisa dikendalikan oleh filter PHR
+      tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false });
+      
+      // Langsung panggil filter untuk menyesuaikan baris yang baru ditambah
+      updateJabatanOptions('mul');
+      updateLabelPersonil();
+  };
+
+  window.hapusBarisPersonil = function(rowId, selectId) { 
+      document.getElementById(rowId).remove(); 
+      // Hancurkan juga memori TomSelect-nya
+      if(tsInst[selectId]) { tsInst[selectId].destroy(); delete tsInst[selectId]; }
+      updateLabelPersonil(); 
+  };
+
+  window.updateLabelPersonil = function() {
+      const rows = document.getElementById('wadahPersonilMulti').children;
+      for(let i=0; i<rows.length; i++) {
+          const badge = rows[i].querySelector('.label-personil');
+          if(badge) badge.innerText = "PERSONIL #" + (i+1);
+      }
+  };
+
+    
 
     window.simpanMultiMajelis = function(e) {
         e.preventDefault();
