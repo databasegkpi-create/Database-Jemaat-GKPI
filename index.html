@@ -100,7 +100,12 @@
     .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-  
+  /* CUSTOM STYLE TOMSELECT AGAR TAMPIL MEWAH & TIDAK TERPOTONG */
+    .ts-control { border-radius: 0.75rem !important; background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; padding: 0.875rem 1rem !important; font-size: 0.875rem !important; font-weight: 600 !important; color: #334155 !important; }
+    .ts-wrapper.focus .ts-control { border-color: #4f46e5 !important; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important; background-color: #ffffff !important; }
+    .ts-dropdown { border-radius: 0.75rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; margin-top: 4px !important; z-index: 999999 !important; }
+    .ts-dropdown .option { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
+    .ts-dropdown .option.active, .ts-dropdown .option:hover { background-color: #e0e7ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
   </style>
 </head>
 <body class="antialiased">
@@ -955,15 +960,28 @@
     let j = String(jabatan).toLowerCase(); if (j.includes('pendeta') || j.includes('pemimpin jemaat')) return 1; if (j.includes('guru') || j.includes('penginjil')) return 2; if (j.includes('penatua') || j.includes('sintua')) return 3; return 4;
   }
 
-  function setupFilters() { 
+  window.setupFilters = function() { 
     let htmlW = '<option value="">Seluruh Wilayah</option>'; let htmlJW = '<option value="">Pilih Wilayah</option>'; 
     for(let i=1; i<=12; i++) { htmlW+=`<option value="${i}">WILAYAH ${i}</option>`; htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`; } 
     safeSetHTML('filterWilayah', htmlW); safeSetHTML('f_wil_j', htmlW); safeSetHTML('formWilayah', htmlJW); safeSetHTML('bk_wilayah', htmlJW); safeSetHTML('j_wilayah', htmlJW);
+    
     let htmlJ = '<option value="">Semua Jabatan</option>'; let formJ = '<option value="">Pilih Jabatan</option>'; 
     DATA_MASTER.jabatan.forEach(j => { if (j.Nama_Jabatan) { htmlJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; formJ += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; } }); 
     safeSetHTML('filterJabatan', htmlJ); safeSetHTML('formJabatan', formJ); 
+    
+    if(window.tsInst['m']) { window.tsInst['m'].destroy(); window.tsInst['m'] = null; }
+    
+    // PEMBARUAN: Menambahkan dropdownParent agar tidak berantakan di dalam modal
+    if(document.getElementById('formJabatan')) {
+        window.tsInst['m'] = new TomSelect('#formJabatan', { 
+            create: false, 
+            dropdownParent: 'body', 
+            onChange: function() { cekJabatan(); } 
+        }); 
+    }
+    
     syncFilterResort(); syncResortJemaatPage(); syncFormResortMajelis(); syncFormResortJemaatEdit();
-  }
+  };
 
   function syncFilterResort() { 
     const w = document.getElementById('filterWilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
@@ -1998,8 +2016,12 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
   };
 
   window.tambahBarisPersonil = function() {
-      window.barisPersonilCount++; const wadah = document.getElementById('wadahPersonilMulti');
-      const rowId = 'personil_row_' + window.barisPersonilCount; const selectId = 'mul_jabatan_' + window.barisPersonilCount;
+      if (!window.barisPersonilCount) window.barisPersonilCount = 0;
+      window.barisPersonilCount++; 
+      const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + window.barisPersonilCount; 
+      const selectId = 'mul_jabatan_' + window.barisPersonilCount;
+      
       let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
       DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
 
@@ -2011,16 +2033,29 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
           <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[9px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
           ${btnHapus}
           <div class="space-y-4">
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap (Gunakan ';' jika nama banyak)</label>
-              <input type="text" name="mul_nama[]" required autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="Pdt. Andi; Budi; Citra"></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan ';' jika nama lebih dari satu)</span></label>
+              <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra"></div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select></div>
-                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA</label><input type="text" name="mul_hp[]" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="0811 / 6281"></div>
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label><select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select></div>
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">Nomor WA <span class="text-emerald-500 normal-case font-medium text-[9px]">(Bisa pisah dgn ;)</span></label>
+                  <input type="text" name="mul_hp[]" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62"></div>
               </div>
           </div>`;
       wadah.appendChild(div);
-      if (typeof TomSelect !== 'undefined') window.tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false }); 
-      updateLabelPersonil();
+      
+      // PEMBARUAN: Jeda sedikit agar HTML siap, lalu jadikan Dropdown pintar bebas halangan
+      setTimeout(() => {
+          if (typeof TomSelect !== 'undefined') {
+              window.tsInst = window.tsInst || {};
+              window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
+                  create: false, 
+                  dropdownParent: 'body' // Mencegah form terpotong
+              }); 
+              if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
+          }
+      }, 50);
+      
+      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
   };
 
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
