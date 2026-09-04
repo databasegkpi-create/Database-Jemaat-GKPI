@@ -1223,38 +1223,46 @@ window.setupFilters = function() {
         }
     });
 
-    // PERBAIKAN: Logika keysToDelete dihapus agar gereja kosong tidak disembunyikan
-    Object.keys(tree).forEach(key => {
-        let node = tree[key];
-        let infoG_Parent = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === key || String(x.Induk_Resort || x.Resort).trim() === key);
-        if (node.isJK && infoG_Parent) { node.totalRT = parseInt(infoG_Parent.Total_RT) || 0; node.totalJiwa = parseInt(infoG_Parent.Total_Jiwa) || 0; } 
-        else if (!node.isJK) { let childGrj = DATA_MASTER.gereja.filter(x => String(x.Induk_Resort || x.Resort).trim() === key); childGrj.forEach(c => { node.totalRT += parseInt(c.Total_RT) || 0; node.totalJiwa += parseInt(c.Total_Jiwa) || 0; }); }
+    // PERBAIKAN: Hapus gereja yang tidak cocok HANYA JIKA sedang mencari nama
+      let keysToDelete = [];
+      Object.keys(tree).forEach(key => {
+          let node = tree[key];
+          let infoG_Parent = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === key || String(x.Induk_Resort || x.Resort).trim() === key);
+          if (node.isJK && infoG_Parent) { node.totalRT = parseInt(infoG_Parent.Total_RT) || 0; node.totalJiwa = parseInt(infoG_Parent.Total_Jiwa) || 0; } 
+          else if (!node.isJK) { let childGrj = DATA_MASTER.gereja.filter(x => String(x.Induk_Resort || x.Resort).trim() === key); childGrj.forEach(c => { node.totalRT += parseInt(c.Total_RT) || 0; node.totalJiwa += parseInt(c.Total_Jiwa) || 0; }); }
 
-        if (!node.isJK) {
-            let pdtList = node.phr.filter(x => String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin'));
-            Object.keys(node.pagaran).forEach(pk => { pdtList.forEach(pdt => { if (!node.pagaran[pk].some(e => e.ID_Majelis === pdt.ID_Majelis)) node.pagaran[pk].push(pdt); }); });
-        }
+          if (!node.isJK) {
+              let pdtList = node.phr.filter(x => String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin'));
+              Object.keys(node.pagaran).forEach(pk => { pdtList.forEach(pdt => { if (!node.pagaran[pk].some(e => e.ID_Majelis === pdt.ID_Majelis)) node.pagaran[pk].push(pdt); }); });
+          }
 
-        if (s) {
-            let keyMatches = key.toLowerCase().includes(s);
-            node.phr = node.phr.filter(m => keyMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
-            Object.keys(node.pagaran).forEach(pk => {
-                let pkMatches = pk.toLowerCase().includes(s);
-                node.pagaran[pk] = node.pagaran[pk].filter(m => keyMatches || pkMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
-                if (node.pagaran[pk].length === 0 && !keyMatches && !pkMatches) delete node.pagaran[pk];
-            });
-        }
+          if (s) { // JIKA ADA TEKS PENCARIAN
+              let keyMatches = key.toLowerCase().includes(s);
+              node.phr = node.phr.filter(m => keyMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
+              
+              let hasPagaranMatch = false;
+              Object.keys(node.pagaran).forEach(pk => {
+                  let pkMatches = pk.toLowerCase().includes(s);
+                  node.pagaran[pk] = node.pagaran[pk].filter(m => keyMatches || pkMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
+                  if (node.pagaran[pk].length === 0 && !keyMatches && !pkMatches) { delete node.pagaran[pk]; } 
+                  else { hasPagaranMatch = true; }
+              });
+              
+              // Hapus dari layar JIKA nama tidak cocok & personil di dalamnya tidak ada yang cocok
+              if (!keyMatches && node.phr.length === 0 && !hasPagaranMatch) { keysToDelete.push(key); }
+          }
 
-        if (selectedGereja) {
-            if (selectedGereja === 'pengurus harian resort (phr)') { node.pagaran = {}; } 
-            else { node.phr = []; Object.keys(node.pagaran).forEach(pk => { if (pk.toLowerCase() !== selectedGereja) delete node.pagaran[pk]; }); }
-        }
+          if (selectedGereja) {
+              if (selectedGereja === 'pengurus harian resort (phr)') { node.pagaran = {}; } 
+              else { node.phr = []; Object.keys(node.pagaran).forEach(pk => { if (pk.toLowerCase() !== selectedGereja) delete node.pagaran[pk]; }); }
+          }
 
-        const sortMajelis = (arr) => arr.sort((a,b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if (diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); 
-        sortMajelis(node.phr); 
-        Object.keys(node.pagaran).forEach(pk => sortMajelis(node.pagaran[pk])); 
-    });
-
+          const sortMajelis = (arr) => arr.sort((a,b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if (diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); 
+          sortMajelis(node.phr); Object.keys(node.pagaran).forEach(pk => sortMajelis(node.pagaran[pk])); 
+      });
+      
+      // Eksekusi penghapusan gereja yang tidak sesuai pencarian
+      keysToDelete.forEach(k => delete tree[k]);
     window.currentTreeData = tree;
     const groupArray = Object.keys(tree).map(k => ({ name: k, ...tree[k] })).sort((a,b) => a.name.localeCompare(b.name));
     const paginatedGroups = groupArray.slice((currentPageMajelis - 1) * 12, ((currentPageMajelis - 1) * 12) + 12);
