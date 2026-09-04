@@ -2059,6 +2059,245 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       else if (section === "SEKSI") { if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"]; else if (text.includes("injil")) keywords = ["injil", "zending"]; else if (text.includes("diakoni")) keywords = ["diakoni"]; else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"]; else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"]; else if (text.includes("remaja")) keywords = ["remaja"]; else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"]; else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"]; else if (text.includes("pria")) keywords = ["pria"]; else if (text.includes("lansia")) keywords = ["lansia"]; }
       if (keywords.length > 0) { for (let jbt of validJabatans) { if (keywords.some(kw => jbt.toLowerCase().includes(kw))) return jbt; } } return null;
   }
+
+  // =========================================================================
+  // PATCH PERBAIKAN: MODAL MULTI MAJELIS, SMART DROPDOWN & AI SCAN
+  // =========================================================================
+
+  window.tsInst = window.tsInst || {};
+  window.barisPersonilCount = 0;
+
+  // 1. Memaksa Dropdown Wilayah dan Resort Multi agar terhubung (Tidak Blank)
+  window.openFormMajelisMulti = function() {
+      if(document.getElementById('formMultiMajelis')) document.getElementById('formMultiMajelis').reset();
+      document.getElementById('wadahPersonilMulti').innerHTML = ''; 
+      window.barisPersonilCount = 0;
+      
+      // Mengarahkan HTML ke Fungsi yang Benar secara Otomatis
+      const selWil = document.getElementById('mul_wilayah');
+      const selRes = document.getElementById('mul_resort');
+      const selGer = document.getElementById('mul_gereja');
+      
+      if(selWil) selWil.setAttribute('onchange', 'syncResortMulti()');
+      if(selRes) selRes.setAttribute('onchange', 'syncGerejaMulti()');
+      if(selGer) selGer.setAttribute('onchange', 'updateJabatanOptionsModal("mul")');
+
+      // Memasukkan Daftar Wilayah
+      let htmlJW = '<option value="">Pilih Wilayah</option>'; 
+      for(let i=1; i<=12; i++) { htmlJW += `<option value="${i}">WILAYAH ${i}</option>`; }
+      if(selWil) selWil.innerHTML = htmlJW;
+
+      syncResortMulti(); 
+      tambahBarisPersonil(); 
+      document.getElementById('modalFormMulti').classList.remove('hidden'); 
+  };
+
+  window.syncResortMulti = function() { 
+      const w = document.getElementById('mul_wilayah')?.value || ''; const cleanW = String(w).trim().toLowerCase();
+      const fr = document.getElementById('mul_resort'); if(!fr) return; fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+      const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+      const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+      resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+      syncGerejaMulti(); 
+  };
+  
+  window.syncGerejaMulti = function() { 
+      const resSelect = document.getElementById('mul_resort'); const fg = document.getElementById('mul_gereja'); if(!fg || !resSelect) return; 
+      const val = resSelect.value, tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); fg.innerHTML = '<option value="">Pilih Nama Gereja / PHR</option>'; 
+      if (tipe === "RESORT" || (!tipe && val)) { 
+          fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-emerald-700 bg-emerald-50">🏢 PENGURUS HARIAN RESORT (PHR)</option>`;
+          DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); }); 
+          fg.disabled = false; fg.classList.remove('bg-slate-200'); 
+      } else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
+      updateJabatanOptionsModal('mul');
+  };
+
+  // 2. Menghidupkan Smart Dropdown (TomSelect) di Baris Personil Multi
+  window.tambahBarisPersonil = function() {
+      window.barisPersonilCount++; const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + window.barisPersonilCount; const selectId = 'mul_jabatan_' + window.barisPersonilCount;
+      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
+      const div = document.createElement('div'); div.id = rowId; 
+      div.className = "bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all mb-4";
+      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-white hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
+
+      div.innerHTML = `
+          <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[9px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
+          ${btnHapus}
+          <div class="space-y-4">
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan ';' jika nama lebih dari satu)</span></label>
+              <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra"></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label><select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select></div>
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">Nomor WA <span class="text-emerald-500 normal-case font-medium text-[9px]">(Bisa pisah dgn ;)</span></label>
+                  <input type="text" name="mul_hp[]" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62"></div>
+              </div>
+          </div>`;
+      wadah.appendChild(div);
+      
+      // Jeda 50ms agar HTML sempat terender sebelum merubahnya jadi Smart Dropdown
+      setTimeout(() => {
+          if (typeof TomSelect !== 'undefined') {
+              window.tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false, placeholder: 'Ketik untuk mencari...' }); 
+              updateJabatanOptionsModal('mul');
+          }
+      }, 50);
+
+      updateLabelPersonil();
+  };
+
+  window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
+  window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const badge = rows[i].querySelector('.label-personil'); if(badge) badge.innerText = "PERSONIL #" + (i+1); } };
+
+  // 3. Modifikasi Filter Jabatan PHR untuk Modal Multi
+  window.updateJabatanOptionsModal = function(prefix = 'form') {
+      let isPHR = false; 
+      let idGereja = (prefix === 'mul') ? 'mul_gereja' : 'formGereja';
+      const gSelect = document.getElementById(idGereja);
+      if (gSelect) { const gerejaVal = gSelect.value.toLowerCase(); isPHR = gerejaVal.includes('phr'); }
+
+      const allowedPHR = ["pengurus harian jemaat resort", "pendeta diperbantukan", "kordinator sekolah minggu resort", "kordinator pemuda/i resort", "kordinator perempuan resort", "kordinator pria resort", "perwakilan penatua resort", "pengawas harta benda keuangan", "sekretaris resort", "bendahara resort", "pendeta resort", "pendeta", "pemimpin jemaat"];
+      let options = [{value: "", text: "Ketik atau pilih jabatan..."}];
+
+      DATA_MASTER.jabatan.forEach(j => {
+          if(j.Nama_Jabatan) {
+              if (isPHR) { 
+                  if(allowedPHR.some(phr => j.Nama_Jabatan.toLowerCase().includes(phr))) options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
+              } else { options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan}); }
+          }
+      });
+
+      if (prefix === 'form' && window.tsInst['m']) { 
+          let currentVal = window.tsInst['m'].getValue(); window.tsInst['m'].clearOptions(); window.tsInst['m'].addOptions(options); 
+          if (options.some(o => o.value === currentVal)) window.tsInst['m'].setValue(currentVal); 
+      } else if (prefix === 'mul') {
+          Object.keys(window.tsInst).forEach(key => {
+              if (key.startsWith('mul_jabatan_')) { 
+                  let currentVal = window.tsInst[key].getValue(); window.tsInst[key].clearOptions(); window.tsInst[key].addOptions(options); 
+                  if (options.some(o => o.value === currentVal)) window.tsInst[key].setValue(currentVal); 
+              }
+          });
+      }
+  };
+
+  // 4. Logika Simpan Database (Massal dan Satuan)
+  window.simpanMultiMajelis = function(e) {
+      e.preventDefault(); const btn = document.getElementById('btnSubmitMulti'); const originalText = btn.innerHTML;
+      const wilayah = document.getElementById('mul_wilayah').value; let resort = document.getElementById('mul_resort').value; let gereja = document.getElementById('mul_gereja').value;
+      const fr = document.getElementById('mul_resort'); if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+
+      const namaInputs = document.getElementsByName('mul_nama[]'); const jabatanInputs = document.getElementsByName('mul_jabatan[]'); const hpInputs = document.getElementsByName('mul_hp[]');
+      
+      let arrData = [];
+      for(let i=0; i<namaInputs.length; i++) {
+          let jbt = jabatanInputs[i].value; let grjRow = gereja;
+          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) { grjRow = "Tingkat Resort"; }
+          let rawNames = namaInputs[i].value; let nameArray = rawNames.split(';').map(n => n.trim()).filter(n => n !== "");
+          let rawHPs = hpInputs[i].value; let hpArray = rawHPs.split(';').map(h => h.trim());
+          nameArray.forEach((namaSatu, index) => { let hpSatu = hpArray[index] || ""; arrData.push({ "Nama_Lengkap": namaSatu, "Jabatan": jbt, "Wilayah": wilayah, "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hpSatu }); });
+      }
+
+      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
+      Swal.fire({ title: 'Menyimpan...', html: 'Mengirim '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+      apiCall('importMajelisMassal', {excelData: arrData, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(res => {
+          if (res === true || res.status === 'success' || res.added !== undefined) {
+              let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
+              if (count === 0) { Swal.fire({ title: 'Ditolak!', html: 'Semua nama tersebut <b>sudah terdaftar</b> di database.', icon: 'info' }); } 
+              else { Swal.fire('Berhasil!', `<b>${count}</b> personil baru didaftarkan.`, 'success'); closeModal('modalFormMulti'); loadData(); }
+          } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan server.', 'error'); }
+          btn.disabled = false; btn.innerHTML = originalText;
+      }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
+  };
+
+  // 5. Mesin OCR / Scan SK AI Tesseract
+  window.prosesScanSK = function(event) {
+      const file = event.target.files[0]; if (!file) return; document.getElementById('inputScanSK').value = '';
+      if (typeof Tesseract === 'undefined') {
+          Swal.fire({ title: 'Menyiapkan AI...', text: 'Mengunduh modul kamera cerdas (hanya pada penggunaan pertama)...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          script.onload = () => { Swal.close(); jalankanTesseract(file); };
+          document.head.appendChild(script);
+      } else { jalankanTesseract(file); }
+  };
+
+  function jalankanTesseract(file) {
+      Swal.fire({ title: 'Memindai SK...', html: '<div class="text-sm mt-2 text-slate-500">Mengekstrak baris per baris...<br><b id="ocrProgress" class="text-emerald-600 text-lg">0%</b></div>', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+      Tesseract.recognize(file, 'ind', { logger: m => { if (m.status === 'recognizing text' && document.getElementById('ocrProgress')) { document.getElementById('ocrProgress').innerText = Math.round(m.progress * 100) + '%'; } }
+      }).then(({ data: { text } }) => {
+          let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+          let hasilScanIndividual = []; let activeSection = ""; let stopParsing = false; 
+          let validJabatans = DATA_MASTER.jabatan.map(j => j.Nama_Jabatan).filter(j => j);
+
+          lines.forEach(line => {
+              if (stopParsing) return; 
+              let upperLine = line.toUpperCase(); let lowerLine = line.toLowerCase();
+              const stopKeywords = ["ditetapkan di", "sekretaris jenderal", "kantor sinode", "tembusan"];
+              if (stopKeywords.some(keyword => lowerLine.includes(keyword)) || upperLine.match(/\bNRP\b/)) { stopParsing = true; return; }
+              if (lowerLine.includes("pdt. dr. humala") || lowerLine.includes("pdt. parsaoran") || lowerLine.includes("pimpinan sinode gkpi")) { return; }
+
+              if (/^I[\.\,]\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
+              if (/^II[\.\,]\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
+              if (/^III[\.\,]\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
+              if (/^IV[\.\,]\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
+              if (/^V[\.\,]\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
+              if (/^[IVX]+[\.\,]\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
+
+              if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
+                  let splitLine = line.split(/[:;]/); let sisiKiri = splitLine[0].toLowerCase(); let sisiKanan = splitLine.length > 1 ? splitLine.slice(1).join(':').trim() : "";
+                  let matchedJabatan = cariJabatanSistem(sisiKiri, activeSection, validJabatans);
+                  if (matchedJabatan) {
+                      let rawNama = sisiKanan !== "" ? sisiKanan : line.toLowerCase().replace(sisiKiri, '').trim(); let namaBersih = bersihkanNama(rawNama);
+                      if (namaBersih.length > 3 && !namaBersih.toLowerCase().includes("sesuai sk")) {
+                          let namaBanyak = namaBersih.split(/\bdan\b|&/i);
+                          namaBanyak.forEach(n => { let nBersih = bersihkanNama(n); if(nBersih.length > 3) hasilScanIndividual.push({ jabatan: matchedJabatan, nama: nBersih }); });
+                      }
+                  }
+              } 
+              else if (activeSection === "PENASEHAT" || activeSection === "PHB" || activeSection === "PENATUA") {
+                  let parts = line.split(/(?=\b\d+[\.\)]\s)/g);
+                  let roleTarget = activeSection === "PHB" ? "pengawas harta benda" : (activeSection === "PENASEHAT" ? "penasehat" : "penatua");
+                  let matchedRole = validJabatans.find(v => v.toLowerCase().includes(roleTarget)) || validJabatans.find(v => v.toLowerCase().includes("sintua"));
+                  if (!matchedRole) matchedRole = activeSection; 
+                  parts.forEach(part => {
+                      let cleanName = bersihkanNama(part);
+                      if (cleanName.length > 3 && !cleanName.toLowerCase().includes('sesuai sk') && !cleanName.toLowerCase().includes('aktif') && !cleanName.toLowerCase().includes('periode')) {
+                          hasilScanIndividual.push({ jabatan: matchedRole, nama: cleanName });
+                      }
+                  });
+              }
+          });
+
+          if(hasilScanIndividual.length === 0) { return Swal.fire('Gagal Membaca', 'Sistem tidak menemukan format jabatan yang sesuai database.', 'error'); }
+
+          document.getElementById('wadahPersonilMulti').innerHTML = ''; window.barisPersonilCount = 0;
+          hasilScanIndividual.forEach(personil => {
+              tambahBarisPersonil(); let selectId = 'mul_jabatan_' + window.barisPersonilCount; let rowEl = document.getElementById('personil_row_' + window.barisPersonilCount);
+              let namaInput = rowEl.querySelector('input[name="mul_nama[]"]'); namaInput.value = personil.nama; 
+              setTimeout(() => { if (window.tsInst[selectId]) { window.tsInst[selectId].setValue(personil.jabatan); } }, 100);
+          });
+          Swal.fire({ title: 'Auto-Isi Berhasil!', text: `${hasilScanIndividual.length} personil berhasil diuraikan secara rapi.`, icon: 'success' });
+      }).catch(err => { Swal.fire('Error Scan', 'Sistem gagal memproses: ' + err.message, 'error'); });
+  }
+
+  function cariJabatanSistem(rawKiri, section, validJabatans) {
+      let text = rawKiri.toLowerCase(); let keywords = [];
+      if (section === "PENGURUS") {
+          if (text.includes("pemimpin")) keywords = ["pemimpin", "pendeta jemaat"]; else if (text.includes("sekretaris")) keywords = ["sekretaris"]; else if (text.includes("bendahara")) keywords = ["bendahara"];
+      } else if (section === "SEKSI") {
+          if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"]; else if (text.includes("injil") || text.includes("pekabaran")) keywords = ["injil", "zending"]; else if (text.includes("diakoni")) keywords = ["diakoni"]; else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"]; else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"]; else if (text.includes("remaja")) keywords = ["remaja"]; else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"]; else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"]; else if (text.includes("pria")) keywords = ["pria"]; else if (text.includes("lansia")) keywords = ["lansia"]; else if (text.includes("kesehatan")) keywords = ["kesehatan"]; else if (text.includes("pendidikan")) keywords = ["pendidikan"]; else if (text.includes("sarana") || text.includes("pembangunan")) keywords = ["sarana", "pembangunan"]; else if (text.includes("usaha") || text.includes("sdm")) keywords = ["usaha", "sdm"]; else if (text.includes("keamanan")) keywords = ["keamanan"];
+      }
+      if (keywords.length > 0) { for (let jbt of validJabatans) { let jbtLower = jbt.toLowerCase(); if (keywords.some(kw => jbtLower.includes(kw))) return jbt; } }
+      return null;
+  }
+
+  function bersihkanNama(text) {
+      let bersih = text; bersih = bersih.replace(/^[\d\.\)\:\s]+/, ''); bersih = bersih.replace(/[\.\:\-\s_=|~;\?]+$/, ''); return bersih.trim();
+  }
 </script>
 </body>
 </html>
