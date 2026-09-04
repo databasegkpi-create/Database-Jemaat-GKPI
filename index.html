@@ -2645,6 +2645,38 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       window.currentPageChecklist = page; 
       window.renderTabelChecklist(false); 
   };
+
+  // =========================================================================
+  // MESIN CETAK PDF DASHBOARD PUSAT
+  // =========================================================================
+  window.openPdfPreview = function() {
+      const modal = document.getElementById('modalPdfPreview');
+      if (modal) {
+          if(chartWilayahInstance) document.getElementById('prevChartW').src = chartWilayahInstance.toBase64Image();
+          if(chartJabatanInstance) document.getElementById('prevChartJ').src = chartJabatanInstance.toBase64Image();
+          
+          const statsJ = {}; DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) statsJ[j.Nama_Jabatan] = 0; });
+          DATA_MASTER.majelis.forEach(m => { if(m.Jabatan && statsJ[m.Jabatan] !== undefined) statsJ[m.Jabatan]++; });
+          let htmlJ = ''; for(let k in statsJ) { htmlJ += `<tr><td class="border border-slate-200 p-2">${k}</td><td class="border border-slate-200 p-2 text-center">${statsJ[k]}</td></tr>`; }
+          safeSetHTML('prevJobTableBody', htmlJ);
+
+          let wilStats = {}; for(let i=1; i<=12; i++) wilStats[i] = { g:0, rt:0, jw:0 };
+          DATA_MASTER.gereja.forEach(g => { let w = parseInt(g.Wilayah); if(w >= 1 && w <= 12) { wilStats[w].g++; wilStats[w].rt += parseInt(g.Total_RT)||0; wilStats[w].jw += parseInt(g.Total_Jiwa)||0; } });
+          let htmlW = ''; for(let i=1; i<=12; i++) { htmlW += `<tr><td class="border border-slate-200 p-2 font-bold text-slate-700">Wilayah ${i}</td><td class="border border-slate-200 p-2 text-center">${wilStats[i].g}</td><td class="border border-slate-200 p-2 text-center">${wilStats[i].rt.toLocaleString('id-ID')}</td><td class="border border-slate-200 p-2 text-center">${wilStats[i].jw.toLocaleString('id-ID')}</td></tr>`; }
+          safeSetHTML('prevWilayahTableBody', htmlW);
+
+          modal.classList.remove('hidden'); modal.style.zIndex = "9999";
+      }
+  };
+  
+  window.executePdfDownload = function() {
+       const isDark = document.documentElement.classList.contains('dark'); if (isDark) document.documentElement.classList.remove('dark');
+       Swal.fire({ title: 'Menyusun Laporan PDF...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+       html2pdf().set({ margin: 0.4, filename: 'Laporan_Statistik_Dashboard_Pusat.pdf', image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdfDocumentArea')).save().then(() => { 
+           if (isDark) document.documentElement.classList.add('dark'); 
+           closePdfPreview(); Swal.fire('Berhasil!', 'Laporan PDF Dashboard berhasil diunduh!', 'success'); 
+       });
+  };
 </script>
 </body>
 </html>
