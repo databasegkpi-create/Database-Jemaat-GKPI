@@ -108,6 +108,27 @@
     .ts-dropdown { border-radius: 0.75rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; margin-top: 4px !important; z-index: 999999 !important; }
     .ts-dropdown .option { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
     .ts-dropdown .option.active, .ts-dropdown .option:hover { background-color: #e0e7ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
+
+    /* CUSTOM STYLE TOMSELECT (SMART DROPDOWN) - FIX UKURAN GEPENG */
+    .ts-wrapper { width: 100% !important; }
+    .ts-control { 
+        border-radius: 0.75rem !important; /* Sama dengan rounded-xl */
+        background-color: #f8fafc !important; /* Sama dengan bg-slate-50 */
+        border: 1px solid #e2e8f0 !important; /* border-slate-200 */
+        padding: 0.875rem 1rem !important; /* padding seragam */
+        font-size: 0.875rem !important; 
+        font-weight: 600 !important; 
+        color: #334155 !important; 
+        min-height: 52px !important; /* KUNCI UTAMA: Paksa tinggi agar sejajar dengan input di sebelahnya */
+        display: flex !important; 
+        align-items: center !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+    }
+    .ts-control > input { font-family: inherit !important; font-size: 0.875rem !important; font-weight: 600 !important; }
+    .ts-wrapper.focus .ts-control { border-color: #4f46e5 !important; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important; background-color: #ffffff !important; }
+    .ts-dropdown { border-radius: 0.75rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; margin-top: 4px !important; z-index: 999999 !important; }
+    .ts-dropdown .option { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
+    .ts-dropdown .option.active, .ts-dropdown .option:hover { background-color: #e0e7ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
   </style>
 </head>
 <body class="antialiased">
@@ -540,21 +561,64 @@
   </div>
 </div>
 
-<!-- MODAL FORM MAJELIS -->
+<!-- MODAL FORM MAJELIS (SATUAN) -->
 <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
-  <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
-    <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10"><div><h3 id="modalTitle" class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis</h3><p class="text-xs text-slate-500 font-medium mt-1">Lengkapi informasi personil majelis</p></div><button onclick="closeModal('modalForm')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button></div>
-    <form id="formInputMajelis" onsubmit="handleSimpan(event, 'majelis')" class="p-8 space-y-5">
+  <div class="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
+    <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-20">
+        <div>
+            <h3 id="modalTitle" class="text-xl font-black text-slate-800 flex items-center"><i class="fas fa-id-badge text-indigo-500 mr-3 text-2xl"></i> Form Majelis</h3>
+            <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Lengkapi informasi personil majelis</p>
+        </div>
+        <button onclick="closeModal('modalForm')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <form id="formInputMajelis" onsubmit="handleSimpan(event, 'majelis')" class="p-8 space-y-6 bg-slate-50/30">
       <input type="hidden" name="ID_Majelis" id="m_id">
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" name="Nama_Lengkap" id="m_nama" placeholder="Masukkan nama" required class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></div></div>
-      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jabatan</label><select name="Jabatan" id="formJabatan" onchange="cekJabatan()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="formWilayah" onchange="syncFormResortMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div></div>
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Resort / Jemaat Khusus</label><select name="Resort" id="formResort" onchange="syncFormGerejaMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
-      <div class="space-y-1.5" id="wadahGereja"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit Nama Gereja</label><select name="Nama_Gereja" id="formGereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nomor WhatsApp Aktif <span class="text-emerald-500 font-bold">(Opsional)</span></label><div class="relative"><i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i><input type="number" name="No_HP" id="m_hp" placeholder="Contoh: 628123456789" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"></div></div>
-      <div class="pt-4"><button type="submit" id="btnSubmit" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Simpan ke Database</button></div>
+      
+      <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap <span class="text-indigo-500 normal-case font-bold ml-1 text-[9px]">(Gunakan titik koma ";" jika banyak)</span></label>
+          <div class="relative">
+              <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" name="Nama_Lengkap" id="m_nama" placeholder="Contoh: Pdt. Andi; Budi; Citra" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all shadow-sm">
+          </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-2">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
+              <select name="Jabatan" id="formJabatan" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm font-bold text-slate-700 shadow-sm"></select>
+          </div>
+          <div class="space-y-2">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label>
+              <select name="Wilayah" id="formWilayah" onchange="syncFormResortMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all shadow-sm"></select>
+          </div>
+      </div>
+
+      <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / Jemaat Khusus</label>
+          <select name="Resort" id="formResort" onchange="syncFormGerejaMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all shadow-sm"></select>
+      </div>
+      
+      <div class="space-y-2" id="wadahGereja">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Unit Nama Gereja</label>
+          <select name="Nama_Gereja" id="formGereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all shadow-sm"></select>
+      </div>
+      
+      <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WhatsApp <span class="text-emerald-500 font-bold normal-case text-[9px]">(Bisa pisah dgn ;)</span></label>
+          <div class="relative">
+              <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
+              <input type="text" name="No_HP" id="m_hp" placeholder="Contoh: 0811; 0822" autocomplete="off" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all shadow-sm">
+          </div>
+      </div>
+      
+      <div class="pt-6 mt-2 border-t border-slate-200">
+          <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2"><i class="fas fa-cloud-upload-alt text-base"></i> Simpan Personil</button>
+      </div>
     </form>
   </div>
 </div>
+  
 <!-- MODAL FORM MAJELIS MULTI (BANYAK BARIS & AUTO-SCAN) -->
 <div id="modalFormMulti" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4 md:p-8">
   <div class="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom">
@@ -2028,9 +2092,10 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
 
       const div = document.createElement('div'); div.id = rowId; 
-      div.className = "bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all mb-5";
+      // Jarak diperlebar (mb-6), border diperhalus
+      div.className = "bg-white p-6 md:p-8 rounded-[1.5rem] border border-emerald-100 shadow-sm relative pt-10 animate-zoom transition-all mb-6";
       
-      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-white hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
+      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
 
       div.innerHTML = `
           <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[9px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
@@ -2041,10 +2106,9 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
                   <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra">
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div class="space-y-2">
+                  <div class="space-y-2 flex flex-col justify-end">
                       <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
-                      <!-- PERBAIKAN: Penambahan class desain yg sama persis agar ukurannya seragam & rapi -->
-                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 shadow-sm">${jHtml}</select>
+                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select>
                   </div>
                   <div class="space-y-2">
                       <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">Nomor WA <span class="text-emerald-500 normal-case font-medium text-[9px]">(Bisa pisah dgn ;)</span></label>
@@ -2062,9 +2126,7 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
                   dropdownParent: 'body',
                   placeholder: 'Ketik atau pilih jabatan...',
                   onFocus: function() {
-                      if (this.getValue() === "") {
-                          this.clear(true);
-                      }
+                      if (this.getValue() === "") { this.clear(true); }
                   }
               }); 
               if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
@@ -2073,6 +2135,8 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       
       if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
   };
+
+  
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
   window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
 
