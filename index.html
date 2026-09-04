@@ -541,13 +541,35 @@
 <div id="modalForm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
   <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-y-auto max-h-[95vh] relative animate-zoom">
     <div class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 px-8 py-6 flex justify-between items-center z-10"><div><h3 id="modalTitle" class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-id-badge text-indigo-500 mr-2"></i> Form Majelis</h3><p class="text-xs text-slate-500 font-medium mt-1">Lengkapi informasi personil majelis</p></div><button onclick="closeModal('modalForm')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button></div>
-    <form id="formInputMajelis" onsubmit="handleSimpan(event, 'majelis')" class="p-8 space-y-5">
+  <form id="formInputMajelis" onsubmit="handleSimpan(event, 'majelis')" class="p-8 space-y-5">
       <input type="hidden" name="ID_Majelis" id="m_id">
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label><div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" name="Nama_Lengkap" id="m_nama" placeholder="Masukkan nama" required class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></div></div>
-      <div class="grid grid-cols-2 gap-5"><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jabatan</label><select name="Jabatan" id="formJabatan" onchange="cekJabatan()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div><div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="formWilayah" onchange="syncFormResortMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div></div>
+      
+      <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap <span class="text-indigo-500 normal-case font-medium ml-1">(Gunakan TITIK KOMA ";" untuk banyak nama)</span></label>
+          <div class="relative">
+              <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" name="Nama_Lengkap" id="m_nama" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra, S.E" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all">
+          </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-5">
+          <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jabatan</label><select name="Jabatan" id="formJabatan" onchange="cekJabatan()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
+          <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Wilayah</label><select name="Wilayah" id="formWilayah" onchange="syncFormResortMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
+      </div>
+      
       <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Resort / Jemaat Khusus</label><select name="Resort" id="formResort" onchange="syncFormGerejaMajelis()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
+      
       <div class="space-y-1.5" id="wadahGereja"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Unit Nama Gereja</label><select name="Nama_Gereja" id="formGereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-sm transition-all"></select></div>
-      <div class="space-y-1.5"><label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nomor WhatsApp Aktif <span class="text-emerald-500 font-bold">(Opsional)</span></label><div class="relative"><i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i><input type="number" name="No_HP" id="m_hp" placeholder="Contoh: 628123456789" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all"></div></div>
+      
+      <div class="space-y-1.5">
+          <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nomor WhatsApp <span class="text-emerald-500 font-bold normal-case">(Bisa pisah dgn ;)</span></label>
+          <div class="relative">
+              <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
+              <!-- PERBAIKAN: Ubah type="number" menjadi type="text" agar bisa diisi titik koma -->
+              <input type="text" name="No_HP" id="m_hp" placeholder="Contoh: 0811; 0822" autocomplete="off" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-semibold text-sm transition-all">
+          </div>
+      </div>
+      
       <div class="pt-4"><button type="submit" id="btnSubmit" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Simpan ke Database</button></div>
     </form>
   </div>
@@ -1615,37 +1637,103 @@
   }
 
   function handleSimpan(e, tipe) {
-    e.preventDefault(); const payload = Object.fromEntries(new FormData(e.target)); const btn = e.target.querySelector('button[type="submit"]'); const originalText = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
-    let fr = document.getElementById('formResort') || document.getElementById('m_resort');
+    e.preventDefault(); 
+    const payload = Object.fromEntries(new FormData(e.target)); 
+    const btn = e.target.querySelector('button[type="submit"]'); 
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true; 
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
+    
+    let fr = document.getElementById('formResort');
     let tipeGereja = fr ? fr.options[fr.selectedIndex]?.getAttribute('data-tipe') : '';
     if (tipeGereja === "JK") { payload.Nama_Gereja = fr.value; payload.Resort = ""; }
-    payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer'; payload.sumberAsal = "Dashboard Pusat";
     
-const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
-    const inputJabatan = String(payload.Jabatan).trim().toLowerCase();
-    const inputGereja = String(payload.Nama_Gereja || payload.Resort).trim().toLowerCase();
-
-    const isDuplicate = DATA_MASTER.majelis.some(m => { 
-        const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); 
-        const existingJabatan = String(m.Jabatan || '').trim().toLowerCase();
-        const existingGereja = String(m.Nama_Gereja || m.Resort || '').trim().toLowerCase();
-
-        if (EDIT_MODE_ID && String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; 
-        
-        // Data dianggap GANDA HANYA JIKA Nama, Jabatan, dan Unit Gerejanya sama persis!
-        return existingNama === inputNama && existingJabatan === inputJabatan && existingGereja === inputGereja; 
-    });
-
-    if (isDuplicate) { 
-        Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama dan jabatan ini sudah terdaftar di unit tersebut!', confirmButtonColor: '#f59e0b' }); 
-        btn.disabled = false; btn.innerHTML = originalText; return; 
+    // Auto-Set tingkat Resort untuk Pendeta/Pemimpin
+    if(String(payload.Jabatan).toLowerCase().includes('pendeta') || String(payload.Jabatan).toLowerCase().includes('pemimpin') || String(payload.Jabatan).toLowerCase().includes('resort')) { 
+        payload.Nama_Gereja = "Tingkat Resort"; 
     }
+
+    payload.userRole = USER_NOW ? USER_NOW.role : 'Viewer'; 
+    payload.sumberAsal = "Dashboard Pusat";
     
-    if (EDIT_MODE_ID) payload.ID_Majelis = EDIT_MODE_ID;
-    let action = payload.ID_Majelis ? 'updateMajelis' : 'simpanMajelis'; 
-    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
-    apiCall(action, payload).then(res => { closeModal('modalForm'); Swal.fire('Sukses', 'Data tersimpan.', 'success'); btn.disabled = false; btn.innerHTML = originalText; loadData(); }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
+    // ==========================================
+    // JIKA MODE EDIT (Hanya 1 Data)
+    // ==========================================
+    if (EDIT_MODE_ID) {
+        payload.ID_Majelis = EDIT_MODE_ID;
+        const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
+        const inputJabatan = String(payload.Jabatan).trim().toLowerCase();
+        const inputGereja = String(payload.Nama_Gereja || payload.Resort).trim().toLowerCase();
+
+        const isDuplicate = DATA_MASTER.majelis.some(m => { 
+            const existingNama = String(m.Nama_Lengkap || '').trim().toLowerCase(); 
+            const existingJabatan = String(m.Jabatan || '').trim().toLowerCase(); 
+            const existingGereja = String(m.Nama_Gereja || m.Resort || '').trim().toLowerCase();
+            if (String(m.ID_Majelis) === String(EDIT_MODE_ID)) return false; 
+            return existingNama === inputNama && existingJabatan === inputJabatan && existingGereja === inputGereja; 
+        });
+
+        if (isDuplicate) { 
+            Swal.fire({ icon: 'warning', title: 'Data Ganda!', text: 'Personil dengan nama dan jabatan ini sudah terdaftar di unit tersebut!', confirmButtonColor: '#f59e0b' }); 
+            btn.disabled = false; btn.innerHTML = originalText; return; 
+        }
+
+        Swal.fire({ title: 'Menyimpan Perubahan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        apiCall('updateMajelis', payload).then(res => { 
+            closeModal('modalForm'); Swal.fire('Sukses', 'Data berhasil diperbarui.', 'success'); 
+            btn.disabled = false; btn.innerHTML = originalText; loadData(); 
+        }).catch(err => { 
+            Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; 
+        });
+    } 
+    // ==========================================
+    // JIKA MODE TAMBAH BARU (Bisa Massal / Titik Koma)
+    // ==========================================
+    else {
+        let rawNames = payload.Nama_Lengkap; 
+        let nameArray = rawNames.split(';').map(n => n.trim()).filter(n => n !== "");
+        
+        let rawHPs = payload.No_HP || ""; 
+        let hpArray = rawHPs.split(';').map(h => h.trim());
+
+        let arrData = [];
+        nameArray.forEach((namaSatu, index) => {
+            let hpSatu = hpArray[index] || "";
+            arrData.push({ 
+                "Nama_Lengkap": namaSatu, 
+                "Jabatan": payload.Jabatan, 
+                "Wilayah": payload.Wilayah, 
+                "Resort": payload.Resort, 
+                "Nama_Gereja": payload.Nama_Gereja, 
+                "No_HP": hpSatu 
+            });
+        });
+
+        if(arrData.length === 0) {
+            Swal.fire('Kosong', 'Tidak ada nama yang valid untuk ditambahkan.', 'warning');
+            btn.disabled = false; btn.innerHTML = originalText; return;
+        }
+
+        Swal.fire({ title: 'Menyimpan Personil...', html: 'Memproses '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        
+        // Kita "Pinjam" API importMajelisMassal yang sangat kuat itu!
+        apiCall('importMajelisMassal', {excelData: arrData, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(res => {
+            if (res === true || res.status === 'success' || res.added !== undefined) {
+                let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
+                if (count === 0) { 
+                    Swal.fire({ title: 'Data Ditolak!', html: 'Semua nama dan jabatan tersebut <b>sudah terdaftar</b> di database pusat.', icon: 'info' }); 
+                } else {
+                    Swal.fire('Berhasil!', `<b>${count}</b> personil baru berhasil didaftarkan.`, 'success');
+                    closeModal('modalForm');
+                    loadData(); // Segarkan tabel di layar
+                }
+            } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan server.', 'error'); }
+            btn.disabled = false; btn.innerHTML = originalText;
+        }).catch(err => { 
+            Swal.fire('Koneksi Gagal', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; 
+        });
+    }
   }
 
   function editDataMajelis(id) {
