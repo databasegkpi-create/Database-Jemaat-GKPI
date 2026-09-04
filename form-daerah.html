@@ -617,20 +617,18 @@
               let upperLine = line.toUpperCase();
               let lowerLine = line.toLowerCase();
 
-              // 1. REM OTOMATIS YANG AMAN (Hanya membaca kata kunci mutlak di stempel SK)
-              // Gelar akademis ditiadakan dari sini agar tidak memblokir nama Majelis
+              // 1. REM OTOMATIS (Mendeteksi Stempel / Tanda Tangan)
               const stopKeywords = ["ditetapkan di", "sekretaris jenderal", "kantor sinode", "tembusan"];
               if (stopKeywords.some(keyword => lowerLine.includes(keyword)) || upperLine.match(/\bNRP\b/)) {
                   stopParsing = true;
                   return;
               }
 
-              // Abaikan secara spesifik nama pejabat penandatangan SK agar tidak masuk ke daftar
               if (lowerLine.includes("pdt. dr. humala") || lowerLine.includes("pdt. parsaoran") || lowerLine.includes("pimpinan sinode gkpi")) {
-                  return; // Lewati baris ini saja
+                  return; 
               }
 
-              // 2. Lacak Posisi Membaca (Romawi - Lebih toleran terhadap titik/koma dari AI)
+              // 2. Lacak Posisi Membaca (Romawi)
               if (/^I[\.\,]\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
               if (/^II[\.\,]\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
               if (/^III[\.\,]\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
@@ -639,12 +637,13 @@
               
               if (/^[IVX]+[\.\,]\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
 
-              // 3. Format KESAMPING (Jabatan di Kiri, Nama di Kanan)
+              // 3. Format KESAMPING
               if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
                   let splitLine = line.split(/[:;]/);
                   let sisiKiri = splitLine[0].toLowerCase();
                   let sisiKanan = splitLine.length > 1 ? splitLine.slice(1).join(':').trim() : "";
                   
+                  // Pastikan fungsi ini terpanggil dengan benar
                   let matchedJabatan = cariJabatanSistem(sisiKiri, activeSection, validJabatans);
                   
                   if (matchedJabatan) {
@@ -652,7 +651,6 @@
                       let namaBersih = bersihkanNama(rawNama);
                       
                       if (namaBersih.length > 3 && !namaBersih.toLowerCase().includes("sesuai sk")) {
-                          // PERBAIKAN: Hanya pecah jika ada kata "dan" atau "&", jangan gunakan koma karena koma dipakai untuk gelar akademis!
                           let namaBanyak = namaBersih.split(/\bdan\b|&/i);
                           namaBanyak.forEach(n => {
                               let nBersih = bersihkanNama(n);
@@ -661,7 +659,7 @@
                       }
                   }
               } 
-              // 4. Format NAMA BERJEJER (Penasehat, PHB, Penatua)
+              // 4. Format NAMA BERJEJER
               else if (activeSection === "PENASEHAT" || activeSection === "PHB" || activeSection === "PENATUA") {
                   let parts = line.split(/(?=\b\d+[\.\)]\s)/g);
                   
@@ -697,9 +695,46 @@
           Swal.fire({ title: 'Auto-Isi Berhasil!', text: `${hasilScanIndividual.length} personil berhasil diuraikan secara rapi.`, icon: 'success' });
 
       }).catch(err => {
-          Swal.fire('Error Scan', 'Terjadi kesalahan saat memproses gambar.', 'error');
+          // Menampilkan detail error asli untuk mempermudah pelacakan jika gagal lagi
+          Swal.fire('Error Scan', 'Sistem gagal memproses: ' + err.message, 'error');
       });
   };
+
+  // --- FILTER PENCOCOKAN TEKS KE DATABASE JABATAN ---
+  function cariJabatanSistem(rawKiri, section, validJabatans) {
+      let text = rawKiri.toLowerCase();
+      let keywords = [];
+      
+      if (section === "PENGURUS") {
+          if (text.includes("pemimpin")) keywords = ["pemimpin", "pendeta jemaat"];
+          else if (text.includes("sekretaris")) keywords = ["sekretaris"];
+          else if (text.includes("bendahara")) keywords = ["bendahara"];
+      } else if (section === "SEKSI") {
+          if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"];
+          else if (text.includes("injil") || text.includes("pekabaran")) keywords = ["injil", "zending"];
+          else if (text.includes("diakoni")) keywords = ["diakoni"];
+          else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"];
+          else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"];
+          else if (text.includes("remaja")) keywords = ["remaja"];
+          else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"];
+          else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"];
+          else if (text.includes("pria")) keywords = ["pria"];
+          else if (text.includes("lansia")) keywords = ["lansia"];
+          else if (text.includes("kesehatan")) keywords = ["kesehatan"];
+          else if (text.includes("pendidikan")) keywords = ["pendidikan"];
+          else if (text.includes("sarana") || text.includes("pembangunan")) keywords = ["sarana", "pembangunan"];
+          else if (text.includes("usaha") || text.includes("sdm")) keywords = ["usaha", "sdm"];
+          else if (text.includes("keamanan")) keywords = ["keamanan"];
+      }
+
+      if (keywords.length > 0) {
+          for (let jbt of validJabatans) {
+              let jbtLower = jbt.toLowerCase();
+              if (keywords.some(kw => jbtLower.includes(kw))) return jbt;
+          }
+      }
+      return null;
+  }
 
   // --- PEMBERSIH TEKS DARI AI YANG LEBIH AGRESIF ---
   function bersihkanNama(text) {
