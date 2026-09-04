@@ -525,7 +525,7 @@
         }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
     }
 
-   // --- FUNGSI PINTAR: FILTER JABATAN JIKA UNIT ADALAH PHR ---
+  // --- FUNGSI PINTAR: FILTER JABATAN JIKA UNIT ADALAH PHR ---
   window.updateJabatanOptions = function(prefix) {
       let isPHR = false;
       const gSelect = document.getElementById(prefix + '_gereja');
@@ -534,7 +534,6 @@
           isPHR = gerejaVal.includes('phr');
       }
 
-      // Daftar eksklusif jabatan yang diizinkan untuk PHR
       const allowedPHR = [
           "pengurus harian jemaat resort", "pendeta diperbantukan", "kordinator sekolah minggu resort", 
           "kordinator pemuda/i resort", "kordinator perempuan resort", "kordinator pria resort", 
@@ -542,22 +541,20 @@
           "pendeta resort", "pendeta", "pemimpin jemaat"
       ];
 
-      let options = [];
+      // PERBAIKAN: Selalu tambahkan opsi kosong di awal agar validasi 'required' browser tidak error!
+      let options = [{value: "", text: "Ketik atau pilih jabatan..."}];
+      
       DATA_MASTER.jabatan.forEach(j => {
           if(j.Nama_Jabatan) {
               if (isPHR) {
                   let jName = j.Nama_Jabatan.toLowerCase();
-                  let match = allowedPHR.some(phr => jName.includes(phr));
-                  // Hanya masukkan opsi jika cocok dengan daftar eksklusif PHR
-                  if(match) options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
+                  if(allowedPHR.some(phr => jName.includes(phr))) options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
               } else {
-                  // Jika bukan PHR, tampilkan semua opsi
                   options.push({value: j.Nama_Jabatan, text: j.Nama_Jabatan});
               }
           }
       });
 
-      // Update langsung daftar TomSelect secara real-time
       if (prefix === 'm' && tsInst['m']) {
           let currentVal = tsInst['m'].getValue(); tsInst['m'].clearOptions(); tsInst['m'].addOptions(options);
           if (options.some(o => o.value === currentVal)) tsInst['m'].setValue(currentVal);
@@ -573,8 +570,7 @@
           });
       }
   };
-
-  // --- PEMBARUAN FUNGSI MULTI PERSONIL (UI SESUAI GAMBAR) ---
+  
   window.tambahBarisPersonil = function() {
       barisPersonilCount++;
       const wadah = document.getElementById('wadahPersonilMulti');
@@ -586,7 +582,7 @@
 
       const div = document.createElement('div');
       div.id = rowId; 
-      div.className = "bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all";
+      div.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative pt-10 animate-zoom mb-4";
       
       let btnHapus = barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors" title="Hapus Baris"><i class="fas fa-times text-lg"></i></button>` : '';
 
@@ -595,8 +591,8 @@
           ${btnHapus}
           <div class="space-y-4">
               <div class="space-y-1.5">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan koma untuk input banyak nama)</span></label>
-                  <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Andi, Budi, Citra">
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap <span class="text-indigo-500 normal-case font-medium ml-1">(Gunakan TITIK KOMA ";" untuk banyak nama)</span></label>
+                  <input type="text" name="mul_nama[]" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra, S.E">
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-1.5">
@@ -604,18 +600,16 @@
                       <select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select>
                   </div>
                   <div class="space-y-1.5">
-                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nomor WA <span class="text-slate-400 normal-case font-medium text-[9px]">(Opsional)</span></label>
-                      <input type="number" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA <span class="text-emerald-500 font-medium normal-case ml-1">(Bisa pisah dgn ;)</span></label>
+                      <!-- PERBAIKAN: type="number" diganti jadi "text" agar bisa diinput titik koma -->
+                      <input type="text" name="mul_hp[]" class="w-full p-3.5 rounded-xl bg-emerald-50/30 border border-emerald-200 text-sm font-bold text-slate-700 outline-none focus:bg-emerald-50 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="0811; 0822">
                   </div>
               </div>
           </div>
       `;
       wadah.appendChild(div);
       
-      // Simpan instance TomSelect multi agar bisa dikendalikan oleh filter PHR
       tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false });
-      
-      // Langsung panggil filter untuk menyesuaikan baris yang baru ditambah
       updateJabatanOptions('mul');
       updateLabelPersonil();
   };
@@ -637,57 +631,60 @@
 
     
 
-    window.simpanMultiMajelis = function(e) {
-        e.preventDefault();
-        const wilayah = document.getElementById('mul_wilayah').value;
-        let resort = document.getElementById('mul_resort').value;
-        let gereja = document.getElementById('mul_gereja').value;
-        const fr = document.getElementById('mul_resort');
-        if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+   window.simpanMultiMajelis = function(e) {
+      e.preventDefault();
+      const wilayah = document.getElementById('mul_wilayah').value;
+      let resort = document.getElementById('mul_resort').value;
+      let gereja = document.getElementById('mul_gereja').value;
+      const fr = document.getElementById('mul_resort');
+      if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
 
-        const namaInputs = document.getElementsByName('mul_nama[]');
-        const jabatanInputs = document.getElementsByName('mul_jabatan[]');
-        const hpInputs = document.getElementsByName('mul_hp[]');
-        
-        let arrData = [];
-        for(let i=0; i<namaInputs.length; i++) {
-            let jbt = jabatanInputs[i].value;
-            let grjRow = gereja;
-            
-            if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) {
-                grjRow = "Tingkat Resort"; 
-            }
-            
-            // FITUR KOMA: Memecah banyak nama
-            let rawNames = namaInputs[i].value;
-            let nameArray = rawNames.split(',').map(n => n.trim()).filter(n => n !== "");
+      const namaInputs = document.getElementsByName('mul_nama[]');
+      const jabatanInputs = document.getElementsByName('mul_jabatan[]');
+      const hpInputs = document.getElementsByName('mul_hp[]');
+      
+      let arrData = [];
+      for(let i=0; i<namaInputs.length; i++) {
+          let jbt = jabatanInputs[i].value;
+          let grjRow = gereja;
+          
+          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) {
+              grjRow = "Tingkat Resort"; 
+          }
+          
+          // PERBAIKAN: Pemisah sekarang menggunakan Titik Koma (;)
+          let rawNames = namaInputs[i].value;
+          let nameArray = rawNames.split(';').map(n => n.trim()).filter(n => n !== "");
 
-            nameArray.forEach(namaSatu => {
-                arrData.push({
-                    "Nama_Lengkap": namaSatu, "Jabatan": jbt, "Wilayah": wilayah,
-                    "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hpInputs[i].value
-                });
-            });
-        }
+          let rawHPs = hpInputs[i].value;
+          let hpArray = rawHPs.split(';').map(h => h.trim());
 
-        if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
-        Swal.fire({ title: 'Menyimpan...', html: 'Mengirim '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+          nameArray.forEach((namaSatu, index) => {
+              let hpSatu = hpArray[index] || "";
+              arrData.push({
+                  "Nama_Lengkap": namaSatu, "Jabatan": jbt, "Wilayah": wilayah,
+                  "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hpSatu
+              });
+          });
+      }
 
-        apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor", sumberAsal: "PORTAL DAERAH"}).then(res => {
-            if (res === true || res.status === 'success' || res.added !== undefined) {
-                let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
-                if (count === 0) { Swal.fire({ title: 'Data Ditolak!', html: 'Semua nama dan jabatan tersebut <b>sudah terdaftar</b> di database.', icon: 'info' }); } 
-                else {
-                    try { arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); } catch(err) {}
-                    Swal.fire('Berhasil!', `<b>${count}</b> personil baru berhasil didaftarkan.`, 'success');
-                    
-                    document.getElementById('formMulti').reset(); 
-                    document.getElementById('wadahPersonilMulti').innerHTML = '';
-                    barisPersonilCount = 0; tambahBarisPersonil(); syncResort('mul'); 
-                }
-            } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan server.', 'error'); }
-        }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
-    };
+      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
+      Swal.fire({ title: 'Menyimpan...', html: 'Mengirim '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+      apiCall('importMajelisMassal', {excelData: arrData, userRole: "Editor", sumberAsal: "PORTAL DAERAH"}).then(res => {
+          if (res === true || res.status === 'success' || res.added !== undefined) {
+              let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
+              if (count === 0) { Swal.fire({ title: 'Data Ditolak!', html: 'Semua nama dan jabatan tersebut <b>sudah terdaftar</b> di database.', icon: 'info' }); } 
+              else {
+                  try { arrData.forEach(row => { tambahKeRiwayat(row.Nama_Lengkap, row.Nama_Gereja || row.Resort); }); } catch(err) {}
+                  Swal.fire('Berhasil!', `<b>${count}</b> personil baru berhasil didaftarkan.`, 'success');
+                  document.getElementById('formMulti').reset(); 
+                  document.getElementById('wadahPersonilMulti').innerHTML = '';
+                  barisPersonilCount = 0; tambahBarisPersonil(); syncResort('mul'); 
+              }
+          } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan server.', 'error'); }
+      }).catch(err => { Swal.fire('Koneksi Gagal', String(err), 'error'); });
+  };
 
     // --- TAB 3: EDIT RIWAYAT (DENGAN VALIDASI GANDA) ---
     window.bukaEdit = function(idTemp, idMajelis) {
