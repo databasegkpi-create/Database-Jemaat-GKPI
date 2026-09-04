@@ -14,6 +14,9 @@
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
+  <!-- Tesseract AI untuk Scan Foto (OCR) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -145,10 +148,22 @@
         </div>
 
         <!-- TOMBOL AKSI BAWAH (Disusun Rapi) -->
-        <div class="pt-2 space-y-3">
-            <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50/50 text-emerald-600 border-2 border-dashed border-emerald-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-50 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-plus-circle text-base"></i> Tambah Baris Jabatan Lain</button>
+        <div class="pt-4 space-y-3">
+            <!-- INPUT FILE TERSEMBUNYI UNTUK KAMERA/FOTO -->
+            <input type="file" id="inputScanSK" accept="image/*" class="hidden" onchange="prosesScanSK(event)">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button type="button" onclick="document.getElementById('inputScanSK').click()" class="w-full bg-purple-50/80 text-purple-600 border-2 border-purple-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-purple-100 hover:border-purple-400 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm">
+                    <i class="fas fa-camera text-base"></i> Scan Foto SK (Auto-Isi)
+                </button>
+                <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50/50 text-emerald-600 border-2 border-dashed border-emerald-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-50 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm">
+                    <i class="fas fa-plus-circle text-base"></i> Tambah Baris Manual
+                </button>
+            </div>
 
-            <button type="submit" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2"><i class="fas fa-cloud-upload-alt text-base"></i> Simpan Semua Personil</button>
+            <button type="submit" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2 mt-2">
+                <i class="fas fa-cloud-upload-alt text-base"></i> Simpan Semua Personil
+            </button>
         </div>
       </form>
     </div>
@@ -759,6 +774,118 @@
           } else { Swal.fire('Gagal', 'Terjadi kesalahan sistem.', 'error'); }
        }).catch(err => { Swal.fire('Error', String(err), 'error'); });
     };
+
+  // ========================================================
+  // MESIN AUTO-SCAN SK (TESSERACT OCR)
+  // ========================================================
+  window.prosesScanSK = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Reset input agar bisa dipakai lagi
+      document.getElementById('inputScanSK').value = '';
+
+      Swal.fire({
+          title: 'Memindai Dokumen...',
+          html: '<div class="text-sm mt-2 text-slate-500">Kecerdasan Buatan sedang membaca teks...<br><b id="ocrProgress" class="text-indigo-600 text-lg">0%</b></div>',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+      });
+
+      // Jalankan AI Tesseract (Menggunakan bahasa Indonesia 'ind')
+      Tesseract.recognize(
+          file,
+          'ind',
+          { logger: m => {
+              if (m.status === 'recognizing text' && document.getElementById('ocrProgress')) {
+                  document.getElementById('ocrProgress').innerText = Math.round(m.progress * 100) + '%';
+              }
+          }}
+      ).then(({ data: { text } }) => {
+          
+          // --- ALGORITMA PINTAR MEMECAH TEKS SK ---
+          let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+          let hasilScan = {}; 
+          let jabatans = DATA_MASTER.jabatan.map(j => j.Nama_Jabatan).filter(j => j);
+          let currentJabatan = "";
+          
+          lines.forEach(line => {
+              let lineLower = line.toLowerCase();
+              let foundJabatan = null;
+              
+              // 1. Cek apakah ada Jabatan di baris ini
+              for(let j of jabatans) {
+                  if(lineLower.includes(j.toLowerCase())) { foundJabatan = j; break; }
+              }
+              
+              if(foundJabatan) {
+                  currentJabatan = foundJabatan; // Set jabatan aktif
+                  // Hapus teks jabatan dari baris (misal: "Budi Santoso - Sintua" jadi "Budi Santoso - ")
+                  let namaAsli = line.replace(new RegExp(foundJabatan, "ig"), '').trim();
+                  
+                  // Bersihkan sisa karakter aneh, titik, nomor urut
+                  namaAsli = bersihkanNama(namaAsli);
+                  if(namaAsli.length > 2) {
+                      if(!hasilScan[currentJabatan]) hasilScan[currentJabatan] = [];
+                      hasilScan[currentJabatan].push(namaAsli);
+                  }
+              } else if (currentJabatan !== "") {
+                  // 2. Jika tidak ada tulisan jabatan, berarti ini deretan nama di bawah jabatan sebelumnya
+                  let namaAsli = bersihkanNama(line);
+                  // Pastikan itu bukan sekadar teks sampah (minimal 3 huruf, maksimal 50 huruf)
+                  if(namaAsli.length > 2 && namaAsli.length < 50 && !namaAsli.toLowerCase().includes('keputusan') && !namaAsli.toLowerCase().includes('menimbang')) {
+                      if(!hasilScan[currentJabatan]) hasilScan[currentJabatan] = [];
+                      hasilScan[currentJabatan].push(namaAsli);
+                  }
+              }
+          });
+
+          // --- MEMASUKKAN HASIL SCAN KE DALAM FORM ---
+          const keys = Object.keys(hasilScan);
+          if(keys.length === 0) {
+              return Swal.fire('Gagal Membaca', 'Sistem tidak menemukan format nama dan jabatan yang bisa dikenali di foto ini. Mohon pastikan foto jernih.', 'error');
+          }
+
+          // Kosongkan form yang ada
+          document.getElementById('wadahPersonilMulti').innerHTML = '';
+          barisPersonilCount = 0;
+
+          // Buatkan baris baru otomatis sesuai jabatan yang ditemukan
+          keys.forEach(jabatanKey => {
+              tambahBarisPersonil(); // Buat baris kosong
+              
+              // Ambil baris terakhir yang baru saja dibuat
+              let selectId = 'mul_jabatan_' + barisPersonilCount;
+              let rowEl = document.getElementById('personil_row_' + barisPersonilCount);
+              
+              // Isi Nama (Digabungkan dengan titik koma)
+              let namaInput = rowEl.querySelector('input[name="mul_nama[]"]');
+              namaInput.value = hasilScan[jabatanKey].join('; ');
+              
+              // Set nilai TomSelect Jabatan
+              if (tsInst[selectId]) {
+                  tsInst[selectId].setValue(jabatanKey);
+              }
+          });
+
+          Swal.fire({
+              title: 'Scan Berhasil!',
+              text: `Sistem menemukan ${keys.length} kelompok jabatan. Silakan periksa dan perbaiki ejaan nama jika ada yang kurang tepat akibat foto buram.`,
+              icon: 'success'
+          });
+
+      }).catch(err => {
+          Swal.fire('Error Scan', 'Terjadi kesalahan saat memproses gambar.', 'error');
+      });
+  };
+
+  function bersihkanNama(text) {
+      // Hapus karakter pemisah di awal/akhir
+      let bersih = text.replace(/^[.,:;\-\s_=|]+|[.,:;\-\s_=|]+$/g, '');
+      // Hapus format nomor urut (contoh "1. ", "12)", "a.")
+      bersih = bersih.replace(/^(\d+|[a-zA-Z])[\.\)]\s*/, '');
+      return bersih.trim();
+  }
 </script>
 </body>
 </html>
