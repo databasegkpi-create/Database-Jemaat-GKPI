@@ -1667,6 +1667,203 @@
       else if (type === 'jemaat') { currentPageJemaat = page; renderTabelJemaat(window.currentFilteredJemaat, false); }
       else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
   };
+
+  // ========================================================
+  // MESIN RENDER TABEL UTAMA (YANG SEMPAT HILANG)
+  // ========================================================
+
+  window.renderTabelIndividu = function(data, resetPage = true) {
+      if (resetPage) currentPageIndividu = 1;
+      if(document.getElementById('totalIndividu')) document.getElementById('totalIndividu').innerText = data.length + " Orang";
+      const startIndex = (currentPageIndividu - 1) * itemsPerPage; const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
+      const body = document.getElementById('individuTableBody'); if(!body) return; const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
+      
+      body.innerHTML = paginatedData.length ? paginatedData.map((m, idx) => {
+          const no = startIndex + idx + 1; const hp = m.No_HP || m['No-HP'] || m['No HP'] || m.No_Hp || ''; const id = m.ID_Majelis || ''; const nama = m.Nama_Lengkap || '-'; 
+          let hpClean = String(hp).replace(/\D/g, ''); if (hpClean.startsWith("0")) hpClean = "62" + hpClean.slice(1); if (hpClean.startsWith("8")) hpClean = "62" + hpClean;
+          let btnProfil = (role.includes('admin') || role.includes('editor')) ? `<button onclick="bukaProfil('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-id-badge"></i></button>` : '';
+          let btnWA = (role.includes('admin') || role.includes('editor')) ? ((hpClean.length >= 9) ? `<a href="https://wa.me/${hpClean}" target="_blank" title="Chat WA" class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all"><i class="fab fa-whatsapp"></i></a>` : `<button onclick="Swal.fire('Data Tidak Lengkap', 'Nomor WhatsApp tidak valid.', 'info')" title="WA Kosong" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 hover:bg-slate-200 transition-all"><i class="fab fa-whatsapp"></i></button>`) : '';
+          let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataMajelis('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all"><i class="fas fa-pen"></i></button>` : '';
+          let btnHapus = (role.includes('admin')) ? `<button onclick="konfirmasiHapus('${id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>` : '';
+          let infoGereja = m.Nama_Gereja ? String(m.Nama_Gereja).toUpperCase() : 'TINGKAT RESORT'; let infoResort = m.Resort ? String(m.Resort).toUpperCase() : 'JEMAAT KHUSUS';
+          return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5 text-center text-slate-400 font-bold text-xs">${no}</td><td class="p-5"><div class="font-bold text-slate-800 text-sm">${nama}</div><div class="text-[10px] text-slate-400 font-mono mt-0.5">UID: ${id}</div></td><td class="p-5"><span class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase">${m.Jabatan || '-'}</span></td><td class="p-5"><div class="text-[11px] font-bold text-slate-700"><i class="fas fa-church text-indigo-400 w-4"></i> ${infoGereja}</div><div class="text-[10px] text-slate-500 tracking-wider mt-1 uppercase">${infoResort} • Wilayah ${m.Wilayah || '-'}</div></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnProfil}${btnWA}${btnEdit}${btnHapus}</div></td></tr>`;
+      }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">Data Personil Tidak Ditemukan</td></tr>`;
+      
+      if (typeof renderPaginationUI === 'function') renderPaginationUI(data.length, currentPageIndividu, 'paginationIndividu', 'individu', itemsPerPage);
+  };
+
+  window.renderTabelGereja = function(dataGereja, resetPage = true) {
+      if (resetPage) currentPageGereja = 1; 
+      const paginatedData = dataGereja.slice((currentPageGereja - 1) * itemsPerPage, ((currentPageGereja - 1) * itemsPerPage) + itemsPerPage);
+      const body = document.getElementById('gerejaTableBody'); if(!body) return; const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer'; 
+      let filterRT = 0; let filterJiwa = 0; dataGereja.forEach(g => { filterRT += parseInt(g.Total_RT) || 0; filterJiwa += parseInt(g.Total_Jiwa) || 0; });
+
+      body.innerHTML = paginatedData.length ? paginatedData.map(g => {
+          const namaG = g.Nama_Gereja || g['Nama Gereja'] || '-'; const res = g.Induk_Resort || g.Resort || 'Jemaat Khusus'; const wil = g.Wilayah || '-'; 
+          const rt = parseInt(g.Total_RT) || 0; const jiwa = parseInt(g.Total_Jiwa) || 0; const statusGrj = g.Status_Gereja || g['Status Gereja'] || g.Tipe_Gereja || g['Tipe Gereja'] || 'Pagaran';
+          let rawLat = String(g.Latitude || g.latitude || g['Latitude '] || '').replace(',', '.'); let rawLng = String(g.Longitude || g.longitude || g['Longitude '] || '').replace(',', '.');
+          let pdt = DATA_MASTER.majelis.find(m => String(m.Resort).trim() === String(res).trim() && (String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')));
+          let gr = DATA_MASTER.majelis.find(m => String(m.Nama_Gereja).trim() === String(namaG).trim() && String(m.Jabatan).toLowerCase().includes('guru'));
+          let badgeText = "PAGARAN"; let badgeColor = "bg-slate-100 text-slate-500"; 
+          if (String(statusGrj).toLowerCase().includes('jemaat khusus') || String(res).toLowerCase() === 'jemaat khusus') { badgeText = "JEMAAT KHUSUS"; badgeColor = "bg-purple-100 text-purple-700"; } 
+          else if (String(statusGrj).toLowerCase().includes('sabungan') || String(statusGrj).toLowerCase().includes('resort')) { badgeText = "SABUNGAN / RESORT"; badgeColor = "bg-indigo-100 text-indigo-700"; }
+          const noReg = g.No_Register || g['No Register'] || '';
+          const tglBerdiri = g.Tanggal_Berdiri || g['Tanggal Berdiri'] || '';
+          let tglFormatForm = '';
+          if(tglBerdiri) { let d = window.parseDateSafe(tglBerdiri); if(d && !isNaN(d.getTime())) { let y = d.getFullYear(); let m = String(d.getMonth() + 1).padStart(2, '0'); let d_day = String(d.getDate()).padStart(2, '0'); tglFormatForm = `${y}-${m}-${d_day}`; } }
+          let btnEdit = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataGerejaItem('${namaG.replace(/'/g, "\\'")}', ${rt}, ${jiwa}, '${badgeText}', '${rawLat}', '${rawLng}', '${noReg}', '${tglFormatForm}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all"><i class="fas fa-edit"></i></button>` : '';
+          const clickName = `<a href="javascript:void(0)" onclick="showDetailGereja('${encodeURIComponent(namaG)}')" class="text-indigo-600 hover:text-indigo-800 transition-colors font-bold flex items-center gap-1.5" title="Klik untuk lihat info gereja">${namaG} <i class="fas fa-info-circle text-[10px] opacity-60"></i></a>`;
+          return `<tr class="hover:bg-slate-50 transition-colors group border-b border-slate-50"><td class="p-5"><div class="font-bold text-slate-800 text-sm flex items-center">${clickName} <span class="${badgeColor} px-2 py-0.5 rounded text-[9px] font-bold uppercase ml-2">${badgeText}</span></div><div class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase mt-1">${res} • Wilayah ${wil}</div></td><td class="p-5"><div class="text-[11px] text-slate-700 mb-1"><i class="fas fa-user-tie text-indigo-400 w-4"></i> <span class="font-bold text-indigo-600">Pendeta:</span> ${pdt?pdt.Nama_Lengkap:'-'}</div><div class="text-[11px] text-slate-700"><i class="fas fa-chalkboard-teacher text-emerald-400 w-4"></i> <span class="font-bold text-emerald-600">Guru Jmt:</span> ${gr?gr.Nama_Lengkap:'-'}</div></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">${rt} RT</span></td><td class="p-5 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${jiwa} Jiwa</span></td><td class="p-5 text-center"><div class="inline-flex gap-2">${btnEdit}</div></td></tr>`;
+      }).join('') : `<tr><td colspan="5" class="p-10 text-center text-slate-400">Data Gereja Tidak Ditemukan</td></tr>`;
+      
+      if(document.getElementById('filterTotalRT')) document.getElementById('filterTotalRT').innerText = filterRT.toLocaleString('id-ID'); 
+      if(document.getElementById('filterTotalJiwa')) document.getElementById('filterTotalJiwa').innerText = filterJiwa.toLocaleString('id-ID');
+      if (typeof renderPaginationUI === 'function') renderPaginationUI(dataGereja.length, currentPageGereja, 'paginationGereja', 'gereja', itemsPerPage);
+  };
+
+  window.renderTabelJemaat = function(data, resetPage = true) {
+      if(resetPage) currentPageJemaat = 1; const container = document.getElementById('jemaatAccordionContainer'); if(!container) return;
+      const groupedKK = {}; 
+      data.forEach(j => { 
+          let nokk = String(j.No_KK).trim(); 
+          if(!groupedKK[nokk]) { groupedKK[nokk] = { kpl: null, anggota: [], wil: j.Wilayah, res: j.Resort, grj: j.Nama_Gereja }; } 
+          if(String(j.Status_Keluarga).toLowerCase() === 'kepala keluarga') { groupedKK[nokk].kpl = j; } else { groupedKK[nokk].anggota.push(j); } 
+      });
+      
+      let arr = Object.keys(groupedKK).map(k => ({ kk: k, ...groupedKK[k] })).sort((a,b) => (a.kpl?a.kpl.Nama_Lengkap:a.kk).localeCompare(b.kpl?b.kpl.Nama_Lengkap:b.kk));
+      safeSetText('labelTotalKK', arr.length.toLocaleString('id-ID') + " KK");
+      const paginated = arr.slice((currentPageJemaat - 1) * 10, ((currentPageJemaat - 1) * 10) + 10);
+      const role = USER_NOW ? String(USER_NOW.role).toLowerCase() : 'viewer';
+      
+      if(paginated.length===0) { 
+          container.innerHTML = `<div class="text-center p-8 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Data Jemaat Kosong</div>`; 
+          if (typeof renderPaginationUI === 'function') renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10); 
+          return; 
+      }
+      
+      container.innerHTML = paginated.map(g => {
+          let nKK = g.kpl ? g.kpl.Nama_Lengkap : "Tanpa Nama KK"; let idKpl = g.kpl ? g.kpl.ID_Jemaat : '';
+          let jkKpl = g.kpl ? (g.kpl.Jenis_Kelamin === 'Laki-laki' ? '<i class="fas fa-mars text-blue-500 ml-1"></i>' : '<i class="fas fa-venus text-rose-500 ml-1"></i>') : '';
+          let btnEditKpl = (idKpl && (role.includes('admin') || role.includes('editor'))) ? `<button onclick="editDataJemaatItem('${idKpl}'); event.stopPropagation();" class="text-amber-500 hover:text-amber-700 ml-3" title="Edit KK"><i class="fas fa-edit"></i></button>` : '';
+          let btnHapusKpl = (idKpl && role.includes('admin')) ? `<button onclick="konfirmasiHapusKeluarga('${g.kk}'); event.stopPropagation();" class="text-rose-500 hover:text-rose-700 ml-2" title="Hapus Seluruh Keluarga"><i class="fas fa-trash"></i></button>` : '';
+          let btnCetakPDF = `<button onclick="bukaPreviewCetakKeluarga('${g.kk}'); event.stopPropagation();" class="text-indigo-500 hover:text-indigo-700 ml-3" title="Cetak Kartu Keluarga PDF"><i class="fas fa-print"></i></button>`;
+          let btnTambahAnggota = (role.includes('admin') || role.includes('editor')) ? `<button onclick="tambahAnggotaKeluarga('${g.kk}', '${g.wil}', '${g.res}', '${g.grj}'); event.stopPropagation();" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold shadow-sm border border-emerald-200 hover:bg-emerald-500 hover:text-white transition-colors ml-3"><i class="fas fa-plus mr-1"></i> Anggota</button>` : '';
+
+          let trs = g.anggota.map(a => {
+              let jkA = a.Jenis_Kelamin === 'Laki-laki' ? '<i class="fas fa-mars text-blue-400"></i>' : '<i class="fas fa-venus text-rose-400"></i>';
+              let badgeKondisi = String(a.Kondisi).toLowerCase() === 'meninggal' ? '<span class="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[9px] font-bold uppercase ml-2">Meninggal</span>' : '';
+              let btnAksi = (role.includes('admin') || role.includes('editor')) ? `<button onclick="editDataJemaatItem('${a.ID_Jemaat}')" class="text-amber-500 hover:text-amber-700 mr-2"><i class="fas fa-edit"></i></button>` : '';
+              if (role.includes('admin')) btnAksi += `<button onclick="konfirmasiHapusJemaat('${a.ID_Jemaat}')" class="text-rose-500 hover:text-rose-700"><i class="fas fa-trash"></i></button>`;
+              return `<tr class="border-b border-slate-100 bg-white hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-700">${a.Nama_Lengkap||'-'} ${badgeKondisi}</td><td class="p-3 text-xs text-emerald-600 font-bold">${a.Status_Keluarga||'-'}</td><td class="p-3 text-xs text-center">${jkA}</td><td class="p-3 text-xs text-slate-500 text-center">${hitungUmur(a.Tanggal_Lahir)}</td><td class="p-3 text-xs text-center">${btnAksi}</td></tr>`;
+          }).join('');
+          
+          let tab = g.anggota.length > 0 ? `<div class="border-t border-emerald-100"><table class="w-full text-left whitespace-nowrap"><thead class="bg-emerald-50"><tr><th class="p-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Nama Anggota</th><th class="p-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Hubungan</th><th class="p-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-center">L/P</th><th class="p-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-center">Umur</th><th class="p-3 text-[10px] font-bold text-emerald-700 uppercase tracking-wider text-center">Aksi</th></tr></thead><tbody>${trs}</tbody></table></div>` : `<div class="p-4 text-center text-[10px] text-slate-400 font-bold uppercase">Tidak ada tanggungan lainnya</div>`;
+          return `<details class="bg-white border border-slate-200 rounded-xl shadow-sm mb-3 group"><summary class="p-4 cursor-pointer flex justify-between items-center group-open:bg-emerald-50 transition-colors hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-open:bg-emerald-500 group-open:text-white group-open:rotate-90 transition-all"><i class="fas fa-chevron-right text-xs"></i></div><div><p class="font-extrabold text-sm text-slate-800">${nKK} ${jkKpl}</p><p class="text-[10px] text-slate-500 font-semibold mt-1"><span class="bg-slate-200 px-1.5 rounded text-slate-700">${g.kk}</span> ${g.grj} • W-${g.wil}</p></div></div><div class="flex items-center"><span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full shadow-sm">${g.anggota.length + (g.kpl?1:0)} Jiwa</span>${btnTambahAnggota}${btnCetakPDF}${btnEditKpl}${btnHapusKpl}</div></summary>${tab}</details>`;
+      }).join('');
+      if (typeof renderPaginationUI === 'function') renderPaginationUI(arr.length, currentPageJemaat, 'paginationJemaat', 'jemaat', 10);
+  };
+
+  window.renderTabelReal = function(data, resetPage = true) {
+      if (resetPage) currentPageMajelis = 1; 
+      const tree = {};
+      const w = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value.trim().toLowerCase() : '';
+      const selectedResort = document.getElementById('filterResort') ? document.getElementById('filterResort').value.trim().toLowerCase() : '';
+      const selectedGereja = document.getElementById('filterGereja') ? document.getElementById('filterGereja').value.trim().toLowerCase() : '';
+      const s = document.getElementById('searchTerm') ? document.getElementById('searchTerm').value.trim().toLowerCase() : '';
+
+      DATA_MASTER.gereja.forEach(g => {
+          let gWil = String(g.Wilayah).trim().toLowerCase(); if (w && gWil !== w) return;
+          let resortNameRaw = String(g.Induk_Resort || g.Resort || '').trim(); let gerejaNameRaw = String(g.Nama_Gereja).trim();
+          let isJK = String(g.Status_Gereja || g.Tipe_Gereja || '').toLowerCase() === 'jemaat khusus' || resortNameRaw.toLowerCase() === 'jemaat khusus' || !resortNameRaw;
+          let key = isJK ? gerejaNameRaw : resortNameRaw;
+          if (!key) return;
+          if (selectedResort && key.toLowerCase() !== selectedResort) return;
+          if (!tree[key]) tree[key] = { isJK: isJK, wilayah: g.Wilayah, totalRT: 0, totalJiwa: 0, phr: [], pagaran: {} };
+          tree[key].totalRT += parseInt(g.Total_RT) || 0; tree[key].totalJiwa += parseInt(g.Total_Jiwa) || 0;
+          if (!isJK && gerejaNameRaw && gerejaNameRaw !== resortNameRaw) { if (!tree[key].pagaran[gerejaNameRaw]) tree[key].pagaran[gerejaNameRaw] = []; }
+      });
+
+      DATA_MASTER.majelis.forEach(m => {
+          let mWil = String(m.Wilayah).trim().toLowerCase(); if (w && mWil !== w) return;
+          let resortNameRaw = String(m.Resort).trim(); let gerejaNameRaw = String(m.Nama_Gereja).trim();
+          let isJK = (!resortNameRaw || resortNameRaw.toLowerCase() === 'jemaat khusus' || gerejaNameRaw === resortNameRaw);
+          let key = isJK ? gerejaNameRaw : resortNameRaw;
+          if (!key || !tree[key]) return; 
+
+          let isPhr = (!gerejaNameRaw || gerejaNameRaw === 'Tingkat Resort' || gerejaNameRaw.includes('PHR'));
+          if (isJK) { tree[key].phr.push(m); } 
+          else {
+              if (isPhr) tree[key].phr.push(m);
+              else {
+                  if (!tree[key].pagaran[gerejaNameRaw]) tree[key].pagaran[gerejaNameRaw] = [];
+                  tree[key].pagaran[gerejaNameRaw].push(m);
+              }
+          }
+      });
+
+      let keysToDelete = [];
+      Object.keys(tree).forEach(key => {
+          let node = tree[key];
+          let infoG_Parent = DATA_MASTER.gereja.find(x => String(x.Nama_Gereja).trim() === key || String(x.Induk_Resort || x.Resort).trim() === key);
+          if (node.isJK && infoG_Parent) { node.totalRT = parseInt(infoG_Parent.Total_RT) || 0; node.totalJiwa = parseInt(infoG_Parent.Total_Jiwa) || 0; } 
+          else if (!node.isJK) { let childGrj = DATA_MASTER.gereja.filter(x => String(x.Induk_Resort || x.Resort).trim() === key); childGrj.forEach(c => { node.totalRT += parseInt(c.Total_RT) || 0; node.totalJiwa += parseInt(c.Total_Jiwa) || 0; }); }
+
+          if (!node.isJK) {
+              let pdtList = node.phr.filter(x => String(x.Jabatan).toLowerCase().includes('pendeta') || String(x.Jabatan).toLowerCase().includes('pemimpin'));
+              Object.keys(node.pagaran).forEach(pk => { pdtList.forEach(pdt => { if (!node.pagaran[pk].some(e => e.ID_Majelis === pdt.ID_Majelis)) node.pagaran[pk].push(pdt); }); });
+          }
+
+          if (s) {
+              let keyMatches = key.toLowerCase().includes(s);
+              node.phr = node.phr.filter(m => keyMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
+              Object.keys(node.pagaran).forEach(pk => {
+                  let pkMatches = pk.toLowerCase().includes(s);
+                  node.pagaran[pk] = node.pagaran[pk].filter(m => keyMatches || pkMatches || String(m.Nama_Lengkap).toLowerCase().includes(s));
+                  if (node.pagaran[pk].length === 0 && !keyMatches && !pkMatches) delete node.pagaran[pk];
+              });
+          }
+
+          if (selectedGereja) {
+              if (selectedGereja === 'pengurus harian resort (phr)') { node.pagaran = {}; } 
+              else { node.phr = []; Object.keys(node.pagaran).forEach(pk => { if (pk.toLowerCase() !== selectedGereja) delete node.pagaran[pk]; }); }
+          }
+
+          if (node.phr.length === 0 && Object.keys(node.pagaran).length === 0) { keysToDelete.push(key); } 
+          else { const sortMajelis = (arr) => arr.sort((a,b) => { let diff = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan); if (diff !== 0) return diff; return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)); }); sortMajelis(node.phr); Object.keys(node.pagaran).forEach(pk => sortMajelis(node.pagaran[pk])); }
+      });
+      keysToDelete.forEach(k => delete tree[k]);
+
+      window.currentTreeData = tree;
+      const groupArray = Object.keys(tree).map(k => ({ name: k, ...tree[k] })).sort((a,b) => a.name.localeCompare(b.name));
+      const paginatedGroups = groupArray.slice((currentPageMajelis - 1) * 12, ((currentPageMajelis - 1) * 12) + 12);
+      const container = document.getElementById('majelisAccordionContainer');
+
+      if (paginatedGroups.length === 0) { 
+          container.className = "p-5 bg-slate-50/50"; container.innerHTML = `<div class="text-center p-10 text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-xl">Unit Gereja Tidak Ditemukan</div>`; 
+          if (typeof renderPaginationUI === 'function') renderPaginationUI(groupArray.length, currentPageMajelis, 'paginationMajelis', 'majelis', 12); 
+          return; 
+      }
+
+      container.className = "p-6 bg-slate-50/50 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6";
+      container.innerHTML = paginatedGroups.map(g => {
+          let totPersonil = g.phr.length + Object.values(g.pagaran).reduce((acc, curr) => acc + curr.length, 0);
+          let badgeCol = g.isJK ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'; let bgGrad = g.isJK ? 'from-purple-100 to-fuchsia-50' : 'from-indigo-100 to-blue-50';
+          return `
+          <div onclick="bukaDetailUnit('${g.name}')" class="bg-white rounded-[1.5rem] p-6 border border-slate-200 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-xl hover:-translate-y-1 hover:border-indigo-300 transition-all cursor-pointer group flex flex-col h-full relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${bgGrad} rounded-bl-full -mr-6 -mt-6 z-0 transition-transform duration-500 group-hover:scale-125 opacity-70"></div>
+              <div class="relative z-10 flex-1">
+                  <div class="flex justify-between items-start mb-4"><span class="px-2.5 py-1 ${badgeCol} text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm border border-white">${g.isJK ? 'Jemaat Khusus' : 'Resort Induk'}</span><span class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100"><i class="fas fa-map-marker-alt text-indigo-400"></i> W-${g.wilayah}</span></div>
+                  <h3 class="text-xl font-black text-slate-800 leading-tight mb-2 group-hover:text-indigo-600 transition-colors drop-shadow-sm pr-4">${g.name}</h3>
+                  <p class="text-xs font-semibold text-slate-500 mb-6 flex items-center gap-1.5"><i class="fas fa-users text-slate-300"></i> ${totPersonil} Personil Terdaftar</p>
+              </div>
+              <div class="relative z-10 pt-4 border-t border-slate-100 flex justify-between items-center mt-auto bg-white/50 backdrop-blur-sm -mx-2 px-2 -mb-2 pb-2 rounded-xl">
+                  <div class="flex gap-4"><div><p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total RT</p><p class="text-sm font-black text-slate-700">${g.totalRT.toLocaleString('id-ID')}</p></div><div class="border-l border-slate-200 pl-4"><p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Total Jiwa</p><p class="text-sm font-black text-slate-700">${g.totalJiwa.toLocaleString('id-ID')}</p></div></div>
+                  <div class="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-slate-400 transition-colors shadow-sm"><i class="fas fa-arrow-right text-sm"></i></div>
+              </div>
+          </div>`;
+      }).join('');
+      if (typeof renderPaginationUI === 'function') renderPaginationUI(groupArray.length, currentPageMajelis, 'paginationMajelis', 'majelis', 12);
+  };
 </script>
 </body>
 </html>
