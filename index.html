@@ -979,6 +979,10 @@
             create: false, 
             dropdownParent: 'body', 
             onChange: function() { cekJabatan(); } 
+          onFocus: function() {
+        // Mengosongkan pilihan atau teks default saat kotak diklik
+        if (this.getValue() === "") {
+            this.clear(true);
         }); 
     }
     
@@ -2054,6 +2058,10 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
                   dropdownParent: 'body' // Mencegah form terpotong
               }); 
               if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
+            onFocus: function() {
+        // Mengosongkan pilihan atau teks default saat kotak diklik
+        if (this.getValue() === "") {
+            this.clear(true);
           }
       }, 50);
       
