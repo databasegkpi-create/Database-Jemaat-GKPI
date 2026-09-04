@@ -2383,6 +2383,132 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       if(tab === 'admin') loadListPetugas(); 
       if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
   };
+
+  // =========================================================================
+  // PATCH FINAL: MESIN RENDER CHECK LIST KELENGKAPAN (ANTI-BLANK)
+  // =========================================================================
+
+  window.currentPageChecklist = 1; 
+  window.itemsPerChecklistPage = 15;
+  window.sortColChecklist = 'status'; 
+  window.sortDescChecklist = false;
+
+  window.sortChecklist = function(col) {
+      if (window.sortColChecklist === col) { window.sortDescChecklist = !window.sortDescChecklist; } 
+      else { window.sortColChecklist = col; window.sortDescChecklist = (col === 'progress' || col === 'personil') ? true : false; }
+      window.renderTabelChecklist(true);
+  };
+
+  window.renderTabelChecklist = function(resetPage = true) {
+      try {
+          if (resetPage) window.currentPageChecklist = 1;
+          const tbody = document.getElementById('tableChecklist'); 
+          if(!tbody) return;
+
+          const totalJabatanStandar = (DATA_MASTER.jabatan || []).filter(j => j && j.Nama_Jabatan).length;
+          let listUnit = [];
+          
+          const listResort = [...new Set((DATA_MASTER.gereja || []).filter(g => g.Induk_Resort || g.Resort).map(g => String(g.Induk_Resort || g.Resort).trim()))];
+          
+          listResort.forEach(r => { 
+              if (r.toLowerCase() !== 'jemaat khusus') { 
+                  let infoWilayah = (DATA_MASTER.gereja || []).find(g => (g.Induk_Resort || g.Resort) === r)?.Wilayah || '-'; 
+                  listUnit.push({ namaUnit: "Pengurus Harian Resort (PHR)", resort: r, wilayah: infoWilayah, isPHR: true }); 
+              } 
+          });
+          
+          (DATA_MASTER.gereja || []).forEach(g => { 
+              listUnit.push({ namaUnit: g.Nama_Gereja || g['Nama Gereja'], resort: g.Induk_Resort || g.Resort || 'Jemaat Khusus', wilayah: g.Wilayah || '-', isPHR: false }); 
+          });
+          
+          let stats = { total: listUnit.length, lengkap: 0, belum: 0 };
+          
+          listUnit.forEach(unit => {
+              let personilDiUnit = (DATA_MASTER.majelis || []).filter(m => {
+                  let isMatchResort = String(m.Resort || '').trim().toLowerCase() === String(unit.resort || '').trim().toLowerCase(); 
+                  let isMatchGereja = String(m.Nama_Gereja || '').trim().toLowerCase() === String(unit.namaUnit || '').trim().toLowerCase(); 
+                  let isUnitPHR = String(m.Nama_Gereja || '').trim().toLowerCase().includes('phr') || String(m.Nama_Gereja || '').trim().toLowerCase() === 'tingkat resort';
+                  
+                  if (unit.isPHR) return isMatchResort && isUnitPHR; 
+                  else return isMatchResort && isMatchGereja;
+              });
+              
+              let uniqueJabatan = new Set(personilDiUnit.map(m => String(m.Jabatan || '').trim().toLowerCase())).size; 
+              let targetMinimal = unit.isPHR ? 5 : (totalJabatanStandar > 0 ? 5 : 1); 
+              
+              unit.personilTertulis = personilDiUnit.length; 
+              unit.jabatanTerisi = uniqueJabatan; 
+              unit.targetJabatan = unit.isPHR ? 10 : totalJabatanStandar;
+              unit.persen = Math.min(100, Math.round((unit.jabatanTerisi / unit.targetJabatan) * 100)); 
+              unit.isLengkap = unit.persen >= 100 || unit.jabatanTerisi >= targetMinimal; 
+              
+              if (unit.isLengkap) stats.lengkap++; else stats.belum++;
+          });
+          
+          safeSetText('chkTotalUnit', stats.total.toLocaleString('id-ID')); 
+          safeSetText('chkLengkap', stats.lengkap.toLocaleString('id-ID')); 
+          safeSetText('chkBelum', stats.belum.toLocaleString('id-ID'));
+          
+          listUnit.sort((a, b) => {
+              let valA, valB;
+              if (window.sortColChecklist === 'nama') { valA = String(a.namaUnit).toLowerCase(); valB = String(b.namaUnit).toLowerCase(); } 
+              else if (window.sortColChecklist === 'personil') { valA = a.personilTertulis; valB = b.personilTertulis; } 
+              else if (window.sortColChecklist === 'progress') { valA = a.persen; valB = b.persen; } 
+              else if (window.sortColChecklist === 'status') { valA = a.isLengkap ? 1 : 0; valB = b.isLengkap ? 1 : 0; }
+              else { valA = a.isLengkap ? 1 : 0; valB = b.isLengkap ? 1 : 0; }
+              
+              if (valA < valB) return window.sortDescChecklist ? 1 : -1; 
+              if (valA > valB) return window.sortDescChecklist ? -1 : 1;
+              if (window.sortColChecklist !== 'nama') return String(a.namaUnit).localeCompare(String(b.namaUnit)); 
+              return 0;
+          });
+          
+          setTimeout(() => { 
+              ['nama', 'personil', 'progress', 'status'].forEach(col => { 
+                  let el = document.getElementById('iconSort_' + col); 
+                  if(el) { el.className = 'ml-1 fas ' + (window.sortColChecklist === col ? (window.sortDescChecklist ? 'fa-sort-down text-indigo-600 text-[13px]' : 'fa-sort-up text-indigo-600 text-[13px]') : 'fa-sort text-slate-300'); } 
+              }); 
+          }, 50);
+          
+          let startIndex = (window.currentPageChecklist - 1) * window.itemsPerChecklistPage; 
+          let paginatedData = listUnit.slice(startIndex, startIndex + window.itemsPerChecklistPage);
+          
+          if (paginatedData.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Belum ada unit yang terdaftar.</td></tr>`;
+              window.renderPaginationChecklistUI(listUnit.length);
+              return;
+          }
+
+          tbody.innerHTML = paginatedData.map((item, idx) => {
+              let badge = item.isLengkap ? `<span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-black tracking-widest rounded-lg uppercase shadow-sm"><i class="fas fa-check-circle mr-1"></i> Selesai</span>` : `<span class="px-3 py-1.5 bg-rose-100 text-rose-600 text-[9px] font-black tracking-widest rounded-lg uppercase shadow-sm border border-rose-200"><i class="fas fa-times-circle mr-1"></i> Kurang</span>`;
+              let colorBar = item.isLengkap ? 'bg-emerald-500' : (item.persen > 50 ? 'bg-amber-500' : 'bg-rose-500');
+              return `<tr class="hover:bg-slate-50 transition-colors"><td class="p-4 text-center text-xs font-bold text-slate-400">${startIndex + idx + 1}</td><td class="p-4"><div class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fas ${item.isPHR ? 'fa-sitemap text-amber-500' : 'fa-church text-indigo-400'}"></i> ${item.namaUnit}</div><div class="text-[10px] font-semibold text-slate-500 tracking-wider mt-1 uppercase">${item.resort} • W-${item.wilayah}</div></td><td class="p-4 text-center"><div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-black text-xs shadow-inner">${item.personilTertulis}</div><div class="text-[9px] font-bold text-slate-400 uppercase mt-1">Orang</div></td><td class="p-4 align-middle"><div class="flex items-center gap-3"><div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner"><div class="${colorBar} h-full rounded-full transition-all duration-1000" style="width: ${item.persen}%"></div></div><span class="text-[10px] font-black text-slate-600 w-8 text-right">${item.persen}%</span></div><div class="text-[9px] font-bold text-slate-400 mt-1.5 text-center tracking-widest">${item.jabatanTerisi} JABATAN TERISI DARI TOTAL TARGET</div></td><td class="p-4 text-center">${badge}</td></tr>`;
+          }).join('');
+          
+          window.renderPaginationChecklistUI(listUnit.length);
+      } catch (error) {
+          console.error(error);
+          document.getElementById('tableChecklist').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-rose-500 font-bold border-2 border-dashed border-slate-200 rounded-xl">Terjadi kesalahan sistem saat memuat tabel checklist.<br>${error.message}</td></tr>`;
+      }
+  };
+
+  window.renderPaginationChecklistUI = function(totalItems) {
+      const totalPages = Math.ceil(totalItems / window.itemsPerChecklistPage); 
+      const container = document.getElementById('paginationChecklist'); 
+      if(!container) return;
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      
+      let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${window.currentPageChecklist} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Unit</span></span><div class="flex items-center gap-1">`;
+      if (window.currentPageChecklist > 1) html += `<button onclick="ubahHalamanChecklist(${window.currentPageChecklist - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
+      for (let i = Math.max(1, window.currentPageChecklist - 2); i <= Math.min(totalPages, window.currentPageChecklist + 2); i++) html += `<button onclick="ubahHalamanChecklist(${i})" class="page-btn ${i===window.currentPageChecklist?'active':'inactive'}">${i}</button>`;
+      if (window.currentPageChecklist < totalPages) html += `<button onclick="ubahHalamanChecklist(${window.currentPageChecklist + 1})" class="page-btn inactive"><i class="fas fa-chevron-right"></i></button>`;
+      container.innerHTML = html + `</div>`;
+  };
+
+  window.ubahHalamanChecklist = function(page) { 
+      window.currentPageChecklist = page; 
+      window.renderTabelChecklist(false); 
+  };
 </script>
 </body>
 </html>
