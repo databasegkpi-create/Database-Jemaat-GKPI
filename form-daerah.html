@@ -581,7 +581,7 @@
        }).catch(err => { Swal.fire('Error', String(err), 'error'); });
     };
 // ========================================================
-  // MESIN AUTO-SCAN SK (TESSERACT OCR) - ANTI TEKS SAMPAH
+  // MESIN AUTO-SCAN SK (TESSERACT OCR) - ANTI TEKS SAMPAH (FIXED)
   // ========================================================
   window.prosesScanSK = function(event) {
       const file = event.target.files[0];
@@ -607,31 +607,37 @@
           let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
           let hasilScanIndividual = []; 
           let activeSection = ""; 
-          let stopParsing = false; // BENDERA UNTUK BERHENTI MEMBACA
+          let stopParsing = false; 
 
           let validJabatans = DATA_MASTER.jabatan.map(j => j.Nama_Jabatan).filter(j => j);
 
           lines.forEach(line => {
-              if (stopParsing) return; // Jika sudah mencapai area tanda tangan, berhentikan AI.
+              if (stopParsing) return; 
 
               let upperLine = line.toUpperCase();
               let lowerLine = line.toLowerCase();
 
-              // 1. REM OTOMATIS: Deteksi Teks Sampah di Bawah (Footer/Stempel/Tanda Tangan)
-              const stopKeywords = ["ditetapkan di", "sekretaris jenderal", "kantor sinode", "nrp", "tembusan", "pdt. dr.", "m.th", "m.min", "bapak", "ibu"];
-              if (stopKeywords.some(keyword => lowerLine.includes(keyword)) || upperLine.includes("NRP")) {
+              // 1. REM OTOMATIS YANG AMAN (Hanya membaca kata kunci mutlak di stempel SK)
+              // Gelar akademis ditiadakan dari sini agar tidak memblokir nama Majelis
+              const stopKeywords = ["ditetapkan di", "sekretaris jenderal", "kantor sinode", "tembusan"];
+              if (stopKeywords.some(keyword => lowerLine.includes(keyword)) || upperLine.match(/\bNRP\b/)) {
                   stopParsing = true;
                   return;
               }
 
-              // 2. Lacak Posisi Membaca (Romawi)
-              if (/^I\.\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
-              if (/^II\.\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
-              if (/^III\.\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
-              if (/^IV\.\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
-              if (/^V\.\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
+              // Abaikan secara spesifik nama pejabat penandatangan SK agar tidak masuk ke daftar
+              if (lowerLine.includes("pdt. dr. humala") || lowerLine.includes("pdt. parsaoran") || lowerLine.includes("pimpinan sinode gkpi")) {
+                  return; // Lewati baris ini saja
+              }
+
+              // 2. Lacak Posisi Membaca (Romawi - Lebih toleran terhadap titik/koma dari AI)
+              if (/^I[\.\,]\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
+              if (/^II[\.\,]\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
+              if (/^III[\.\,]\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
+              if (/^IV[\.\,]\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
+              if (/^V[\.\,]\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
               
-              if (/^[IVX]+\.\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
+              if (/^[IVX]+[\.\,]\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
 
               // 3. Format KESAMPING (Jabatan di Kiri, Nama di Kanan)
               if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
@@ -646,7 +652,8 @@
                       let namaBersih = bersihkanNama(rawNama);
                       
                       if (namaBersih.length > 3 && !namaBersih.toLowerCase().includes("sesuai sk")) {
-                          let namaBanyak = namaBersih.split(/,| dan /i);
+                          // PERBAIKAN: Hanya pecah jika ada kata "dan" atau "&", jangan gunakan koma karena koma dipakai untuk gelar akademis!
+                          let namaBanyak = namaBersih.split(/\bdan\b|&/i);
                           namaBanyak.forEach(n => {
                               let nBersih = bersihkanNama(n);
                               if(nBersih.length > 3) hasilScanIndividual.push({ jabatan: matchedJabatan, nama: nBersih });
@@ -664,7 +671,6 @@
 
                   parts.forEach(part => {
                       let cleanName = bersihkanNama(part);
-                      // Filter ekstra ketat untuk nama
                       if (cleanName.length > 3 && !cleanName.toLowerCase().includes('sesuai sk') && !cleanName.toLowerCase().includes('aktif') && !cleanName.toLowerCase().includes('periode')) {
                           hasilScanIndividual.push({ jabatan: matchedRole, nama: cleanName });
                       }
@@ -694,42 +700,6 @@
           Swal.fire('Error Scan', 'Terjadi kesalahan saat memproses gambar.', 'error');
       });
   };
-
-  // --- FILTER PENCOCOKAN TEKS KE DATABASE JABATAN ---
-  function cariJabatanSistem(rawKiri, section, validJabatans) {
-      let text = rawKiri.toLowerCase();
-      let keywords = [];
-      
-      if (section === "PENGURUS") {
-          if (text.includes("pemimpin")) keywords = ["pemimpin", "pendeta jemaat"];
-          else if (text.includes("sekretaris")) keywords = ["sekretaris"];
-          else if (text.includes("bendahara")) keywords = ["bendahara"];
-      } else if (section === "SEKSI") {
-          if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"];
-          else if (text.includes("injil") || text.includes("pekabaran")) keywords = ["injil", "zending"];
-          else if (text.includes("diakoni")) keywords = ["diakoni"];
-          else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"];
-          else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"];
-          else if (text.includes("remaja")) keywords = ["remaja"];
-          else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"];
-          else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"];
-          else if (text.includes("pria")) keywords = ["pria"];
-          else if (text.includes("lansia")) keywords = ["lansia"];
-          else if (text.includes("kesehatan")) keywords = ["kesehatan"];
-          else if (text.includes("pendidikan")) keywords = ["pendidikan"];
-          else if (text.includes("sarana") || text.includes("pembangunan")) keywords = ["sarana", "pembangunan"];
-          else if (text.includes("usaha") || text.includes("sdm")) keywords = ["usaha", "sdm"];
-          else if (text.includes("keamanan")) keywords = ["keamanan"];
-      }
-
-      if (keywords.length > 0) {
-          for (let jbt of validJabatans) {
-              let jbtLower = jbt.toLowerCase();
-              if (keywords.some(kw => jbtLower.includes(kw))) return jbt;
-          }
-      }
-      return null;
-  }
 
   // --- PEMBERSIH TEKS DARI AI YANG LEBIH AGRESIF ---
   function bersihkanNama(text) {
