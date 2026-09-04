@@ -2046,22 +2046,19 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
       wadah.appendChild(div);
       
       // PEMBARUAN: Jeda sedikit agar HTML siap, lalu jadikan Dropdown pintar bebas halangan
-   // PEMBARUAN: Jeda sedikit agar HTML siap, lalu jadikan Dropdown pintar bebas halangan
       setTimeout(() => {
           if (typeof TomSelect !== 'undefined') {
               window.tsInst = window.tsInst || {};
               window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
                   create: false, 
-                  dropdownParent: 'body', // Mencegah form terpotong
-                  onFocus: function() {
-                      if (this.getValue() === "") {
-                          this.clear(true);
-                      }
-                  }
+                  dropdownParent: 'body' // Mencegah form terpotong
               }); 
               if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
           }
       }, 50);
+      
+      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
+  };
 
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
   window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
