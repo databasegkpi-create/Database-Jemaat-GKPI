@@ -2348,6 +2348,41 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
   function bersihkanNama(text) {
       let bersih = text; bersih = bersih.replace(/^[\d\.\)\:\s]+/, ''); bersih = bersih.replace(/[\.\:\-\s_=|~;\?]+$/, ''); return bersih.trim();
   }
+
+  // =========================================================================
+  // PATCH PERBAIKAN: NAVIGASI TAB MENU CHECK LIST
+  // =========================================================================
+  window.currentPageChecklist = 1; 
+  window.itemsPerChecklistPage = 15;
+  window.sortColChecklist = 'status'; 
+  window.sortDescChecklist = false;
+
+  window.switchTab = function(tab) {
+      // 1. Sembunyikan semua halaman & matikan warna tombol
+      ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog', 'pageChecklist'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
+      ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog', 'btnChecklist'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
+      
+      // 2. Tampilkan halaman & hidupkan warna tombol yang diklik
+      if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
+      if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
+      
+      // 3. Atur Judul Header & Panggil Fungsi Khusus
+      let title = 'Dashboard Pusat'; 
+      if(tab === 'search') title = 'Data Internal'; 
+      if(tab === 'jemaat') title = 'Data Jemaat'; 
+      if(tab === 'admin') title = 'Akses Admin';
+      if(tab === 'log') title = 'Log Aktivitas';
+      
+      if(tab === 'checklist') { 
+          title = 'Check List Input'; 
+          // INI YANG SEBELUMNYA HILANG: Memicu tabel Check List untuk me-render data!
+          if(typeof window.renderTabelChecklist === 'function') window.renderTabelChecklist(true); 
+      } 
+      
+      safeSetText('pageTitle', title); 
+      if(tab === 'admin') loadListPetugas(); 
+      if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
+  };
 </script>
 </body>
 </html>
