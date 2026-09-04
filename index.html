@@ -979,6 +979,9 @@
             create: false, 
             dropdownParent: 'body', 
             onChange: function() { cekJabatan(); } 
+          onFocus: function() {
+                if (this.getValue() === "") {
+                    this.clear(true);
         }); 
     }
     
@@ -2051,14 +2054,16 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
               window.tsInst = window.tsInst || {};
               window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
                   create: false, 
-                  dropdownParent: 'body' // Mencegah form terpotong
+                  dropdownParent: 'body', // Mencegah form terpotong
+                  onFocus: function() {
+                      if (this.getValue() === "") {
+                          this.clear(true);
+                      }
+                  }
               }); 
               if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
           }
       }, 50);
-      
-      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
-  };
 
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
   window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
