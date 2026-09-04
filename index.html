@@ -438,13 +438,21 @@
           <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 flex-1 flex flex-col">
             <div class="overflow-x-auto border border-slate-100 rounded-2xl custom-scrollbar">
               <table class="w-full text-left whitespace-nowrap">
-                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0">
+                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 select-none">
                   <tr>
-                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">No</th>
-                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Unit & Wilayah</th>
-                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Total Personil</th>
-                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Progress Kelengkapan</th>
-                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
+                    <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center w-12">No</th>
+                    <th onclick="sortChecklist('nama')" class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 hover:text-indigo-600 transition-colors group rounded-l-lg">
+                        Nama Unit & Wilayah <i id="iconSort_nama" class="fas fa-sort ml-1 text-slate-300 group-hover:text-indigo-400"></i>
+                    </th>
+                    <th onclick="sortChecklist('personil')" class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center cursor-pointer hover:bg-slate-100 hover:text-indigo-600 transition-colors group">
+                        Total Personil <i id="iconSort_personil" class="fas fa-sort ml-1 text-slate-300 group-hover:text-indigo-400"></i>
+                    </th>
+                    <th onclick="sortChecklist('progress')" class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center cursor-pointer hover:bg-slate-100 hover:text-indigo-600 transition-colors group">
+                        Progress Kelengkapan <i id="iconSort_progress" class="fas fa-sort ml-1 text-slate-300 group-hover:text-indigo-400"></i>
+                    </th>
+                    <th onclick="sortChecklist('status')" class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center cursor-pointer hover:bg-slate-100 hover:text-indigo-600 transition-colors group rounded-r-lg">
+                        Status <i id="iconSort_status" class="fas fa-sort ml-1 text-slate-300 group-hover:text-indigo-400"></i>
+                    </th>
                   </tr>
                 </thead>
                 <tbody id="tableChecklist" class="divide-y divide-slate-50 text-sm">
@@ -1920,13 +1928,14 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
             .catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
       } 
   };
-  // ========================================================
-  // MESIN FITUR CHECK LIST KELENGKAPAN INPUT
+// ========================================================
+  // MESIN FITUR CHECK LIST KELENGKAPAN INPUT (SMART SORT)
   // ========================================================
   let currentPageChecklist = 1; 
   const itemsPerChecklistPage = 15;
+  let sortColChecklist = 'status'; // Urutan Bawaan: Status
+  let sortDescChecklist = false;   // Bawaan: Yang belum lengkap di atas
 
-  // 1. Modifikasi Fungsi switchTab (Agar menu Checklist bisa diklik)
   function switchTab(tab) {
     ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog', 'pageChecklist'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
     ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog', 'btnChecklist'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
@@ -1937,25 +1946,34 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
     if(tab === 'search') title = 'Data Internal'; 
     if(tab === 'jemaat') title = 'Data Jemaat'; 
     if(tab === 'admin') title = 'Akses Admin';
-    if(tab === 'checklist') { title = 'Check List Input'; renderTabelChecklist(true); } // Render saat diklik
+    if(tab === 'checklist') { title = 'Check List Input'; renderTabelChecklist(true); } 
     
     safeSetText('pageTitle', title); 
     if(tab === 'admin') loadListPetugas(); 
     if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
   }
 
-  // 2. Fungsi Kalkulator & Render Tabel Checklist
+  // --- LOGIKA KLIK SMART SORT ---
+  window.sortChecklist = function(col) {
+      if (sortColChecklist === col) {
+          sortDescChecklist = !sortDescChecklist; // Balik urutan jika klik kolom yang sama
+      } else {
+          sortColChecklist = col;
+          // Bawaan untuk angka (progress/personil) dari besar ke kecil, huruf dari A-Z
+          sortDescChecklist = (col === 'progress' || col === 'personil') ? true : false; 
+      }
+      renderTabelChecklist(true);
+  };
+
+  // --- MESIN RENDER & KALKULASI ---
   window.renderTabelChecklist = function(resetPage = true) {
       if (resetPage) currentPageChecklist = 1;
       const tbody = document.getElementById('tableChecklist'); 
       if(!tbody) return;
 
-      // Kumpulkan Target Standar Jabatan (Berapa jabatan maksimal yg tersedia)
       const totalJabatanStandar = DATA_MASTER.jabatan.filter(j => j.Nama_Jabatan).length;
-      
       let listUnit = [];
       
-      // Ambil seluruh Resort untuk dibuatkan daftar PHR-nya
       const listResort = [...new Set(DATA_MASTER.gereja.filter(g => g.Induk_Resort || g.Resort).map(g => String(g.Induk_Resort || g.Resort).trim()))];
       listResort.forEach(r => {
           if (r.toLowerCase() !== 'jemaat khusus') {
@@ -1964,16 +1982,13 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
           }
       });
 
-      // Ambil seluruh Gereja Pagaran / Jemaat Khusus
       DATA_MASTER.gereja.forEach(g => {
           listUnit.push({ namaUnit: g.Nama_Gereja || g['Nama Gereja'], resort: g.Induk_Resort || g.Resort || 'Jemaat Khusus', wilayah: g.Wilayah || '-', isPHR: false });
       });
 
       let stats = { total: listUnit.length, lengkap: 0, belum: 0 };
 
-      // Kalkulasi Kelengkapan untuk tiap Unit
       listUnit.forEach(unit => {
-          // Cari personil yg bertugas di unit ini
           let personilDiUnit = DATA_MASTER.majelis.filter(m => {
               let isMatchResort = String(m.Resort).trim().toLowerCase() === String(unit.resort).trim().toLowerCase();
               let isMatchGereja = String(m.Nama_Gereja).trim().toLowerCase() === String(unit.namaUnit).trim().toLowerCase();
@@ -1983,35 +1998,54 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
               else return isMatchResort && isMatchGereja;
           });
 
-          // Hitung Jabatan Berbeda yang sudah terisi
           let uniqueJabatan = new Set(personilDiUnit.map(m => String(m.Jabatan).trim().toLowerCase())).size;
-          
-          // Asumsi: Kita anggap "Lengkap" jika sudah terisi minimal 70% dari Total Jabatan, 
-          // (Bapak bisa sesuaikan rumusnya di bawah ini sesuai standar kebijakan pusat)
-          let targetMinimal = unit.isPHR ? 5 : (totalJabatanStandar > 0 ? 5 : 1); // Standar minimal sementara 5 jabatan
+          let targetMinimal = unit.isPHR ? 5 : (totalJabatanStandar > 0 ? 5 : 1); 
           
           unit.personilTertulis = personilDiUnit.length;
           unit.jabatanTerisi = uniqueJabatan;
-          unit.targetJabatan = unit.isPHR ? 10 : totalJabatanStandar; // PHR maksimal 10 jabatan
-          
+          unit.targetJabatan = unit.isPHR ? 10 : totalJabatanStandar;
           unit.persen = Math.min(100, Math.round((unit.jabatanTerisi / unit.targetJabatan) * 100));
-          unit.isLengkap = unit.persen >= 100 || unit.jabatanTerisi >= targetMinimal; // Kondisi Lengkap
+          unit.isLengkap = unit.persen >= 100 || unit.jabatanTerisi >= targetMinimal; 
           
           if (unit.isLengkap) stats.lengkap++; else stats.belum++;
       });
 
-      // Update Angka di Kartu Atas
       safeSetText('chkTotalUnit', stats.total.toLocaleString('id-ID'));
       safeSetText('chkLengkap', stats.lengkap.toLocaleString('id-ID'));
       safeSetText('chkBelum', stats.belum.toLocaleString('id-ID'));
 
-      // Sortir: Yang Belum Lengkap tampil paling atas, lalu abjad
+      // --- LOGIKA PENGURUTAN (SORTING) ---
       listUnit.sort((a, b) => {
-          if (a.isLengkap === b.isLengkap) return a.namaUnit.localeCompare(b.namaUnit);
-          return a.isLengkap ? 1 : -1;
+          let valA, valB;
+          if (sortColChecklist === 'nama') {
+              valA = a.namaUnit.toLowerCase(); valB = b.namaUnit.toLowerCase();
+          } else if (sortColChecklist === 'personil') {
+              valA = a.personilTertulis; valB = b.personilTertulis;
+          } else if (sortColChecklist === 'progress') {
+              valA = a.persen; valB = b.persen;
+          } else if (sortColChecklist === 'status') {
+              valA = a.isLengkap ? 1 : 0; valB = b.isLengkap ? 1 : 0;
+          }
+
+          if (valA < valB) return sortDescChecklist ? 1 : -1;
+          if (valA > valB) return sortDescChecklist ? -1 : 1;
+          
+          // Jika nilai sama, urutkan berdasarkan abjad sebagai penentu
+          if (sortColChecklist !== 'nama') return a.namaUnit.localeCompare(b.namaUnit);
+          return 0;
       });
 
-      // Render Paginasi
+      // --- UPDATE TAMPILAN ICON SORTING ---
+      setTimeout(() => {
+          ['nama', 'personil', 'progress', 'status'].forEach(col => {
+              let el = document.getElementById('iconSort_' + col);
+              if(el) {
+                  el.className = 'ml-1 fas ' + (sortColChecklist === col ? (sortDescChecklist ? 'fa-sort-down text-indigo-600 text-[13px]' : 'fa-sort-up text-indigo-600 text-[13px]') : 'fa-sort text-slate-300');
+              }
+          });
+      }, 50);
+
+      // --- RENDER PAGINASI ---
       let startIndex = (currentPageChecklist - 1) * itemsPerChecklistPage;
       let paginatedData = listUnit.slice(startIndex, startIndex + itemsPerChecklistPage);
 
