@@ -582,154 +582,170 @@
     };
 
 // ========================================================
-    // MESIN AUTO-SCAN SK (TESSERACT OCR) - KHUSUS FORMAT SK GKPI
-    // ========================================================
-    window.prosesScanSK = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+  // MESIN AUTO-SCAN SK (TESSERACT OCR) - STRICT DATABASE
+  // ========================================================
+  window.prosesScanSK = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-        document.getElementById('inputScanSK').value = '';
+      document.getElementById('inputScanSK').value = '';
 
-        Swal.fire({
-            title: 'Memindai SK...',
-            html: '<div class="text-sm mt-2 text-slate-500">Kecerdasan Buatan sedang membaca dokumen...<br><b id="ocrProgress" class="text-indigo-600 text-lg">0%</b></div>',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
+      Swal.fire({
+          title: 'Memindai SK...',
+          html: '<div class="text-sm mt-2 text-slate-500">Mengekstrak baris per baris...<br><b id="ocrProgress" class="text-indigo-600 text-lg">0%</b></div>',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+      });
 
-        // Jalankan AI Tesseract
-        Tesseract.recognize(file, 'ind', {
-            logger: m => {
-                if (m.status === 'recognizing text' && document.getElementById('ocrProgress')) {
-                    document.getElementById('ocrProgress').innerText = Math.round(m.progress * 100) + '%';
-                }
-            }
-        }).then(({ data: { text } }) => {
-            
-            // --- ALGORITMA PINTAR PEMBACA FORMAT SK GKPI ---
-            let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-            let hasilScan = {};
-            let activeSection = ""; // Melacak kita sedang ada di Romawi berapa
+      Tesseract.recognize(file, 'ind', {
+          logger: m => {
+              if (m.status === 'recognizing text' && document.getElementById('ocrProgress')) {
+                  document.getElementById('ocrProgress').innerText = Math.round(m.progress * 100) + '%';
+              }
+          }
+      }).then(({ data: { text } }) => {
+          
+          let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+          let hasilScanIndividual = []; // Array penyimpanan 1 orang = 1 baris
+          let activeSection = ""; 
 
-            lines.forEach(line => {
-                let upperLine = line.toUpperCase();
+          // Ambil daftar jabatan ASLI dari server agar pencocokan 100% rapi
+          let validJabatans = DATA_MASTER.jabatan.map(j => j.Nama_Jabatan).filter(j => j);
 
-                // 1. Deteksi Pergantian Kategori (Membaca Angka Romawi)
-                if (/^I\.\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
-                if (/^II\.\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
-                if (/^III\.\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
-                if (/^IV\.\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
-                if (/^V\.\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
+          lines.forEach(line => {
+              let upperLine = line.toUpperCase();
 
-                // Abaikan jika baris tersebut hanya judul kategori
-                if (/^[IVX]+\.\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
+              // 1. Lacak Posisi Membaca (Romawi)
+              if (/^I\.\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
+              if (/^II\.\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
+              if (/^III\.\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
+              if (/^IV\.\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
+              if (/^V\.\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
+              
+              // Abaikan jika hanya judul (Romawi saja tanpa nama orang)
+              if (/^[IVX]+\.\s+[A-Z\s\/]+(:)?$/.test(upperLine)) return;
 
-                // 2. Format Kategori I & II: "No. Jabatan : Nama"
-                if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
-                    // Cari pola teks yang dibelah dengan titik dua (:)
-                    let match = line.match(/^(\d+[\.\)]?)?\s*([A-Za-z\s\/\(\)]+)\s*[:;]\s*(.*)$/);
-                    if (match) {
-                        let rawJabatan = match[2].trim();
-                        let rawNama = match[3].trim();
-                        
-                        // Abaikan teks placeholder seperti "Sesuai SK Pimpinan Sinode"
-                        if (rawNama && !rawNama.toLowerCase().includes("sesuai sk") && rawNama.length > 2) {
-                            // Konversi jabatan di kertas SK menjadi nama jabatan baku di sistem
-                            let namaBaku = cariJabatanSistem(rawJabatan, activeSection);
-                            if (namaBaku) {
-                                if (!hasilScan[namaBaku]) hasilScan[namaBaku] = [];
-                                hasilScan[namaBaku].push(bersihkanNama(rawNama));
-                            }
-                        }
-                    }
-                } 
-                // 3. Format Kategori III, IV, V: Daftar Nama (Jabatan = Nama Kategori Utama)
-                else if (activeSection === "PENASEHAT" || activeSection === "PHB" || activeSection === "PENATUA") {
-                    
-                    // Tesseract sering membaca 2 kolom jadi 1 baris menyambung: "1. Andi  18. Budi"
-                    // Rumus ini memecahnya berdasarkan angka urut yang diikuti titik (1., 2., 18., dst)
-                    let parts = line.split(/(?=\b\d+[\.\)]\s)/g);
-                    
-                    // Tetapkan jabatan baku untuk keseluruhan isi kategori ini
-                    let roleTarget = activeSection === "PHB" ? "PHB" : (activeSection === "PENASEHAT" ? "Penasehat" : "Penatua");
+              // 2. Format KESAMPING (Jabatan di Kiri, Nama di Kanan)
+              if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
+                  // Pecah baris berdasarkan titik dua (:)
+                  let splitLine = line.split(/[:;]/);
+                  let sisiKiri = splitLine[0].toLowerCase();
+                  let sisiKanan = splitLine.length > 1 ? splitLine.slice(1).join(':').trim() : "";
+                  
+                  // Cocokkan teks KIRI dengan Database Jabatan kita
+                  let matchedJabatan = cariJabatanSistem(sisiKiri, activeSection, validJabatans);
+                  
+                  // JIKA JABATAN DITEMUKAN DI DATABASE, AMBIL NAMANYA
+                  if (matchedJabatan) {
+                      let rawNama = sisiKanan !== "" ? sisiKanan : line.toLowerCase().replace(sisiKiri, '').trim();
+                      let namaBersih = bersihkanNama(rawNama);
+                      
+                      // Filter sampah (jangan masukkan kata "sesuai sk")
+                      if (namaBersih.length > 2 && !namaBersih.toLowerCase().includes("sesuai sk")) {
+                          // Jika ada 2 nama di satu seksi yang dipisah koma/dan, kita pecah juga jadi 2 baris terpisah
+                          let namaBanyak = namaBersih.split(/,| dan /i);
+                          namaBanyak.forEach(n => {
+                              let nBersih = bersihkanNama(n);
+                              if(nBersih.length > 2) {
+                                  hasilScanIndividual.push({ jabatan: matchedJabatan, nama: nBersih });
+                              }
+                          });
+                      }
+                  }
+              } 
+              // 3. Format NAMA BERJEJER (Penasehat, PHB, Penatua)
+              else if (activeSection === "PENASEHAT" || activeSection === "PHB" || activeSection === "PENATUA") {
+                  // Karena kolom berjejer (1. Andi  18. Budi), kita belah tiap ada angka dan titik
+                  let parts = line.split(/(?=\b\d+[\.\)]\s)/g);
+                  
+                  // Tentukan jabatan valid dari database
+                  let roleTarget = activeSection === "PHB" ? "pengawas harta benda" : (activeSection === "PENASEHAT" ? "penasehat" : "penatua");
+                  let matchedRole = validJabatans.find(v => v.toLowerCase().includes(roleTarget)) || validJabatans.find(v => v.toLowerCase().includes("sintua"));
+                  if (!matchedRole) matchedRole = activeSection; // Fallback
 
-                    parts.forEach(part => {
-                        let cleanName = bersihkanNama(part);
-                        if (cleanName.length > 3 && !cleanName.toLowerCase().includes('sesuai sk')) {
-                            if (!hasilScan[roleTarget]) hasilScan[roleTarget] = [];
-                            hasilScan[roleTarget].push(cleanName);
-                        }
-                    });
-                }
-            });
+                  parts.forEach(part => {
+                      let cleanName = bersihkanNama(part);
+                      if (cleanName.length > 3 && !cleanName.toLowerCase().includes('sesuai sk') && !cleanName.toLowerCase().includes('aktif')) {
+                          // LANGSUNG MASUKKAN SEBAGAI 1 ORANG = 1 BARIS TERPISAH
+                          hasilScanIndividual.push({ jabatan: matchedRole, nama: cleanName });
+                      }
+                  });
+              }
+          });
 
-            // --- MEMASUKKAN HASIL SCAN KE DALAM FORM ---
-            const keys = Object.keys(hasilScan);
-            if(keys.length === 0) {
-                return Swal.fire('Gagal Membaca', 'Sistem tidak menemukan format SK yang sesuai. Mohon foto lebih jelas & pastikan bagian Romawi I s/d V terlihat.', 'error');
-            }
+          if(hasilScanIndividual.length === 0) {
+              return Swal.fire('Gagal Membaca', 'Sistem tidak menemukan format jabatan yang sesuai database. Pastikan foto terbaca jelas.', 'error');
+          }
 
-            document.getElementById('wadahPersonilMulti').innerHTML = ''; barisPersonilCount = 0;
+          // KOSONGKAN WADAH LALU BUATKAN BARIS BARU SEJUMLAH ORANG YANG DITEMUKAN
+          document.getElementById('wadahPersonilMulti').innerHTML = ''; barisPersonilCount = 0;
 
-            keys.forEach(jabatanKey => {
-                tambahBarisPersonil(); 
-                let selectId = 'mul_jabatan_' + barisPersonilCount; 
-                let rowEl = document.getElementById('personil_row_' + barisPersonilCount);
-                
-                let namaInput = rowEl.querySelector('input[name="mul_nama[]"]');
-                
-                // Gabungkan seluruh nama di jabatan tersebut dengan TITIK KOMA (;)
-                namaInput.value = hasilScan[jabatanKey].join('; '); 
-                
-                // Pilih jabatannya secara otomatis di Dropdown
-                if (tsInst[selectId]) { tsInst[selectId].setValue(jabatanKey); }
-            });
+          hasilScanIndividual.forEach(personil => {
+              tambahBarisPersonil(); // Memicu pembuatan blok HTML baru
+              let selectId = 'mul_jabatan_' + barisPersonilCount; 
+              let rowEl = document.getElementById('personil_row_' + barisPersonilCount);
+              
+              // Isi Nama (Murni 1 orang, tidak pakai pemisah ;)
+              let namaInput = rowEl.querySelector('input[name="mul_nama[]"]');
+              namaInput.value = personil.nama; 
+              
+              // Pilih Jabatan di Dropdown
+              if (tsInst[selectId]) { tsInst[selectId].setValue(personil.jabatan); }
+          });
 
-            Swal.fire({ title: 'Scan Berhasil!', text: `Teks SK berhasil diekstrak ke dalam ${keys.length} baris jabatan. Mohon pastikan ejaan gelar/nama sudah tepat.`, icon: 'success' });
+          Swal.fire({ title: 'Auto-Isi Berhasil!', text: `${hasilScanIndividual.length} personil berhasil diuraikan menjadi baris-baris terpisah.`, icon: 'success' });
 
-        }).catch(err => {
-            Swal.fire('Error Scan', 'Terjadi kesalahan saat memproses gambar. Pastikan format foto didukung.', 'error');
-        });
-    };
+      }).catch(err => {
+          Swal.fire('Error Scan', 'Terjadi kesalahan saat memproses gambar.', 'error');
+      });
+  };
 
-    // Translator Kamus Jabatan (SK ke Sistem)
-    function cariJabatanSistem(rawStr, section) {
-        let text = rawStr.toLowerCase();
-        if (section === "PENGURUS") {
-            if (text.includes("pemimpin")) return "Pemimpin Jemaat";
-            if (text.includes("sekretaris")) return "Sekretaris Jemaat";
-            if (text.includes("bendahara")) return "Bendahara Jemaat";
-        } else if (section === "SEKSI") {
-            if (text.includes("pembinaan") || text.includes("rohani")) return "Seksi Pembinaan/ Pelayanan Rohani";
-            if (text.includes("injil")) return "Seksi Pekabaran Injil";
-            if (text.includes("diakoni")) return "Seksi Diakoni Sosial";
-            if (text.includes("musik") || text.includes("nyanyian") || text.includes("koor")) return "Seksi Musik/ Nyanyian/ Koor";
-            if (text.includes("sekolah minggu")) return "Seksi Sekolah Minggu";
-            if (text.includes("remaja") && !text.includes("pemuda")) return "Seksi Remaja";
-            if (text.includes("pemuda") || text.includes("pp")) return "Seksi Pemuda/i ( PP)";
-            if (text.includes("perempuan")) return "Seksi Perempuan";
-            if (text.includes("pria")) return "Seksi Pria";
-            if (text.includes("lansia") || text.includes("lanjut usia")) return "Seksi Lansia";
-            if (text.includes("kesehatan")) return "Seksi Kesehatan";
-            if (text.includes("pendidikan")) return "Seksi Pendidikan";
-            if (text.includes("sarana") || text.includes("prasarana")) return "Seksi Sarana dan Prasarana";
-            if (text.includes("usaha") || text.includes("sdm")) return "Seksi Usaha/ Pengembangan SDM";
-            if (text.includes("keamanan")) return "Seksi Keamanan";
-        }
-        return null;
-    }
+  // --- FILTER PENCOCOKAN TEKS KE DATABASE JABATAN ---
+  function cariJabatanSistem(rawKiri, section, validJabatans) {
+      let text = rawKiri.toLowerCase();
+      let keywords = [];
+      
+      if (section === "PENGURUS") {
+          if (text.includes("pemimpin")) keywords = ["pemimpin", "pendeta jemaat"];
+          else if (text.includes("sekretaris")) keywords = ["sekretaris"];
+          else if (text.includes("bendahara")) keywords = ["bendahara"];
+      } else if (section === "SEKSI") {
+          if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"];
+          else if (text.includes("injil") || text.includes("pekabaran")) keywords = ["injil", "zending"];
+          else if (text.includes("diakoni")) keywords = ["diakoni"];
+          else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"];
+          else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"];
+          else if (text.includes("remaja")) keywords = ["remaja"];
+          else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"];
+          else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"];
+          else if (text.includes("pria")) keywords = ["pria"];
+          else if (text.includes("lansia")) keywords = ["lansia"];
+          else if (text.includes("kesehatan")) keywords = ["kesehatan"];
+          else if (text.includes("pendidikan")) keywords = ["pendidikan"];
+          else if (text.includes("sarana") || text.includes("pembangunan")) keywords = ["sarana", "pembangunan"];
+          else if (text.includes("usaha") || text.includes("sdm")) keywords = ["usaha", "sdm"];
+          else if (text.includes("keamanan")) keywords = ["keamanan"];
+      }
 
-    // Pembersih Sisa Teks
-    function bersihkanNama(text) {
-        let bersih = text;
-        // Hapus awal angka/huruf list (misal: "1. ", "12) ")
-        bersih = bersih.replace(/^[\d\.\)\:\s]+/, '');
-        // Hapus karakter aneh di akhir
-        bersih = bersih.replace(/[\.\:\-\s_=|~]+$/, '');
-        // Jika ada "titik koma" di dalam teks hasil scan dari AI, kita ubah jadi koma biasa agar tidak merusak logika Multi-Name kita
-        bersih = bersih.replace(/;/g, ',');
-        return bersih.trim();
-    }
+      // Jika ada keyword yg cocok, cari nama resminya di database
+      if (keywords.length > 0) {
+          for (let jbt of validJabatans) {
+              let jbtLower = jbt.toLowerCase();
+              if (keywords.some(kw => jbtLower.includes(kw))) return jbt; // Berikan nama baku
+          }
+      }
+      return null;
+  }
+
+  // --- PEMBERSIH TEKS DARI AI ---
+  function bersihkanNama(text) {
+      let bersih = text;
+      // Hapus awal angka/huruf list (misal: "1. ", "12) ")
+      bersih = bersih.replace(/^[\d\.\)\:\s]+/, '');
+      // Hapus karakter aneh di akhir kalimat
+      bersih = bersih.replace(/[\.\:\-\s_=|~;]+$/, '');
+      return bersih.trim();
+  }
 </script>
 </body>
 </html>
