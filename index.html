@@ -498,7 +498,42 @@
     </form>
   </div>
 </div>
+<!-- MODAL FORM MAJELIS MULTI (BANYAK BARIS & AUTO-SCAN) -->
+<div id="modalFormMulti" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4 md:p-8">
+  <div class="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom">
+    <div class="bg-emerald-600 px-6 py-5 md:px-8 flex justify-between items-center text-white z-10 shrink-0">
+      <div>
+        <h3 class="text-xl font-black flex items-center"><i class="fas fa-users-line mr-3"></i> Input Multi Personil</h3>
+        <p class="text-[11px] font-medium text-emerald-100 mt-1 uppercase tracking-widest">Tambah banyak majelis & Scan SK Otomatis</p>
+      </div>
+      <button onclick="closeModal('modalFormMulti')" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition-colors"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <form id="formMultiMajelis" onsubmit="simpanMultiMajelis(event)" class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50 custom-scrollbar">
+        <div class="bg-emerald-50/50 p-5 md:p-6 rounded-2xl border border-emerald-100 shadow-sm mb-6">
+            <h4 class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest border-b border-emerald-200/60 pb-2 mb-4"><i class="fas fa-map-marker-alt mr-2 text-emerald-500"></i> 1. Tentukan Lokasi Penempatan Bersama</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="mul_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="mul_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
+            </div>
+            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja Lokasi Penempatan</label><select id="mul_gereja" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
+        </div>
 
+        <h4 class="text-[10px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center"><i class="fas fa-users mr-2 text-slate-400"></i> 2. Daftar Personil Majelis</h4>
+        <div id="wadahPersonilMulti" class="space-y-5 mt-4 mb-6"></div>
+
+        <div class="space-y-3 pt-4 border-t border-slate-200">
+            <input type="file" id="inputScanSK" accept="image/*" class="hidden" onchange="prosesScanSK(event)">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button type="button" onclick="document.getElementById('inputScanSK').click()" class="w-full bg-purple-50 text-purple-600 border-2 border-purple-200 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-purple-100 hover:border-purple-400 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-camera text-base"></i> Scan Foto SK (Auto-Isi)</button>
+                <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50 text-emerald-600 border-2 border-dashed border-emerald-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-100 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-plus-circle text-base"></i> Tambah Baris Manual</button>
+            </div>
+            <button type="submit" id="btnSubmitMulti" class="w-full bg-emerald-600 text-white py-4.5 rounded-xl font-black text-xs md:text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all flex justify-center items-center gap-2 mt-2"><i class="fas fa-cloud-upload-alt text-base"></i> Simpan Semua Personil</button>
+        </div>
+    </form>
+  </div>
+</div>
+  
 <!-- ========================================== -->
 <!-- MODAL BARU: DETAIL STRUKTUR UNIT (Gereja)  -->
 <!-- ========================================== -->
@@ -1470,16 +1505,38 @@
           }
       }
   };
-  function openModalSmart() {
-    const isHome = !document.getElementById('pageHome').classList.contains('hidden');
-    if (isHome) {
-      Swal.fire({ title: 'Tambah Data Baru', text: 'Pilih jenis data yang ingin ditambahkan:', showCancelButton: true, showDenyButton: true, confirmButtonText: '<i class="fas fa-users-cog"></i> Data Jemaat', denyButtonText: '<i class="fas fa-id-badge"></i> Data Majelis', cancelButtonText: 'Batal', confirmButtonColor: '#10b981', denyButtonColor: '#4f46e5' }).then((result) => { if (result.isConfirmed) { openFormJemaatBulk(); } else if (result.isDenied) { openFormMajelis(); } });
-    } else {
-      const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
-      if(isJemaat) { openFormJemaatBulk(); } else { openFormMajelis(); }
-    }
-  }
+ window.openModalSmart = function() {
+      const isHome = !document.getElementById('pageHome').classList.contains('hidden');
+      if (isHome) {
+          Swal.fire({ 
+              title: 'Tambah Data Baru', text: 'Pilih jenis data yang ingin ditambahkan:', 
+              showCancelButton: true, showDenyButton: true, 
+              confirmButtonText: '<i class="fas fa-users-cog"></i> Data Jemaat', 
+              denyButtonText: '<i class="fas fa-id-badge"></i> Data Majelis', 
+              cancelButtonText: 'Batal', confirmButtonColor: '#10b981', denyButtonColor: '#4f46e5' 
+          }).then((result) => { 
+              if (result.isConfirmed) { openFormJemaatBulk(); } 
+              else if (result.isDenied) { tampilkanPilihanMajelis(); } 
+          });
+      } else {
+          const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
+          if(isJemaat) { openFormJemaatBulk(); } else { tampilkanPilihanMajelis(); }
+      }
+  };
 
+  window.tampilkanPilihanMajelis = function() {
+      Swal.fire({
+          title: 'Mode Input Majelis', text: 'Pilih metode pengetikan data:',
+          showCancelButton: true, showDenyButton: true,
+          confirmButtonText: '<i class="fas fa-user"></i> Satuan',
+          denyButtonText: '<i class="fas fa-users"></i> Multi / Scan',
+          cancelButtonText: 'Batal',
+          confirmButtonColor: '#3b82f6', denyButtonColor: '#10b981'
+      }).then((res) => {
+          if(res.isConfirmed) openFormMajelis();
+          else if(res.isDenied) openFormMajelisMulti();
+      });
+  };
   function openFormJemaatBulk() {
     if(document.getElementById('formKeluargaBulk')) document.getElementById('formKeluargaBulk').reset(); 
     document.getElementById('containerAnggotaKeluarga').innerHTML = ''; counterAnggota = 0; syncFormResortBulk(); 
@@ -1874,6 +1931,134 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
             .catch(err => { Swal.fire('Error API', String(err), 'error'); btn.disabled=false; }); 
       } 
   };
+
+  // ====================================================================
+  // FUNGSI MULTI PERSONIL & OCR SCAN
+  // ====================================================================
+  window.tsInst = window.tsInst || {};
+  window.barisPersonilCount = 0;
+
+  window.openFormMajelisMulti = function() {
+      if(document.getElementById('formMultiMajelis')) document.getElementById('formMultiMajelis').reset();
+      document.getElementById('wadahPersonilMulti').innerHTML = ''; window.barisPersonilCount = 0;
+      let htmlJW = '<option value="">Pilih Wilayah</option>'; for(let i=1; i<=12; i++) htmlJW+=`<option value="${i}">WILAYAH ${i}</option>`;
+      safeSetHTML('mul_wilayah', htmlJW); syncFormResortBulk(); // Menggunakan fungsi sinkronisasi yang sudah ada
+      tambahBarisPersonil(); 
+      document.getElementById('modalFormMulti').classList.remove('hidden'); 
+  };
+
+  window.tambahBarisPersonil = function() {
+      window.barisPersonilCount++; const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + window.barisPersonilCount; const selectId = 'mul_jabatan_' + window.barisPersonilCount;
+      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
+
+      const div = document.createElement('div'); div.id = rowId; 
+      div.className = "bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all mb-4";
+      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-white hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
+
+      div.innerHTML = `
+          <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[9px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
+          ${btnHapus}
+          <div class="space-y-4">
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap (Gunakan ';' jika nama banyak)</label>
+              <input type="text" name="mul_nama[]" required autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="Pdt. Andi; Budi; Citra"></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Jabatan</label><select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select></div>
+                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nomor WA</label><input type="text" name="mul_hp[]" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="0811 / 6281"></div>
+              </div>
+          </div>`;
+      wadah.appendChild(div);
+      if (typeof TomSelect !== 'undefined') window.tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false }); 
+      updateLabelPersonil();
+  };
+
+  window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
+  window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
+
+  window.simpanMultiMajelis = function(e) {
+      e.preventDefault(); const btn = document.getElementById('btnSubmitMulti'); const originalText = btn.innerHTML;
+      const wilayah = document.getElementById('bk_wilayah').value; let resort = document.getElementById('bk_resort').value; let gereja = document.getElementById('bk_gereja').value;
+      const fr = document.getElementById('bk_resort'); if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+
+      const namaInputs = document.getElementsByName('mul_nama[]'); const jabatanInputs = document.getElementsByName('mul_jabatan[]'); const hpInputs = document.getElementsByName('mul_hp[]');
+      let arrData = [];
+      for(let i=0; i<namaInputs.length; i++) {
+          let jbt = jabatanInputs[i].value; let grjRow = gereja;
+          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) grjRow = "Tingkat Resort"; 
+          let nameArray = namaInputs[i].value.split(';').map(n => n.trim()).filter(n => n !== "");
+          let hpArray = hpInputs[i].value.split(';').map(h => h.trim());
+          nameArray.forEach((namaSatu, index) => { arrData.push({ "Nama_Lengkap": namaSatu, "Jabatan": jbt, "Wilayah": wilayah, "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hpArray[index] || "" }); });
+      }
+
+      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada data valid.', 'warning');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENYIMPAN...';
+      Swal.fire({ title: 'Menyimpan...', html: 'Mengirim '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+      apiCall('importMajelisMassal', {excelData: arrData, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(res => {
+          if (res === true || res.status === 'success' || res.added !== undefined) {
+              Swal.fire('Berhasil!', `<b>${res.added || arrData.length}</b> personil didaftarkan.`, 'success'); closeModal('modalFormMulti'); loadData(); 
+          } else { Swal.fire('Gagal', res.message, 'error'); }
+          btn.disabled = false; btn.innerHTML = originalText;
+      }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
+  };
+
+  window.prosesScanSK = function(event) {
+      const file = event.target.files[0]; if (!file) return; document.getElementById('inputScanSK').value = '';
+      Swal.fire({ title: 'Memindai SK...', html: '<div class="text-sm mt-2">Mengekstrak teks...<br><b id="ocrProgress" class="text-emerald-600 text-lg">0%</b></div>', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+      Tesseract.recognize(file, 'ind', { logger: m => { if (m.status === 'recognizing text' && document.getElementById('ocrProgress')) document.getElementById('ocrProgress').innerText = Math.round(m.progress * 100) + '%'; }
+      }).then(({ data: { text } }) => {
+          let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+          let hasilScanIndividual = []; let activeSection = ""; let stopParsing = false; 
+          let validJabatans = DATA_MASTER.jabatan.map(j => j.Nama_Jabatan).filter(j => j);
+
+          lines.forEach(line => {
+              if (stopParsing) return; 
+              let upperLine = line.toUpperCase(); let lowerLine = line.toLowerCase();
+              if (["ditetapkan di", "sekretaris jenderal", "kantor sinode"].some(kw => lowerLine.includes(kw)) || upperLine.match(/\bNRP\b/)) { stopParsing = true; return; }
+              if (/^I[\.\,]\s+PENGURUS/.test(upperLine)) { activeSection = "PENGURUS"; return; }
+              if (/^II[\.\,]\s+SEKSI/.test(upperLine)) { activeSection = "SEKSI"; return; }
+              if (/^III[\.\,]\s+PENASEHAT/.test(upperLine)) { activeSection = "PENASEHAT"; return; }
+              if (/^IV[\.\,]\s+PENGAWAS/.test(upperLine) || upperLine.includes("PHBK")) { activeSection = "PHB"; return; }
+              if (/^V[\.\,]\s+PENATUA/.test(upperLine)) { activeSection = "PENATUA"; return; }
+
+              if (activeSection === "PENGURUS" || activeSection === "SEKSI") {
+                  let splitLine = line.split(/[:;]/); let sisiKiri = splitLine[0].toLowerCase(); let sisiKanan = splitLine.length > 1 ? splitLine.slice(1).join(':').trim() : "";
+                  let matchedJabatan = cariJabatanSistem(sisiKiri, activeSection, validJabatans);
+                  if (matchedJabatan) {
+                      let rawNama = sisiKanan !== "" ? sisiKanan : line.toLowerCase().replace(sisiKiri, '').trim(); 
+                      if (rawNama.length > 3 && !rawNama.toLowerCase().includes("sesuai sk")) {
+                          rawNama.split(/\bdan\b|&/i).forEach(n => { let nBersih = n.replace(/^[\d\.\)\:\s]+|[\.\:\-\s_=|~;\?]+$/g, '').trim(); if(nBersih.length > 3) hasilScanIndividual.push({ jabatan: matchedJabatan, nama: nBersih }); });
+                      }
+                  }
+              } 
+              else if (activeSection === "PENASEHAT" || activeSection === "PHB" || activeSection === "PENATUA") {
+                  let roleTarget = activeSection === "PHB" ? "pengawas harta benda" : (activeSection === "PENASEHAT" ? "penasehat" : "penatua");
+                  let matchedRole = validJabatans.find(v => v.toLowerCase().includes(roleTarget)) || activeSection; 
+                  line.split(/(?=\b\d+[\.\)]\s)/g).forEach(part => {
+                      let cleanName = part.replace(/^[\d\.\)\:\s]+|[\.\:\-\s_=|~;\?]+$/g, '').trim();
+                      if (cleanName.length > 3 && !cleanName.toLowerCase().includes('sesuai sk') && !cleanName.toLowerCase().includes('aktif')) hasilScanIndividual.push({ jabatan: matchedRole, nama: cleanName });
+                  });
+              }
+          });
+
+          if(hasilScanIndividual.length === 0) return Swal.fire('Gagal Membaca', 'Pastikan foto terbaca jelas.', 'error');
+          document.getElementById('wadahPersonilMulti').innerHTML = ''; window.barisPersonilCount = 0;
+          hasilScanIndividual.forEach(personil => {
+              tambahBarisPersonil(); let selectId = 'mul_jabatan_' + window.barisPersonilCount;
+              document.getElementById('personil_row_' + window.barisPersonilCount).querySelector('input[name="mul_nama[]"]').value = personil.nama; 
+              if (window.tsInst[selectId]) window.tsInst[selectId].setValue(personil.jabatan); 
+          });
+          Swal.fire('Auto-Isi Berhasil!', `${hasilScanIndividual.length} personil diuraikan.`, 'success');
+      }).catch(err => Swal.fire('Error Scan', err.message, 'error'));
+  }
+
+  function cariJabatanSistem(rawKiri, section, validJabatans) {
+      let text = rawKiri.toLowerCase(); let keywords = [];
+      if (section === "PENGURUS") { if (text.includes("pemimpin")) keywords = ["pemimpin", "pendeta jemaat"]; else if (text.includes("sekretaris")) keywords = ["sekretaris"]; else if (text.includes("bendahara")) keywords = ["bendahara"]; } 
+      else if (section === "SEKSI") { if (text.includes("rohani") || text.includes("pembinaan")) keywords = ["rohani", "pembinaan"]; else if (text.includes("injil")) keywords = ["injil", "zending"]; else if (text.includes("diakoni")) keywords = ["diakoni"]; else if (text.includes("musik") || text.includes("koor")) keywords = ["musik", "koor"]; else if (text.includes("sekolah minggu")) keywords = ["sekolah minggu"]; else if (text.includes("remaja")) keywords = ["remaja"]; else if (text.includes("pemuda") || text.includes("pp")) keywords = ["pemuda"]; else if (text.includes("perempuan") || text.includes("pr")) keywords = ["perempuan"]; else if (text.includes("pria")) keywords = ["pria"]; else if (text.includes("lansia")) keywords = ["lansia"]; }
+      if (keywords.length > 0) { for (let jbt of validJabatans) { if (keywords.some(kw => jbt.toLowerCase().includes(kw))) return jbt; } } return null;
+  }
 </script>
 </body>
 </html>
