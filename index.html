@@ -1646,6 +1646,27 @@
       }).join('');
       renderPaginationChecklistUI(listUnit.length);
   };
+
+  // --- MESIN PAGINASI UTAMA (YANG SEMPAT HILANG) ---
+  window.renderPaginationUI = function(totalItems, currentPg, containerId, type, perPage) {
+      const totalPages = Math.ceil(totalItems / perPage); 
+      const container = document.getElementById(containerId); 
+      if(!container) return;
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      
+      let html = `<span class="text-xs text-slate-400 font-bold tracking-widest uppercase mr-4">Hal. ${currentPg} / ${totalPages} <span class="ml-2 px-2 py-1 bg-slate-100 rounded-md border border-slate-200">${totalItems} Data</span></span><div class="flex items-center gap-1">`;
+      if (currentPg > 1) html += `<button onclick="ubahHalaman('${type}', ${currentPg - 1})" class="page-btn inactive"><i class="fas fa-chevron-left"></i></button>`;
+      for (let i = Math.max(1, currentPg - 2); i <= Math.min(totalPages, currentPg + 2); i++) html += `<button onclick="ubahHalaman('${type}', ${i})" class="page-btn ${i===currentPg?'active':'inactive'}">${i}</button>`;
+      if (currentPg < totalPages) html += `<button onclick="ubahHalaman('${type}', ${currentPg + 1})" class="page-btn inactive"><i class="fas fa-chevron-right"></i></button>`;
+      container.innerHTML = html + `</div>`;
+  };
+
+  window.ubahHalaman = function(type, page) { 
+      if (type === 'majelis') { currentPageMajelis = page; renderTabelReal(window.currentFilteredList, false); } 
+      else if (type === 'individu') { currentPageIndividu = page; renderTabelIndividu(window.currentFilteredList, false); }
+      else if (type === 'jemaat') { currentPageJemaat = page; renderTabelJemaat(window.currentFilteredJemaat, false); }
+      else { currentPageGereja = page; renderTabelGereja(window.currentFilteredGereja, false); } 
+  };
 </script>
 </body>
 </html>
