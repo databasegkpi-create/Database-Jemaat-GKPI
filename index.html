@@ -111,15 +111,15 @@
 
    /* CUSTOM STYLE TOMSELECT (SMART DROPDOWN) - FIX UKURAN GEPENG */
     .ts-wrapper { width: 100% !important; }
-    .ts-control { 
+  .ts-control { 
         border-radius: 0.75rem !important; 
-        background-color: #ffffff !important; 
+        background-color: #f8fafc !important; 
         border: 1px solid #e2e8f0 !important; 
         padding: 0.875rem 1rem !important; 
         font-size: 0.875rem !important; 
-        font-weight: 700 !important; 
+        font-weight: 600 !important; 
         color: #334155 !important; 
-        height: 50px !important; /* KUNCI TINGGI MUTLAK */
+        height: 52px !important; /* <--- Kunci tinggi mati di sini */
         display: flex !important; 
         align-items: center !important;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; 
@@ -2243,72 +2243,6 @@ function konfirmasiHapus(id) {
       document.getElementById('modalFormMulti').classList.remove('hidden'); 
   };
 
-window.tambahBarisPersonil = function() {
-      if (!window.barisPersonilCount) window.barisPersonilCount = 0;
-      window.barisPersonilCount++; 
-      const wadah = document.getElementById('wadahPersonilMulti');
-      const rowId = 'personil_row_' + window.barisPersonilCount; 
-      const selectId = 'mul_jabatan_' + window.barisPersonilCount;
-      
-      // Opsi pertama WAJIB kosong (tanpa teks) agar Placeholder TomSelect muncul!
-      let jHtml = '<option value=""></option>';
-      DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
-
-      const div = document.createElement('div'); div.id = rowId; 
-      div.className = "bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all mb-4";
-      
-      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
-
-      div.innerHTML = `
-          <span class="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
-          ${btnHapus}
-          <div class="space-y-4">
-              <!-- NAMA LENGKAP -->
-              <div class="space-y-1.5 flex flex-col justify-end">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap</label>
-                  <div class="relative">
-                      <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                      <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full h-[50px] pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th">
-                  </div>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <!-- JABATAN -->
-                  <div class="space-y-1.5 flex flex-col justify-end">
-                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
-                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full h-[50px] rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 shadow-sm">${jHtml}</select>
-                  </div>
-                  
-                  <!-- NOMOR WA -->
-                  <div class="space-y-1.5 flex flex-col justify-end">
-                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA</label>
-                      <div class="relative">
-                          <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
-                          <input type="text" name="mul_hp[]" autocomplete="off" class="w-full h-[50px] pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
-                      </div>
-                  </div>
-              </div>
-          </div>`;
-      wadah.appendChild(div);
-      
-      setTimeout(() => {
-          if (typeof TomSelect !== 'undefined') {
-              window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
-                  create: false, 
-                  dropdownParent: 'body', 
-                  placeholder: 'Ketik atau pilih jabatan...',
-                  onFocus: function() { this.clear(true); } // <-- Menghapus teks placeholder saat diklik
-              }); 
-              if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
-          }
-      }, 50);
-      
-      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
-  };
-
-  
-  window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
-  window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
 
  window.simpanMultiMajelis = function(e) {
       e.preventDefault(); const btn = document.getElementById('btnSubmitMulti'); const originalText = btn.innerHTML;
@@ -2453,40 +2387,65 @@ window.tambahBarisPersonil = function() {
       updateJabatanOptionsModal('mul');
   };
 
-  // 2. Menghidupkan Smart Dropdown (TomSelect) di Baris Personil Multi
-  window.tambahBarisPersonil = function() {
-      window.barisPersonilCount++; const wadah = document.getElementById('wadahPersonilMulti');
-      const rowId = 'personil_row_' + window.barisPersonilCount; const selectId = 'mul_jabatan_' + window.barisPersonilCount;
-      let jHtml = '<option value="">Ketik atau pilih jabatan...</option>';
+ window.tambahBarisPersonil = function() {
+      if (!window.barisPersonilCount) window.barisPersonilCount = 0;
+      window.barisPersonilCount++; 
+      const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + window.barisPersonilCount; 
+      const selectId = 'mul_jabatan_' + window.barisPersonilCount;
+      
+      // Opsi pertama HARUS KOSONG tanpa spasi agar "Ketik atau Pilih" bisa muncul
+      let jHtml = '<option value=""></option>';
       DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
 
       const div = document.createElement('div'); div.id = rowId; 
-      div.className = "bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all mb-4";
-      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-white hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
+      div.className = "bg-white p-6 md:p-8 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-12 animate-zoom transition-all mb-6";
+      
+      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-5 right-5 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm border border-slate-100"><i class="fas fa-trash-alt"></i></button>` : '';
 
       div.innerHTML = `
-          <span class="absolute top-0 left-0 bg-emerald-600 text-white text-[9px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
+          <span class="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] font-black px-5 py-2 rounded-br-2xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
           ${btnHapus}
-          <div class="space-y-4">
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan ';' jika nama lebih dari satu)</span></label>
-              <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra"></div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label><select name="mul_jabatan[]" id="${selectId}" required class="w-full text-sm font-bold text-slate-700">${jHtml}</select></div>
-                  <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">Nomor WA <span class="text-emerald-500 normal-case font-medium text-[9px]">(Bisa pisah dgn ;)</span></label>
-                  <input type="text" name="mul_hp[]" autocomplete="off" class="w-full p-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-sm font-bold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62"></div>
+          <div class="space-y-5">
+              <!-- BARIS NAMA (Tanpa panduan titik koma) -->
+              <div class="space-y-1.5 flex flex-col justify-end">
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap</label>
+                  <div class="relative">
+                      <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                      <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th">
+                  </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <!-- BARIS JABATAN -->
+                  <div class="space-y-1.5 flex flex-col justify-end">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
+                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full h-[52px] rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 shadow-sm">${jHtml}</select>
+                  </div>
+                  <!-- BARIS WA -->
+                  <div class="space-y-1.5 flex flex-col justify-end">
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA</label>
+                      <div class="relative">
+                          <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
+                          <input type="text" name="mul_hp[]" autocomplete="off" class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
+                      </div>
+                  </div>
               </div>
           </div>`;
       wadah.appendChild(div);
       
-      // Jeda 50ms agar HTML sempat terender sebelum merubahnya jadi Smart Dropdown
       setTimeout(() => {
           if (typeof TomSelect !== 'undefined') {
-              window.tsInst[selectId] = new TomSelect(`#${selectId}`, { create: false, placeholder: 'Ketik untuk mencari...' }); 
-              updateJabatanOptionsModal('mul');
+              window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
+                  create: false, 
+                  dropdownParent: 'body',
+                  placeholder: 'Ketik atau pilih jabatan...',
+                  onFocus: function() { this.clear(true); } // <--- Ini kode agar teks otomatis raib saat diketik
+              }); 
+              if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
           }
       }, 50);
-
-      updateLabelPersonil();
+      
+      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
   };
 
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
