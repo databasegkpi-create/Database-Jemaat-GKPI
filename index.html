@@ -1812,16 +1812,56 @@ const inputNama = String(payload.Nama_Lengkap).trim().toLowerCase();
     if(document.getElementById('modalForm')) document.getElementById('modalForm').classList.remove('hidden');
   }
 
-  function konfirmasiHapus(id) { 
+function konfirmasiHapus(id) { 
       Swal.fire({ title: 'Hapus data permanen?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { 
-          if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusMajelis', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadData(); }); } 
+          if (result.isConfirmed) { 
+              Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); 
+              apiCall('hapusMajelis', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { 
+                  // 1. Hapus Instan dari Memori Layar (Real-time Majelis)
+                  DATA_MASTER.majelis = DATA_MASTER.majelis.filter(m => String(m.ID_Majelis) !== String(id));
+                  try { localStorage.setItem('gkpi_data_cache', JSON.stringify(DATA_MASTER)); } catch(e) {}
+                  
+                  // 2. Render ulang layar tanpa loading
+                  filterTabel();
+                  Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); 
+              }).catch(err => Swal.fire('Error Server', String(err), 'error'));
+          } 
       }); 
   }
+
   function konfirmasiHapusJemaat(id) { 
       Swal.fire({ title: 'Hapus data jemaat?', text: 'Tindakan ini permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => { 
-          if (result.isConfirmed) { Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); apiCall('hapusJemaat', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { Swal.fire('Terhapus!', 'Data dihapus.', 'success'); loadData(); }); } 
+          if (result.isConfirmed) { 
+              Swal.fire({ title: 'Menghapus...', didOpen: () => Swal.showLoading() }); 
+              apiCall('hapusJemaat', {id: id, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => { 
+                  // 1. Hapus Instan dari Memori Layar (Real-time Jemaat)
+                  DATA_MASTER.jemaat = DATA_MASTER.jemaat.filter(j => String(j.ID_Jemaat) !== String(id));
+                  try { localStorage.setItem('gkpi_data_cache', JSON.stringify(DATA_MASTER)); } catch(e) {}
+                  
+                  // 2. Render ulang layar tanpa loading
+                  filterTabelJemaat();
+                  Swal.fire('Terhapus!', 'Data dihapus.', 'success'); 
+              }).catch(err => Swal.fire('Error Server', String(err), 'error'));
+          } 
       }); 
   }
+
+  // FUNGSI BARU: Hapus 1 Keluarga Sekaligus (Real-time)
+  window.konfirmasiHapusKeluarga = function(noKK) {
+      Swal.fire({ title: 'Hapus 1 Keluarga?', text: 'Seluruh anggota di dalam No KK ini akan dihapus permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire({ title: 'Menghapus Keluarga...', didOpen: () => Swal.showLoading() });
+              apiCall('hapusKeluarga', {no_kk: noKK, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(() => {
+                  // Hapus seluruh anggota dengan No KK tersebut dari memori
+                  DATA_MASTER.jemaat = DATA_MASTER.jemaat.filter(j => String(j.No_KK).trim() !== String(noKK).trim());
+                  try { localStorage.setItem('gkpi_data_cache', JSON.stringify(DATA_MASTER)); } catch(e) {}
+                  
+                  filterTabelJemaat();
+                  Swal.fire('Terhapus!', 'Satu keluarga berhasil dihapus.', 'success');
+              }).catch(err => Swal.fire('Error Server', String(err), 'error'));
+          }
+      });
+  };
 
   function downloadTemplateImport() { 
       const isJemaat = !document.getElementById('pageJemaat').classList.contains('hidden');
