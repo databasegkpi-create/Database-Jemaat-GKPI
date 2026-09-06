@@ -70,7 +70,7 @@
     
     .leaflet-container { z-index: 10 !important; }
     .leaflet-top, .leaflet-bottom { z-index: 10 !important; }
-
+    div:where(.swal2-container) { z-index: 99999 !important; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -1090,12 +1090,16 @@ window.setupFilters = function() {
     
     if(window.tsInst['m']) { window.tsInst['m'].destroy(); window.tsInst['m'] = null; }
     
-    if(document.getElementById('formJabatan')) {
+ if(document.getElementById('formJabatan')) {
         window.tsInst['m'] = new TomSelect('#formJabatan', { 
             create: false, 
             dropdownParent: 'body', 
-            placeholder: 'Ketik atau pilih jabatan...', // PERBAIKAN: Teks ditaruh di sini
-            onChange: function() { cekJabatan(); }
+            placeholder: 'Ketik atau pilih jabatan...', 
+            onChange: function() { cekJabatan(); },
+            // Tambahkan 3 baris ini agar teks langsung raib saat diklik
+            onFocus: function() {
+                if (this.getValue() === "") { this.clear(true); }
+            }
         }); 
     }
     
@@ -1678,7 +1682,12 @@ window.setupFilters = function() {
     container.innerHTML = html + `</div>`;
   }
 
-  function ubahHalaman(type, page) { 
+ function ubahHalaman(type, page) { 
+    // Mengembalikan layar ke atas tabel secara mulus
+    const targetContainer = document.getElementById('mainContent');
+    if(targetContainer) targetContainer.scrollTo({ top: 0, behavior: 'smooth' });
+
+
     if (type === 'majelis') { currentPageMajelis = page; renderTabelReal(window.currentFilteredList, false); } 
     else if (type === 'individu') { currentPageIndividu = page; renderTabelIndividu(window.currentFilteredList, false); }
     else if (type === 'jemaat') { currentPageJemaat = page; renderTabelJemaat(window.currentFilteredJemaat, false); }
