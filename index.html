@@ -208,7 +208,7 @@
       </div>
      <div class="flex items-center gap-2 md:gap-3">
         <button onclick="toggleDarkMode()" id="btnDarkMode" class="bg-white text-slate-600 border border-slate-200 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center w-10 md:w-auto"><i class="fas fa-moon"></i></button>
-        <button onclick="loadData()" class="bg-emerald-50 text-emerald-600 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide border border-emerald-100/50"><i class="fas fa-sync-alt"></i> <span class="hidden md:inline">Refresh</span></button>
+        <button onclick="loadData(true)" class="bg-emerald-50 text-emerald-600 px-3 md:px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide border border-emerald-100/50"><i class="fas fa-sync-alt"></i> <span class="hidden md:inline">Refresh</span></button>
         <button id="btnTopTambah" onclick="openModalSmart()" class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-4 md:px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-plus"></i> <span class="hidden lg:inline">Tambah Data</span><span class="lg:hidden">Tambah</span></button>
         
         <!-- TOMBOL CETAK PDF YANG BARU DIPINDAHKAN -->
@@ -879,10 +879,11 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark'); updateDarkModeIcon();
-    const saved = sessionStorage.getItem('si_majelis_user');
-    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { sessionStorage.removeItem('si_majelis_user'); } }
+    // PERBAIKAN: Menggunakan localStorage agar sesi login tidak hilang saat aplikasi ditutup
+    const saved = localStorage.getItem('si_majelis_user');
+    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { localStorage.removeItem('si_majelis_user'); } }
   });
 
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
@@ -894,7 +895,9 @@
     btn.disabled = true; safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
     apiCall('checkLogin', {username: u, password: p}).then(res => { 
         if (res.status === 'success') { 
-            USER_NOW = res; sessionStorage.setItem('si_majelis_user', JSON.stringify(res)); 
+            USER_NOW = res; 
+            // PERBAIKAN: Simpan ke localStorage
+            localStorage.setItem('si_majelis_user', JSON.stringify(res)); 
             apiCall('catatLogEvent', { aksi: "LOGIN", sumber: "Sistem Auth", detail: "Akun berhasil masuk: " + res.nama }).catch(e=>{});
             showMainApp(); loadData(); 
         } else if (res.status === 'fail') { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); } 
@@ -906,8 +909,9 @@
       Swal.fire({ title: 'Keluar dari sistem?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'Ya, Keluar!' }).then((result) => { 
           if (result.isConfirmed) { 
               Swal.fire({ title: 'Menutup sesi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-              if(USER_NOW) { apiCall('catatLogEvent', { aksi: "LOGOUT", sumber: "Sistem Auth", detail: "Akun keluar: " + USER_NOW.nama }).finally(() => { sessionStorage.removeItem('si_majelis_user'); location.reload(); });
-              } else { sessionStorage.removeItem('si_majelis_user'); location.reload(); }
+              // PERBAIKAN: Bersihkan localStorage
+              if(USER_NOW) { apiCall('catatLogEvent', { aksi: "LOGOUT", sumber: "Sistem Auth", detail: "Akun keluar: " + USER_NOW.nama }).finally(() => { localStorage.removeItem('si_majelis_user'); location.reload(); });
+              } else { localStorage.removeItem('si_majelis_user'); location.reload(); }
           } 
       }); 
   }
@@ -924,32 +928,77 @@
     else { elemenDilarangUntukViewer.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }); }
   }
 
-  function loadData() {
-    Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data dari server.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-    if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = Array(6).fill(`<div class="skeleton h-24 w-full rounded-[1.5rem]"></div>`).join('');
-    
-    const curW = document.getElementById('filterWilayah')?.value || ""; const curR = document.getElementById('filterResort')?.value || "";
-    const curG = document.getElementById('filterGereja')?.value || ""; const curJ = document.getElementById('filterJabatan')?.value || "";
-    const curWJ = document.getElementById('f_wil_j')?.value || "";
-    
-    apiCall('getAppData').then(res => { 
-        if(res.status === 'error') throw new Error(res.message);
-        DATA_MASTER = res; 
-        if(!DATA_MASTER.jemaat) DATA_MASTER.jemaat = []; if(!DATA_MASTER.gereja) DATA_MASTER.gereja = [];
-        if(!DATA_MASTER.majelis) DATA_MASTER.majelis = []; if(!DATA_MASTER.jabatan) DATA_MASTER.jabatan = [];
-        if(!DATA_MASTER.log) DATA_MASTER.log = [];
+  function loadData(forceRefresh = false) {
+      // 1. Coba baca memori lokal (Cache) agar loading 0 detik
+      const cachedData = localStorage.getItem('gkpi_data_cache');
+      
+      if (cachedData && !forceRefresh) {
+          try {
+              DATA_MASTER = JSON.parse(cachedData);
+              eksekusiRenderEstafet(); // <-- Memanggil mesin rendering baru
+              tarikDariServer(false); // <-- Tarik data terbaru diam-diam di belakang layar
+              return;
+          } catch(e) { console.log("Cache rusak, mengambil ulang..."); }
+      }
 
-        renderHomeStats(); setupFilters(); 
-        if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
-        if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
-        if(curG) safeSetValue('filterGereja', curG);
-        if(curJ) safeSetValue('filterJabatan', curJ);
-        if(curWJ) safeSetValue('f_wil_j', curWJ); syncResortJemaatPage();
+      // 2. Jika memori kosong atau tombol Refresh manual ditekan
+      Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data dari server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = Array(6).fill(`<div class="skeleton h-24 w-full rounded-[1.5rem]"></div>`).join('');
+      
+      tarikDariServer(true);
+  }
 
-        filterTabel(); filterTabelJemaat(); renderTabelLogAktivitas(); 
-        if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
-        Swal.close(); const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
-    }).catch(err => { setTimeout(() => { Swal.fire({ icon: 'error', title: 'Koneksi Gagal', html: String(err) }); }, 500); });
+  // MESIN 1: Menarik Data API
+  function tarikDariServer(tutupLoadingScreen) {
+      apiCall('getAppData').then(res => { 
+          if(res.status === 'error') throw new Error(res.message);
+          DATA_MASTER = res; 
+          if(!DATA_MASTER.jemaat) DATA_MASTER.jemaat = []; if(!DATA_MASTER.gereja) DATA_MASTER.gereja = [];
+          if(!DATA_MASTER.majelis) DATA_MASTER.majelis = []; if(!DATA_MASTER.jabatan) DATA_MASTER.jabatan = [];
+          if(!DATA_MASTER.log) DATA_MASTER.log = [];
+
+          // Simpan ke memori lokal
+          try { localStorage.setItem('gkpi_data_cache', JSON.stringify(DATA_MASTER)); } catch(e) {}
+
+          eksekusiRenderEstafet();
+
+          if(tutupLoadingScreen) {
+              Swal.close(); 
+              const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); 
+              Toast.fire({ icon: 'success', title: 'Data Diperbarui!' });
+          }
+      }).catch(err => { 
+          if(tutupLoadingScreen) { setTimeout(() => { Swal.fire({ icon: 'error', title: 'Koneksi Gagal', html: String(err) }); }, 500); }
+      });
+  }
+
+  // MESIN 2: Rendering Bertahap (Anti-Freeze)
+  function eksekusiRenderEstafet() {
+      const curW = document.getElementById('filterWilayah')?.value || ""; const curR = document.getElementById('filterResort')?.value || "";
+      const curG = document.getElementById('filterGereja')?.value || ""; const curJ = document.getElementById('filterJabatan')?.value || "";
+      const curWJ = document.getElementById('f_wil_j')?.value || "";
+      
+      // Tahap 1: Filter & Statistik (Langsung)
+      setTimeout(() => { 
+          renderHomeStats(); setupFilters(); 
+          if(curW) safeSetValue('filterWilayah', curW); syncFilterResort();
+          if(curR) safeSetValue('filterResort', curR); syncFilterGereja();
+          if(curG) safeSetValue('filterGereja', curG);
+          if(curJ) safeSetValue('filterJabatan', curJ);
+          if(curWJ) safeSetValue('f_wil_j', curWJ); syncResortJemaatPage();
+      }, 0);
+
+      // Tahap 2: Tabel Majelis (Jeda 50ms)
+      setTimeout(() => { filterTabel(); }, 50);
+
+      // Tahap 3: Tabel Jemaat & Keluarga (Jeda 150ms agar tidak berat)
+      setTimeout(() => { filterTabelJemaat(); }, 150);
+
+      // Tahap 4: Log Aktivitas & Akses Admin (Jeda 250ms)
+      setTimeout(() => { 
+          renderTabelLogAktivitas(); 
+          if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
+      }, 250);
   }
   
   function renderMap() {
