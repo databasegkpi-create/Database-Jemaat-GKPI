@@ -506,36 +506,49 @@
 <!-- ================= SELURUH KOTAK POP-UP/MODAL DI BAWAH INI ================= -->
 
 <!-- MODAL TAMBAH KELUARGA BULK -->
-<div id="modalTambahKeluarga" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[90] flex items-center justify-center p-4 md:p-8">
-  <div class="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom">
-    <div class="bg-emerald-600 px-8 py-5 flex justify-between items-center text-white z-10 shrink-0">
-      <div><h3 class="text-xl font-black flex items-center"><i class="fas fa-users-cog mr-3"></i> Formulir Data Keluarga</h3><p class="text-[11px] font-medium text-emerald-100 mt-1 uppercase tracking-widest">Registrasi Kepala Keluarga beserta Istri & Anak sekaligus</p></div>
-      <button onclick="closeModal('modalTambahKeluarga')" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition-colors"><i class="fas fa-times"></i></button>
+<div id="modalTambahKeluarga" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[90] flex items-center justify-center p-4 md:p-6">
+  <div class="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom border border-slate-100">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 shrink-0">
+      <div>
+          <h3 class="text-xl font-black text-slate-800 flex items-center"><i class="fas fa-users-cog text-emerald-500 mr-3 text-2xl"></i> Formulir Data Keluarga</h3>
+          <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Registrasi Kepala Keluarga beserta Anggota</p>
+      </div>
+      <button onclick="closeModal('modalTambahKeluarga')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors"><i class="fas fa-times"></i></button>
     </div>
-    <form id="formKeluargaBulk" onsubmit="simpanKeluargaBulk(event)" class="flex-1 overflow-y-auto p-8 bg-slate-50">
-      <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-church text-emerald-500 mr-2"></i> 1. Penempatan Jemaat & Kartu Keluarga</h4>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="bk_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
-         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="bk_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
-         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Unit Gereja</label><select id="bk_gereja" required class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
-         <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">No KK (Kosongkan Jika Baru)</label><input type="text" id="bk_kk" class="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-bold text-emerald-700" placeholder="Ketik No KK..."></div>
+    
+    <form id="formKeluargaBulk" onsubmit="simpanKeluargaBulk(event)" class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 custom-scrollbar">
+      <!-- 1. Penempatan -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-50 pb-3"><i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> Penempatan Unit Gereja</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="bk_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="bk_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Unit Gereja</label><select id="bk_gereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">No KK <span class="text-emerald-500 normal-case">(Opsional)</span></label><input type="text" id="bk_kk" class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700" placeholder="Ketik No KK..."></div>
+          </div>
       </div>
 
-      <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2"><i class="fas fa-user-tie text-emerald-500 mr-2"></i> 2. Identitas Kepala Keluarga</h4>
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 p-5 bg-white border border-emerald-100 rounded-xl mb-6 shadow-sm">
-         <div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Kepala Keluarga</label><input type="text" id="bk_nama_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
-         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select id="bk_jk_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Lahir</label><input type="date" id="bk_tgl_kk" required class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
-         <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" id="bk_pek_kk" class="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>
+      <!-- 2. Identitas KK -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-50 pb-3"><i class="fas fa-user-tie text-emerald-400 mr-1"></i> Identitas Kepala Keluarga</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             <div class="lg:col-span-2 space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Kepala Keluarga</label><input type="text" id="bk_nama_kk" required class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></div>
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select id="bk_jk_kk" required class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+             <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Tanggal Lahir</label><input type="date" id="bk_tgl_kk" required class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></div>
+             <div class="lg:col-span-2 space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" id="bk_pek_kk" class="w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"></div>
+          </div>
       </div>
 
-      <div class="flex justify-between items-center mb-3 border-b border-slate-200 pb-2">
-         <h4 class="text-sm font-bold text-slate-800"><i class="fas fa-users text-emerald-500 mr-2"></i> 3. Anggota Keluarga (Istri / Anak)</h4>
-         <button type="button" onclick="tambahBarisAnggota()" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-lg hover:bg-emerald-500 hover:text-white transition-colors shadow-sm"><i class="fas fa-plus mr-1"></i> Tambah Anggota</button>
+      <!-- 3. Anggota Keluarga -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <div class="flex justify-between items-center mb-4 border-b border-slate-50 pb-3">
+             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest"><i class="fas fa-users text-emerald-400 mr-1"></i> Anggota Keluarga</h4>
+             <button type="button" onclick="tambahBarisAnggota()" class="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-emerald-500 hover:text-white transition-colors"><i class="fas fa-plus mr-1"></i> Tambah</button>
+          </div>
+          <div id="containerAnggotaKeluarga" class="space-y-3 mb-2"></div>
       </div>
-      <div id="containerAnggotaKeluarga" class="space-y-3 mb-8"></div>
 
-      <button type="submit" id="btnSubmitKeluarga" class="w-full bg-slate-800 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-2"><i class="fas fa-save"></i> Simpan Seluruh Keluarga</button>
+      <button type="submit" id="btnSubmitKeluarga" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"><i class="fas fa-save text-lg"></i> Simpan Data Keluarga</button>
     </form>
   </div>
 </div>
@@ -625,36 +638,39 @@
 </div>
   
 <!-- MODAL FORM MAJELIS MULTI (BANYAK BARIS & AUTO-SCAN) -->
-<div id="modalFormMulti" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4 md:p-8">
-  <div class="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom">
-    <div class="bg-emerald-600 px-6 py-5 md:px-8 flex justify-between items-center text-white z-10 shrink-0">
+<div id="modalFormMulti" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4 md:p-6">
+  <div class="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-full relative animate-zoom border border-slate-100">
+    <!-- Header Simetris Clean Putih -->
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 shrink-0">
       <div>
-        <h3 class="text-xl font-black flex items-center"><i class="fas fa-users-line mr-3"></i> Input Multi Personil</h3>
-        <p class="text-[11px] font-medium text-emerald-100 mt-1 uppercase tracking-widest">Tambah banyak majelis & Scan SK Otomatis</p>
+        <h3 class="text-xl font-black text-slate-800 flex items-center"><i class="fas fa-users-line text-emerald-500 mr-3 text-2xl"></i> Input Multi Personil</h3>
+        <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Tambah banyak majelis & Scan SK Otomatis</p>
       </div>
-      <button onclick="closeModal('modalFormMulti')" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition-colors"><i class="fas fa-times"></i></button>
+      <button onclick="closeModal('modalFormMulti')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors"><i class="fas fa-times"></i></button>
     </div>
     
-    <form id="formMultiMajelis" onsubmit="simpanMultiMajelis(event)" class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50 custom-scrollbar">
-        <div class="bg-emerald-50/50 p-5 md:p-6 rounded-2xl border border-emerald-100 shadow-sm mb-6">
-            <h4 class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest border-b border-emerald-200/60 pb-2 mb-4"><i class="fas fa-map-marker-alt mr-2 text-emerald-500"></i> 1. Tentukan Lokasi Penempatan Bersama</h4>
+    <form id="formMultiMajelis" onsubmit="simpanMultiMajelis(event)" class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 custom-scrollbar">
+        <!-- Area 1: Lokasi Penempatan -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+            <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-3 mb-4"><i class="fas fa-map-marker-alt mr-1 text-emerald-400"></i> 1. Penempatan Bersama</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wilayah</label><select id="mul_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
-              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resort / JK</label><select id="mul_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Wilayah</label><select id="mul_wilayah" onchange="syncFormResortBulk()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-slate-700 transition-all"></select></div>
+              <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Resort / JK</label><select id="mul_resort" onchange="syncFormGerejaBulk()" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-slate-700 transition-all"></select></div>
             </div>
-            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Gereja Lokasi Penempatan</label><select id="mul_gereja" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-slate-700 shadow-sm transition-all"></select></div>
+            <div class="space-y-1.5" id="wadahGerejaMulti"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Gereja</label><select id="mul_gereja" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 text-xs font-bold text-slate-700 transition-all"></select></div>
         </div>
 
-        <h4 class="text-[10px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center"><i class="fas fa-users mr-2 text-slate-400"></i> 2. Daftar Personil Majelis</h4>
-        <div id="wadahPersonilMulti" class="space-y-5 mt-4 mb-6"></div>
+        <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center mb-4"><i class="fas fa-users mr-1 text-emerald-400"></i> 2. Daftar Personil Majelis</h4>
+        <div id="wadahPersonilMulti" class="space-y-4 mb-6"></div>
 
         <div class="space-y-3 pt-4 border-t border-slate-200">
             <input type="file" id="inputScanSK" accept="image/*" class="hidden" onchange="prosesScanSK(event)">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button type="button" onclick="document.getElementById('inputScanSK').click()" class="w-full bg-purple-50 text-purple-600 border-2 border-purple-200 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-purple-100 hover:border-purple-400 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-camera text-base"></i> Scan Foto SK (Auto-Isi)</button>
-                <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50 text-emerald-600 border-2 border-dashed border-emerald-300 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-100 active:scale-95 transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-plus-circle text-base"></i> Tambah Baris Manual</button>
+                <button type="button" onclick="document.getElementById('inputScanSK').click()" class="w-full bg-purple-50 text-purple-600 border border-purple-200 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-camera text-base"></i> Scan SK (Auto-Isi)</button>
+                <button type="button" onclick="tambahBarisPersonil()" class="w-full bg-emerald-50 text-emerald-600 border border-emerald-200 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-plus-circle text-base"></i> Tambah Baris Manual</button>
             </div>
-           <button type="submit" id="btnSubmitMulti" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-xl font-black text-xs md:text-sm uppercase tracking-widest shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 mt-4"><i class="fas fa-cloud-upload-alt text-base"></i> Simpan Semua Personil</button>        </div>
+            <button type="submit" id="btnSubmitMulti" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 mt-4"><i class="fas fa-cloud-upload-alt text-lg"></i> Simpan Semua Personil</button>
+        </div>
     </form>
   </div>
 </div>
@@ -1761,10 +1777,16 @@ window.setupFilters = function() {
   function closeModal(modalId) { if(document.getElementById(modalId)) document.getElementById(modalId).classList.add('hidden'); }
 
   let counterAnggota = 0;
-  window.tambahBarisAnggota = function() {
+ window.tambahBarisAnggota = function() {
       counterAnggota++; const div = document.createElement('div');
-      div.className = "grid grid-cols-1 md:grid-cols-6 gap-3 p-4 bg-white border border-emerald-100 rounded-xl relative shadow-sm"; div.id = `barisAnggota_${counterAnggota}`;
-      div.innerHTML = `<button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md"><i class="fas fa-times text-xs"></i></button><div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Anggota</label><input type="text" class="input-nama w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Hubungan</label><select class="input-hub w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Tanggungan">Tanggungan</option></select></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select class="input-jk w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Lahir</label><input type="date" class="input-tgl w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs" required></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" class="input-pek w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs"></div>`;
+      div.className = "grid grid-cols-1 md:grid-cols-6 gap-3 p-5 bg-slate-50 border border-slate-200 rounded-xl relative shadow-sm transition-all"; div.id = `barisAnggota_${counterAnggota}`;
+      div.innerHTML = `
+          <button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md transition-colors"><i class="fas fa-times text-xs"></i></button>
+          <div class="md:col-span-2 space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Nama Anggota</label><input type="text" class="input-nama w-full p-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" required></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Hubungan</label><select class="input-hub w-full p-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" required><option value="Istri">Istri</option><option value="Anak">Anak</option><option value="Tanggungan">Tanggungan</option></select></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">L/P</label><select class="input-jk w-full p-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" required><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Tgl Lahir</label><input type="date" class="input-tgl w-full p-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" required></div>
+          <div class="space-y-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan</label><input type="text" class="input-pek w-full p-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"></div>`;
       document.getElementById('containerAnggotaKeluarga').appendChild(div);
   };
 
@@ -2220,43 +2242,38 @@ function konfirmasiHapus(id) {
       document.getElementById('modalFormMulti').classList.remove('hidden'); 
   };
 
- window.tambahBarisPersonil = function() {
+window.tambahBarisPersonil = function() {
       if (!window.barisPersonilCount) window.barisPersonilCount = 0;
-      window.barisPersonilCount++; 
-      const wadah = document.getElementById('wadahPersonilMulti');
-      const rowId = 'personil_row_' + window.barisPersonilCount; 
-      const selectId = 'mul_jabatan_' + window.barisPersonilCount;
-      
+      window.barisPersonilCount++; const wadah = document.getElementById('wadahPersonilMulti');
+      const rowId = 'personil_row_' + window.barisPersonilCount; const selectId = 'mul_jabatan_' + window.barisPersonilCount;
       let jHtml = '<option value=""></option>';
       DATA_MASTER.jabatan.forEach(j => { if(j.Nama_Jabatan) jHtml += `<option value="${j.Nama_Jabatan}">${j.Nama_Jabatan}</option>`; });
 
       const div = document.createElement('div'); div.id = rowId; 
-      // Jarak antar box diperluas (mb-6) & Padding Atas Diturunkan agar tidak tertimpa Badge
-      div.className = "bg-white p-6 md:p-8 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-12 animate-zoom transition-all mb-6";
-      
-      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-5 right-5 text-slate-400 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm border border-slate-100"><i class="fas fa-trash-alt"></i></button>` : '';
+      div.className = "bg-white p-6 rounded-[1.5rem] border border-slate-200 shadow-sm relative pt-10 animate-zoom transition-all";
+      let btnHapus = window.barisPersonilCount > 1 ? `<button type="button" onclick="hapusBarisPersonil('${rowId}', '${selectId}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 bg-slate-50 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm border border-slate-100"><i class="fas fa-times"></i></button>` : '';
 
       div.innerHTML = `
-          <span class="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] font-black px-5 py-2 rounded-br-2xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
+          <span class="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-br-xl rounded-tl-[1.4rem] label-personil tracking-widest shadow-sm">PERSONIL #${window.barisPersonilCount}</span>
           ${btnHapus}
-          <div class="space-y-5">
-              <div class="space-y-1.5">
-                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">Nama Lengkap <span class="text-slate-400 normal-case font-medium text-[9px]">(Gunakan ';' jika nama lebih dari satu)</span></label>
+          <div class="space-y-4">
+              <div class="space-y-1.5 flex flex-col justify-end">
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nama Lengkap</label>
                   <div class="relative">
                       <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                      <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th; Budi; Citra">
+                      <input type="text" name="mul_nama[]" required autocomplete="off" autocorrect="off" spellcheck="false" class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm" placeholder="Contoh: Pdt. Andi, S.Th">
                   </div>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-1.5 flex flex-col justify-end">
                       <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Jabatan</label>
-                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 shadow-sm">${jHtml}</select>
+                      <select name="mul_jabatan[]" id="${selectId}" required class="w-full h-[52px] rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 shadow-sm">${jHtml}</select>
                   </div>
                   <div class="space-y-1.5 flex flex-col justify-end">
-                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">Nomor WA <span class="text-emerald-500 normal-case font-medium text-[9px]">(Bisa pisah dgn ;)</span></label>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor WA</label>
                       <div class="relative">
                           <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 text-lg"></i>
-                          <input type="text" name="mul_hp[]" autocomplete="off" class="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
+                          <input type="text" name="mul_hp[]" autocomplete="off" class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-white border border-slate-200 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all" placeholder="Mulai 08 / 62">
                       </div>
                   </div>
               </div>
@@ -2265,49 +2282,50 @@ function konfirmasiHapus(id) {
       
       setTimeout(() => {
           if (typeof TomSelect !== 'undefined') {
-              window.tsInst = window.tsInst || {};
               window.tsInst[selectId] = new TomSelect(`#${selectId}`, { 
-                  create: false, 
-                  dropdownParent: 'body',
-                  placeholder: 'Ketik atau pilih jabatan...',
-                  onFocus: function() {
-                      if (this.getValue() === "") { this.clear(true); }
-                  }
+                  create: false, dropdownParent: 'body', placeholder: 'Ketik atau pilih jabatan...',
+                  onFocus: function() { if (this.getValue() === "") { this.clear(true); } }
               }); 
               if(typeof updateJabatanOptionsModal === 'function') updateJabatanOptionsModal('mul');
           }
       }, 50);
-      
-      if(typeof updateLabelPersonil === 'function') updateLabelPersonil();
+      updateLabelPersonil();
   };
 
   
   window.hapusBarisPersonil = function(rowId, selectId) { document.getElementById(rowId).remove(); if(window.tsInst[selectId]) { window.tsInst[selectId].destroy(); delete window.tsInst[selectId]; } updateLabelPersonil(); };
   window.updateLabelPersonil = function() { const rows = document.getElementById('wadahPersonilMulti').children; for(let i=0; i<rows.length; i++) { const b = rows[i].querySelector('.label-personil'); if(b) b.innerText = "PERSONIL #" + (i+1); } };
 
-  window.simpanMultiMajelis = function(e) {
+ window.simpanMultiMajelis = function(e) {
       e.preventDefault(); const btn = document.getElementById('btnSubmitMulti'); const originalText = btn.innerHTML;
-      const wilayah = document.getElementById('bk_wilayah').value; let resort = document.getElementById('bk_resort').value; let gereja = document.getElementById('bk_gereja').value;
-      const fr = document.getElementById('bk_resort'); if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
+      const wilayah = document.getElementById('mul_wilayah').value; let resort = document.getElementById('mul_resort').value; let gereja = document.getElementById('mul_gereja').value;
+      const fr = document.getElementById('mul_resort'); if(fr.options[fr.selectedIndex]?.getAttribute('data-tipe') === 'JK') { gereja = resort; resort = ""; }
 
       const namaInputs = document.getElementsByName('mul_nama[]'); const jabatanInputs = document.getElementsByName('mul_jabatan[]'); const hpInputs = document.getElementsByName('mul_hp[]');
+      
       let arrData = [];
       for(let i=0; i<namaInputs.length; i++) {
           let jbt = jabatanInputs[i].value; let grjRow = gereja;
-          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) grjRow = "Tingkat Resort"; 
-          let nameArray = namaInputs[i].value.split(';').map(n => n.trim()).filter(n => n !== "");
-          let hpArray = hpInputs[i].value.split(';').map(h => h.trim());
-          nameArray.forEach((namaSatu, index) => { arrData.push({ "Nama_Lengkap": namaSatu, "Jabatan": jbt, "Wilayah": wilayah, "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hpArray[index] || "" }); });
+          if(jbt.toLowerCase().includes('pendeta') || jbt.toLowerCase().includes('pemimpin') || jbt.toLowerCase().includes('resort')) { grjRow = "Tingkat Resort"; }
+          
+          let nama = namaInputs[i].value.trim();
+          let hp = hpInputs[i].value.trim();
+          
+          if (nama !== "") { // Membuang logic split titik koma (;)
+              arrData.push({ "Nama_Lengkap": nama, "Jabatan": jbt, "Wilayah": wilayah, "Resort": resort, "Nama_Gereja": grjRow, "No_HP": hp });
+          }
       }
 
-      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada data valid.', 'warning');
-      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENYIMPAN...';
+      if(arrData.length === 0) return Swal.fire('Kosong', 'Tidak ada personil yang ditambahkan.', 'warning');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MENYIMPAN...';
       Swal.fire({ title: 'Menyimpan...', html: 'Mengirim '+arrData.length+' data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
       apiCall('importMajelisMassal', {excelData: arrData, userRole: USER_NOW.role, sumberAsal: "Dashboard Pusat"}).then(res => {
           if (res === true || res.status === 'success' || res.added !== undefined) {
-              Swal.fire('Berhasil!', `<b>${res.added || arrData.length}</b> personil didaftarkan.`, 'success'); closeModal('modalFormMulti'); loadData(); 
-          } else { Swal.fire('Gagal', res.message, 'error'); }
+              let count = parseInt(res.added); if (isNaN(count)) count = arrData.length; 
+              if (count === 0) { Swal.fire({ title: 'Ditolak!', html: 'Semua nama tersebut <b>sudah terdaftar</b> di database.', icon: 'info' }); } 
+              else { Swal.fire('Berhasil!', `<b>${count}</b> personil baru didaftarkan.`, 'success'); closeModal('modalFormMulti'); loadData(true); }
+          } else { Swal.fire('Gagal', res.message || 'Terjadi kesalahan server.', 'error'); }
           btn.disabled = false; btn.innerHTML = originalText;
       }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = originalText; });
   };
