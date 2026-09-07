@@ -1015,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // MESIN 2: Rendering Bertahap (Anti-Freeze)
+// MESIN 2: Rendering Bertahap (Anti-Freeze & Auto-Refresh Checklist)
   function eksekusiRenderEstafet() {
       const curW = document.getElementById('filterWilayah')?.value || ""; const curR = document.getElementById('filterResort')?.value || "";
       const curG = document.getElementById('filterGereja')?.value || ""; const curJ = document.getElementById('filterJabatan')?.value || "";
@@ -1034,13 +1034,18 @@ document.addEventListener('DOMContentLoaded', () => {
       // Tahap 2: Tabel Majelis (Jeda 50ms)
       setTimeout(() => { filterTabel(); }, 50);
 
-      // Tahap 3: Tabel Jemaat & Keluarga (Jeda 150ms agar tidak berat)
+      // Tahap 3: Tabel Jemaat & Keluarga (Jeda 150ms)
       setTimeout(() => { filterTabelJemaat(); }, 150);
 
-      // Tahap 4: Log Aktivitas & Akses Admin (Jeda 250ms)
+      // Tahap 4: Log Aktivitas, Admin, & CHECKLIST (Jeda 250ms)
       setTimeout(() => { 
           renderTabelLogAktivitas(); 
           if(document.getElementById('pageAdmin') && !document.getElementById('pageAdmin').classList.contains('hidden')) loadListPetugas(); 
+          
+          // PERBAIKAN: Paksa Checklist merender ulang data terbaru
+          if(document.getElementById('pageChecklist') && !document.getElementById('pageChecklist').classList.contains('hidden')) {
+              if(typeof window.renderTabelChecklist === 'function') window.renderTabelChecklist(false);
+          }
       }, 250);
   }
   
@@ -2717,10 +2722,23 @@ function konfirmasiHapus(id) {
           let wilayahStats = Array.from({length: 13}, () => ({ total: 0, lengkap: 0 })); 
 
           listUnit.forEach(unit => {
+              // PERBAIKAN LOGIKA PENCOCOKAN DATA
               let personilDiUnit = (DATA_MASTER.majelis || []).filter(m => {
-                  let isMatchResort = String(m.Resort || '').trim().toLowerCase() === String(unit.resort || '').trim().toLowerCase(); 
-                  let isMatchGereja = String(m.Nama_Gereja || '').trim().toLowerCase() === String(unit.namaUnit || '').trim().toLowerCase(); 
-                  let isUnitPHR = String(m.Nama_Gereja || '').trim().toLowerCase().includes('phr') || String(m.Nama_Gereja || '').trim().toLowerCase() === 'tingkat resort';
+                  let mResort = String(m.Resort || '').trim().toLowerCase();
+                  let uResort = String(unit.resort || '').trim().toLowerCase();
+                  
+                  // Normalisasi mutlak untuk Jemaat Khusus
+                  if (mResort === '' || mResort.includes('jemaat khusus')) mResort = 'jemaat khusus';
+                  if (uResort === '' || uResort.includes('jemaat khusus')) uResort = 'jemaat khusus';
+                  
+                  let isMatchResort = mResort === uResort; 
+                  
+                  let mGereja = String(m.Nama_Gereja || '').trim().toLowerCase();
+                  let uGereja = String(unit.namaUnit || '').trim().toLowerCase();
+                  let isMatchGereja = mGereja === uGereja; 
+                  
+                  // Deteksi segala bentuk penulisan PHR
+                  let isUnitPHR = mGereja.includes('phr') || mGereja === 'tingkat resort' || mGereja === 'pengurus harian resort';
                   
                   if (unit.isPHR) return isMatchResort && isUnitPHR; 
                   else return isMatchResort && isMatchGereja;
@@ -2744,7 +2762,6 @@ function konfirmasiHapus(id) {
               }
           });
           
-          // --- SIMPAN DATA GLOBAL AGAR BISA DIBACA SAAT KOTAK WILAYAH DIKLIK ---
           window.globalListUnitChecklist = listUnit; 
 
           safeSetText('chkTotalUnit', stats.total.toLocaleString('id-ID')); 
@@ -2759,7 +2776,6 @@ function konfirmasiHapus(id) {
               let textCol = progress === 100 ? 'text-emerald-600' : (progress > 0 ? 'text-amber-600' : 'text-rose-600');
               let bgWrap = progress === 100 ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100 bg-slate-50';
               
-              // FITUR KLIK DITAMBAHKAN DI SINI
               wHtml += `
               <div onclick="bukaDetailWilayah(${i})" class="border ${bgWrap} p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all relative overflow-hidden group cursor-pointer hover:border-indigo-400 hover:-translate-y-1">
                   <div class="flex justify-between items-center mb-2.5">
@@ -2808,6 +2824,7 @@ function konfirmasiHapus(id) {
           window.renderPaginationChecklistUI(listUnit.length);
       } catch (error) {}
   };
+  
   window.renderPaginationChecklistUI = function(totalItems) {
       const totalPages = Math.ceil(totalItems / window.itemsPerChecklistPage); 
       const container = document.getElementById('paginationChecklist'); 
