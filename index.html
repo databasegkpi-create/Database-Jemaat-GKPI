@@ -717,6 +717,24 @@
   </div>
 </div>
 
+  <!-- MODAL DETAIL KEKURANGAN WILAYAH -->
+<div id="modalDetailWilayah" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[120] flex items-center justify-center p-4 md:p-6">
+  <div class="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative animate-zoom border border-slate-100">
+    <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 shrink-0">
+      <div>
+          <h3 id="titleDetailWilayah" class="text-xl font-black text-slate-800 flex items-center"><i class="fas fa-exclamation-circle text-rose-500 mr-3 text-2xl"></i> Unit Belum Lengkap (W-1)</h3>
+          <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Daftar unit dengan personil di bawah 10 orang</p>
+      </div>
+      <button onclick="closeModal('modalDetailWilayah')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-rose-50 hover:text-rose-500 transition-colors"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 custom-scrollbar">
+        <div id="listDetailWilayah" class="space-y-3">
+            <!-- Daftar gereja yang kurang data akan muncul di sini -->
+        </div>
+    </div>
+  </div>
+</div>
+
 <!-- SCRIPT CETAK PDF LAMA YANG ELEGAN -->
 <div id="modalPdfPreview" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[80] flex flex-col items-center p-4 md:p-8">
   <div class="w-full max-w-[800px] flex justify-between items-center bg-white rounded-t-2xl px-6 py-4 shadow-md">
@@ -2696,7 +2714,7 @@ function konfirmasiHapus(id) {
           });
           
           let stats = { total: listUnit.length, lengkap: 0, belum: 0 };
-          let wilayahStats = Array.from({length: 13}, () => ({ total: 0, lengkap: 0 })); // Array untuk 12 Wilayah
+          let wilayahStats = Array.from({length: 13}, () => ({ total: 0, lengkap: 0 })); 
 
           listUnit.forEach(unit => {
               let personilDiUnit = (DATA_MASTER.majelis || []).filter(m => {
@@ -2719,7 +2737,6 @@ function konfirmasiHapus(id) {
               
               if (unit.isLengkap) stats.lengkap++; else stats.belum++;
 
-              // --- LOGIKA PENGUMPULAN DATA WILAYAH ---
               let w = parseInt(String(unit.wilayah).replace(/\D/g, ''));
               if (!isNaN(w) && w >= 1 && w <= 12) {
                   wilayahStats[w].total++;
@@ -2727,21 +2744,24 @@ function konfirmasiHapus(id) {
               }
           });
           
+          // --- SIMPAN DATA GLOBAL AGAR BISA DIBACA SAAT KOTAK WILAYAH DIKLIK ---
+          window.globalListUnitChecklist = listUnit; 
+
           safeSetText('chkTotalUnit', stats.total.toLocaleString('id-ID')); 
           safeSetText('chkLengkap', stats.lengkap.toLocaleString('id-ID')); 
           safeSetText('chkBelum', stats.belum.toLocaleString('id-ID'));
           
-          // --- RENDER KOTAK WILAYAH ---
           let wHtml = '';
           for(let i=1; i<=12; i++) {
               let ws = wilayahStats[i];
               let progress = ws.total > 0 ? Math.round((ws.lengkap / ws.total) * 100) : 0;
-              let color = progress === 100 ? 'bg-emerald-500' : (progress >= 50 ? 'bg-amber-500' : 'bg-rose-500');
-              let textCol = progress === 100 ? 'text-emerald-600' : (progress >= 50 ? 'text-amber-600' : 'text-rose-600');
+              let color = progress === 100 ? 'bg-emerald-500' : (progress > 0 ? 'bg-amber-500' : 'bg-rose-500');
+              let textCol = progress === 100 ? 'text-emerald-600' : (progress > 0 ? 'text-amber-600' : 'text-rose-600');
               let bgWrap = progress === 100 ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100 bg-slate-50';
               
+              // FITUR KLIK DITAMBAHKAN DI SINI
               wHtml += `
-              <div class="border ${bgWrap} p-4 rounded-2xl hover:bg-white hover:shadow-md transition-all relative overflow-hidden group">
+              <div onclick="bukaDetailWilayah(${i})" class="border ${bgWrap} p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all relative overflow-hidden group cursor-pointer hover:border-indigo-400 hover:-translate-y-1">
                   <div class="flex justify-between items-center mb-2.5">
                       <h5 class="text-[10px] font-black text-slate-600 uppercase tracking-widest"><i class="fas fa-map-marker-alt text-slate-400 mr-1"></i> W-${i}</h5>
                       <span class="text-xs font-black ${textCol}">${progress}%</span>
@@ -2755,11 +2775,8 @@ function konfirmasiHapus(id) {
                   </div>
               </div>`;
           }
-          if(document.getElementById('progressWilayahContainer')) {
-              document.getElementById('progressWilayahContainer').innerHTML = wHtml;
-          }
+          if(document.getElementById('progressWilayahContainer')) document.getElementById('progressWilayahContainer').innerHTML = wHtml;
 
-          // --- LANJUTAN RENDER TABEL BAWAH ---
           listUnit.sort((a, b) => {
               let valA, valB;
               if (window.sortColChecklist === 'nama') { valA = String(a.namaUnit).toLowerCase(); valB = String(b.namaUnit).toLowerCase(); } 
@@ -2767,27 +2784,19 @@ function konfirmasiHapus(id) {
               else if (window.sortColChecklist === 'progress') { valA = a.persen; valB = b.persen; } 
               else if (window.sortColChecklist === 'status') { valA = a.isLengkap ? 1 : 0; valB = b.isLengkap ? 1 : 0; }
               else { valA = a.isLengkap ? 1 : 0; valB = b.isLengkap ? 1 : 0; }
-              
               if (valA < valB) return window.sortDescChecklist ? 1 : -1; 
               if (valA > valB) return window.sortDescChecklist ? -1 : 1;
               if (window.sortColChecklist !== 'nama') return String(a.namaUnit).localeCompare(String(b.namaUnit)); 
               return 0;
           });
           
-          setTimeout(() => { 
-              ['nama', 'personil', 'progress', 'status'].forEach(col => { 
-                  let el = document.getElementById('iconSort_' + col); 
-                  if(el) { el.className = 'ml-1 fas ' + (window.sortColChecklist === col ? (window.sortDescChecklist ? 'fa-sort-down text-indigo-600 text-[13px]' : 'fa-sort-up text-indigo-600 text-[13px]') : 'fa-sort text-slate-300'); } 
-              }); 
-          }, 50);
+          setTimeout(() => { ['nama', 'personil', 'progress', 'status'].forEach(col => { let el = document.getElementById('iconSort_' + col); if(el) { el.className = 'ml-1 fas ' + (window.sortColChecklist === col ? (window.sortDescChecklist ? 'fa-sort-down text-indigo-600 text-[13px]' : 'fa-sort-up text-indigo-600 text-[13px]') : 'fa-sort text-slate-300'); } }); }, 50);
           
           let startIndex = (window.currentPageChecklist - 1) * window.itemsPerChecklistPage; 
           let paginatedData = listUnit.slice(startIndex, startIndex + window.itemsPerChecklistPage);
-          
           if (paginatedData.length === 0) {
               tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-xl">Belum ada unit yang terdaftar.</td></tr>`;
-              window.renderPaginationChecklistUI(listUnit.length);
-              return;
+              window.renderPaginationChecklistUI(listUnit.length); return;
           }
 
           tbody.innerHTML = paginatedData.map((item, idx) => {
@@ -2797,12 +2806,8 @@ function konfirmasiHapus(id) {
           }).join('');
           
           window.renderPaginationChecklistUI(listUnit.length);
-      } catch (error) {
-          console.error(error);
-          document.getElementById('tableChecklist').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-rose-500 font-bold border-2 border-dashed border-slate-200 rounded-xl">Terjadi kesalahan saat memuat checklist.<br>${error.message}</td></tr>`;
-      }
+      } catch (error) {}
   };
-
   window.renderPaginationChecklistUI = function(totalItems) {
       const totalPages = Math.ceil(totalItems / window.itemsPerChecklistPage); 
       const container = document.getElementById('paginationChecklist'); 
