@@ -923,10 +923,22 @@
   }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark'); updateDarkModeIcon();
-    // PERBAIKAN: Menggunakan localStorage agar sesi login tidak hilang saat aplikasi ditutup
-    const saved = localStorage.getItem('si_majelis_user');
-    if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { localStorage.removeItem('si_majelis_user'); } }
+      if(localStorage.getItem('gkpi_dark_mode') === 'true') document.documentElement.classList.add('dark'); updateDarkModeIcon();
+      
+      // Auto-Login
+      const saved = localStorage.getItem('si_majelis_user');
+      if (saved) { try { USER_NOW = JSON.parse(saved); showMainApp(); loadData(); } catch(e) { localStorage.removeItem('si_majelis_user'); } }
+      
+      // ==== SENSOR AUTO HIDE (MOUSE LEAVE) ====
+      const sidebarEl = document.getElementById('sidebar');
+      if(sidebarEl) {
+          sidebarEl.addEventListener('mouseleave', () => {
+              // Jika di Laptop dan kursor menjauh, sidebar akan menutup sendiri
+              if (window.innerWidth >= 768) {
+                  sidebarEl.classList.add('md:-ml-[280px]');
+              }
+          });
+      }
   });
 
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
@@ -2669,16 +2681,28 @@ function konfirmasiHapus(id) {
       if(tab === 'jemaat') title = 'Data Jemaat'; 
       if(tab === 'admin') title = 'Akses Admin';
       if(tab === 'log') title = 'Log Aktivitas';
-      
       if(tab === 'checklist') { 
           title = 'Check List Input'; 
-          // INI YANG SEBELUMNYA HILANG: Memicu tabel Check List untuk me-render data!
           if(typeof window.renderTabelChecklist === 'function') window.renderTabelChecklist(true); 
       } 
       
       safeSetText('pageTitle', title); 
       if(tab === 'admin') loadListPetugas(); 
       if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
+
+      // 4. ==== FITUR AUTO HIDE SIDEBAR ====
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      
+      if (window.innerWidth < 768) {
+          // Mode HP: Sembunyikan sidebar ke kiri & hilangkan bayangan gelap
+          sidebar.classList.add('-translate-x-full');
+          overlay.classList.add('opacity-0');
+          setTimeout(() => overlay.classList.add('hidden'), 300);
+      } else {
+          // Mode Laptop/PC: Sembunyikan/Lipat sidebar
+          sidebar.classList.add('md:-ml-[280px]');
+      }
   };
 
   // =========================================================================
