@@ -155,7 +155,55 @@
     </div>
   </div>
 </div>
+<!-- ================= WIDGET LIVE CHAT AI ================= -->
+    <div id="chatWidgetContainer" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-end">
+      
+      <!-- KOTAK OBROLAN (Disembunyikan secara default) -->
+      <div id="chatBox" class="bg-white w-[320px] md:w-[350px] rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col transition-all duration-300 transform scale-0 origin-bottom-right mb-4 opacity-0 h-[450px]">
+          
+          <!-- Header Chat -->
+          <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center justify-between text-white shrink-0 shadow-md relative z-10">
+              <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
+                      <i class="fas fa-robot text-xl drop-shadow-sm"></i>
+                      <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-emerald-600 rounded-full shadow-sm"></div>
+                  </div>
+                  <div>
+                      <h4 class="font-black text-sm leading-tight drop-shadow-sm">CS Infokom</h4>
+                      <p class="text-[9px] font-bold text-emerald-100 uppercase tracking-widest mt-0.5">Asisten AI Aktif</p>
+                  </div>
+              </div>
+              <button onclick="toggleChatBox()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90 hover:bg-white/20 hover:text-white transition-all"><i class="fas fa-times text-sm"></i></button>
+          </div>
 
+          <!-- Area Pesan -->
+          <div id="chatMessages" class="flex-1 p-5 overflow-y-auto bg-slate-50 flex flex-col gap-4 custom-scrollbar text-sm font-medium text-slate-700 relative">
+              <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 z-0 pointer-events-none"></div>
+              
+              <!-- Pesan Pembuka dari Bot -->
+              <div class="flex gap-2.5 items-end w-[85%] relative z-10">
+                  <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm border border-emerald-200"><i class="fas fa-robot text-[10px]"></i></div>
+                  <div class="bg-white p-3.5 rounded-2xl rounded-bl-sm shadow-sm border border-slate-200 text-[13px] leading-relaxed">
+                      Halo! 👋 Saya Asisten AI Infokom. Ada yang bisa saya bantu terkait akses GKPI Data Hub?
+                  </div>
+              </div>
+          </div>
+
+          <!-- Input Pesan -->
+          <div class="p-3.5 bg-white border-t border-slate-100 flex items-center gap-2.5 shrink-0 z-10 relative shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+              <input type="text" id="chatInput" onkeypress="if(event.key === 'Enter') kirimPesanChat()" placeholder="Ketik pesan di sini..." class="flex-1 bg-slate-50 h-11 px-4 rounded-full border border-slate-200 text-sm font-semibold outline-none focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-slate-700 placeholder:font-medium">
+              <button onclick="kirimPesanChat()" class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md shadow-emerald-200 shrink-0"><i class="fas fa-paper-plane text-sm ml-[-2px]"></i></button>
+          </div>
+      </div>
+
+      <!-- TOMBOL MENGAMBANG (Pemicu) -->
+      <button onclick="toggleChatBox()" id="chatTriggerBtn" class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-tr from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white text-3xl shadow-xl shadow-emerald-500/30 hover:scale-110 hover:shadow-emerald-500/50 transition-all duration-300 relative group">
+          <div class="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-40"></div>
+          <i class="fas fa-comments relative z-10 text-2xl md:text-3xl drop-shadow-md transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110"></i>
+      </button>
+      
+    </div>
+    <!-- ================= SAMPAI SINI ================= -->
 <!-- GANTI MULAI DARI SINI (<div id="mainApp"...>) SAMPAI PENUTUP </header> -->
 <div id="mainApp" class="hidden h-screen flex bg-[#f4f7fb] overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900">
   
@@ -2951,6 +2999,95 @@ function konfirmasiHapus(id) {
       } else {
           Swal.fire('Error', 'Kode HTML Modal tidak ditemukan!', 'error');
       }
+  };
+
+  // =========================================================================
+  // LOGIKA SIMULASI LIVE CHAT AI
+  // =========================================================================
+  window.toggleChatBox = function() {
+      const box = document.getElementById('chatBox');
+      const trigger = document.getElementById('chatTriggerBtn');
+      const icon = trigger.querySelector('i');
+      
+      if (box.classList.contains('scale-0')) {
+          box.classList.remove('scale-0', 'opacity-0');
+          box.classList.add('scale-100', 'opacity-100');
+          // Ubah icon tombol menjadi panah ke bawah
+          icon.className = "fas fa-chevron-down relative z-10 text-2xl drop-shadow-md transition-transform duration-300";
+          setTimeout(() => document.getElementById('chatInput').focus(), 300);
+      } else {
+          box.classList.remove('scale-100', 'opacity-100');
+          box.classList.add('scale-0', 'opacity-0');
+          // Kembalikan ke icon obrolan
+          icon.className = "fas fa-comments relative z-10 text-2xl md:text-3xl drop-shadow-md transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110";
+      }
+  };
+
+  window.kirimPesanChat = function() {
+      const input = document.getElementById('chatInput');
+      const pesan = input.value.trim();
+      if (!pesan) return;
+
+      const area = document.getElementById('chatMessages');
+
+      // 1. Munculkan pesan User
+      area.innerHTML += `
+          <div class="flex gap-2 items-end w-[85%] self-end justify-end relative z-10 animate-fade">
+              <div class="bg-gradient-to-bl from-emerald-500 to-teal-500 text-white p-3.5 rounded-2xl rounded-br-sm shadow-sm text-[13px] font-medium leading-relaxed">${pesan}</div>
+          </div>`;
+      
+      input.value = '';
+      input.disabled = true; // Kunci input sementara AI "mengetik"
+      input.placeholder = "AI sedang mengetik...";
+      area.scrollTop = area.scrollHeight; // Auto-scroll ke bawah
+
+      // 2. Tampilkan indikator mengetik (Typing indicator)
+      const idTyping = 'typing_' + Date.now();
+      area.innerHTML += `
+          <div id="${idTyping}" class="flex gap-2.5 items-end w-[85%] relative z-10 animate-fade">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm border border-emerald-200"><i class="fas fa-robot text-[10px]"></i></div>
+              <div class="bg-white px-4 py-3.5 rounded-2xl rounded-bl-sm shadow-sm border border-slate-200 flex gap-1 items-center h-[42px]">
+                  <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                  <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                  <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+              </div>
+          </div>`;
+      area.scrollTop = area.scrollHeight;
+
+      // 3. Simulasi Jeda AI Membalas (1.5 detik)
+      setTimeout(() => {
+          // Hapus indikator mengetik
+          const typingEl = document.getElementById(idTyping);
+          if (typingEl) typingEl.remove();
+
+          const jamSekarang = new Date().getHours();
+          // Jam operasional: 08:00 - 17:00
+          const isJamKerja = (jamSekarang >= 8 && jamSekarang < 17);
+          
+          let balasan = "";
+          if (!isJamKerja) {
+              balasan = "Mohon maaf, saat ini Admin Infokom sedang <b>tidak tersedia / di luar jam operasional (08:00 - 17:00)</b>. 😴<br><br>Pesan Anda telah kami rekam dengan aman. Admin kami akan membalas segera setelah kembali bertugas.";
+          } else {
+              balasan = "Terima kasih atas pesan Anda! ✨<br><br>Kami telah meneruskan pertanyaan ini ke layar Admin. Mohon tunggu sebentar, Admin akan membalas langsung di ruang obrolan ini. ⏳";
+          }
+
+          // Munculkan balasan AI
+          area.innerHTML += `
+              <div class="flex gap-2.5 items-end w-[85%] relative z-10 animate-fade">
+                  <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm border border-emerald-200"><i class="fas fa-robot text-[10px]"></i></div>
+                  <div class="bg-white p-3.5 rounded-2xl rounded-bl-sm shadow-sm border border-slate-200 text-[13px] leading-relaxed text-slate-700">${balasan}</div>
+              </div>`;
+          
+          // Buka kembali input
+          input.disabled = false;
+          input.placeholder = "Ketik pesan di sini...";
+          setTimeout(() => input.focus(), 100);
+          area.scrollTop = area.scrollHeight;
+
+          // NANTINYA: Di sinilah Bapak menyisipkan fungsi kirim ke Fonnte
+          // apiCall('kirimPesanCS', { pesan: pesan });
+
+      }, 1500);
   };
 </script>
 </body>
