@@ -21,6 +21,9 @@
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
+  <!-- MEMORI INDEXEDDB UNTUK BIG DATA (100.000+ Baris) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+
  <!-- SCRIPT GENERATOR PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -1031,37 +1034,37 @@ document.addEventListener('DOMContentLoaded', () => {
     else { elemenDilarangUntukViewer.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }); }
   }
 
-  function loadData(forceRefresh = false) {
-      // 1. Coba baca memori lokal (Cache) agar loading 0 detik
-      const cachedData = localStorage.getItem('gkpi_data_cache');
-      
-      if (cachedData && !forceRefresh) {
+  // MESIN 1: Menarik & Menyimpan Data (Versi Big Data IndexedDB)
+  async function loadData(forceRefresh = false) {
+      if (!forceRefresh) {
           try {
-              DATA_MASTER = JSON.parse(cachedData);
-              eksekusiRenderEstafet(); // <-- Memanggil mesin rendering baru
-              tarikDariServer(false); // <-- Tarik data terbaru diam-diam di belakang layar
-              return;
-          } catch(e) { console.log("Cache rusak, mengambil ulang..."); }
+              // Membaca dari IndexedDB (Mampu menampung ratusan MB data instan)
+              const cachedData = await localforage.getItem('gkpi_data_cache');
+              if (cachedData && cachedData.gereja && cachedData.gereja.length > 0) {
+                  DATA_MASTER = cachedData;
+                  eksekusiRenderEstafet(); 
+                  tarikDariServer(false); // Update siluman di latar belakang
+                  return;
+              }
+          } catch(e) { console.log("Cache kosong, menarik data baru..."); }
       }
 
-      // 2. Jika memori kosong atau tombol Refresh manual ditekan
-      Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengambil data dari server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+      Swal.fire({ title: 'Menyinkronkan Data...', html: 'Mengunduh puluhan ribu data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
       if(document.getElementById('majelisAccordionContainer')) document.getElementById('majelisAccordionContainer').innerHTML = Array(6).fill(`<div class="skeleton h-24 w-full rounded-[1.5rem]"></div>`).join('');
       
       tarikDariServer(true);
   }
 
-  // MESIN 1: Menarik Data API
   function tarikDariServer(tutupLoadingScreen) {
-      apiCall('getAppData').then(res => { 
+      apiCall('getAppData').then(async res => { 
           if(res.status === 'error') throw new Error(res.message);
           DATA_MASTER = res; 
           if(!DATA_MASTER.jemaat) DATA_MASTER.jemaat = []; if(!DATA_MASTER.gereja) DATA_MASTER.gereja = [];
           if(!DATA_MASTER.majelis) DATA_MASTER.majelis = []; if(!DATA_MASTER.jabatan) DATA_MASTER.jabatan = [];
           if(!DATA_MASTER.log) DATA_MASTER.log = [];
 
-          // Simpan ke memori lokal
-          try { localStorage.setItem('gkpi_data_cache', JSON.stringify(DATA_MASTER)); } catch(e) {}
+          // Simpan ke IndexedDB (Tanpa batas kuota 5MB)
+          try { await localforage.setItem('gkpi_data_cache', DATA_MASTER); } catch(e) { console.error("Gagal save cache"); }
 
           eksekusiRenderEstafet();
 
@@ -1302,10 +1305,20 @@ window.setupFilters = function() {
     } else if (tipe === "JK") { const opt = document.createElement('option'); opt.value = val; opt.text = val; fg.appendChild(opt); fg.value = val; fg.disabled = false; fg.classList.add('bg-slate-200'); } else { fg.disabled = false; fg.classList.remove('bg-slate-200'); } 
   }
 
-  let searchTimeout; 
-  if(document.getElementById('searchTerm')) { document.getElementById('searchTerm').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabel, 300); }); }
-  if(document.getElementById('search_j')) { document.getElementById('search_j').addEventListener('input', function() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTabelJemaat, 300); }); }
-
+let searchTimeout; 
+  if(document.getElementById('searchTerm')) { 
+      document.getElementById('searchTerm').addEventListener('input', function() { 
+          clearTimeout(searchTimeout); 
+          // Jeda 800ms agar browser tidak freeze saat mengetik nama di Big Data
+          searchTimeout = setTimeout(filterTabel, 800); 
+      }); 
+  }
+  if(document.getElementById('search_j')) { 
+      document.getElementById('search_j').addEventListener('input', function() { 
+          clearTimeout(searchTimeout); 
+          searchTimeout = setTimeout(filterTabelJemaat, 800); 
+      }); 
+  }
   function filterTabel() {
     const w = document.getElementById('filterWilayah') ? document.getElementById('filterWilayah').value.trim().toLowerCase() : ''; 
     const r = document.getElementById('filterResort') ? document.getElementById('filterResort').value.trim().toLowerCase() : ''; 
