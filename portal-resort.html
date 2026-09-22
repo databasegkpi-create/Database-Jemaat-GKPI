@@ -70,20 +70,36 @@
       <!-- KARTU IDENTITAS GEREJA -->
       <div class="bg-gradient-to-br from-indigo-700 to-blue-800 rounded-[2rem] p-8 md:p-10 shadow-xl mb-8 relative overflow-hidden text-white">
           <i class="fas fa-place-of-worship absolute -right-4 -bottom-4 text-9xl opacity-10"></i>
+          
           <div class="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
               <div>
-                  <span id="lblWilayah" class="bg-white/20 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/30 inline-block mb-4">Wilayah -</span>
-                  <h2 id="lblNamaUnit" class="text-3xl md:text-5xl font-black tracking-tight mb-2">Memuat Data...</h2>
-                  <p class="text-indigo-100 text-sm font-medium flex items-center gap-2"><i class="fas fa-file-signature text-indigo-300"></i> No. Register: <span id="lblNoReg" class="font-bold text-white">Belum ada</span></p>
+                  <span id="lblWilayah" class="bg-white/20 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/30 inline-block mb-3 shadow-sm"><i class="fas fa-map-marker-alt text-rose-300 mr-1.5"></i> Wilayah -</span>
+                  <h2 id="lblNamaUnit" class="text-3xl md:text-5xl font-black tracking-tight mb-3 drop-shadow-md">Memuat Data...</h2>
+                  
+                  <!-- KOTAK INFO PIMPINAN RESORT -->
+                  <div class="flex flex-col gap-2 mb-5 bg-black/15 px-4 py-3 rounded-xl backdrop-blur-sm border border-white/10 w-fit shadow-inner">
+                      <p class="text-white text-sm font-bold flex items-center gap-3">
+                          <span class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-400/50"><i class="fas fa-user-tie text-emerald-400"></i></span>
+                          <span id="lblPimpinan">Mencari Pimpinan...</span>
+                      </p>
+                  </div>
+
+                  <!-- INFO REGISTRASI & BERDIRI -->
+                  <div class="flex flex-wrap items-center gap-5 text-xs font-medium text-indigo-100">
+                      <span class="flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-file-signature text-amber-300"></i></div> No. Reg: <strong id="lblNoReg" class="text-white tracking-wider">Belum ada</strong></span>
+                      <span class="w-1.5 h-1.5 bg-indigo-300 rounded-full opacity-50"></span>
+                      <span class="flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-calendar-check text-emerald-300"></i></div> Berdiri: <strong id="lblTglBerdiri" class="text-white tracking-wider">-</strong></span>
+                  </div>
               </div>
-              <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex gap-6 shrink-0">
-                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1">Total RT</p><p id="lblRT" class="text-2xl font-black">0</p></div>
+              
+              <!-- KOTAK STATISTIK KANAN -->
+              <div class="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl flex gap-6 shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1.5"><i class="fas fa-users-cog mr-1 opacity-70"></i> Total RT</p><p id="lblRT" class="text-3xl font-black drop-shadow-md">0</p></div>
                   <div class="w-px bg-white/20"></div>
-                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1">Total Jiwa</p><p id="lblJiwa" class="text-2xl font-black">0</p></div>
+                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1.5"><i class="fas fa-user-friends mr-1 opacity-70"></i> Total Jiwa</p><p id="lblJiwa" class="text-3xl font-black drop-shadow-md">0</p></div>
               </div>
           </div>
       </div>
-
       <!-- TABEL DAFTAR MAJELIS -->
       <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
@@ -170,74 +186,106 @@
       }).catch(err => Swal.fire('Error', String(err), 'error'));
   }
 
-function renderData(data) {
+// --- MESIN PENGHITUNG KASTA JABATAN ---
+  function dapatkanBobotJabatan(jabatan) {
+      let j = String(jabatan).toLowerCase(); 
+      if (j.includes('pendeta') || j.includes('pemimpin')) return 1; 
+      if (j.includes('guru') || j.includes('penginjil')) return 2; 
+      if (j.includes('penatua') || j.includes('sintua')) return 3; 
+      if (j.includes('sekretaris')) return 4;
+      if (j.includes('bendahara')) return 5;
+      if (j.includes('kordinator')) return 6;
+      if (j.includes('seksi')) return 7;
+      return 8; // Sisanya di bawah
+  }
+
+  // --- MESIN PENGUBAH TANGGAL ---
+  function formatTanggalIndo(tgl) {
+      if (!tgl || String(tgl).trim() === '') return '-';
+      let d = new Date(tgl);
+      if (isNaN(d.getTime())) return tgl; // Jika formatnya aneh, kembalikan teks aslinya
+      const bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      return d.getDate() + " " + bulan[d.getMonth()] + " " + d.getFullYear();
+  }
+
+  function renderData(data) {
       if (!USER_RESORT || !USER_RESORT.akses_unit) return;
-      
-      // Ambil nama unit KTP dari user yang login (Contoh: "resort agape mandala")
       const myResort = String(USER_RESORT.akses_unit).toLowerCase().trim();
 
-      // =========================================================
-      // 1. FILTERING DATA SECARA LOKAL (DOUBLE SECURITY)
-      // Membuang semua data yang bukan milik Resort ini
-      // =========================================================
-      
-      // Saring Gereja (Induk & Pagaran)
-      const myGerejaList = (data.gereja || []).filter(g => {
-          const namaG = String(g.Nama_Gereja || g['Nama Gereja'] || '').toLowerCase().trim();
-          const resortG = String(g.Induk_Resort || g.Resort || '').toLowerCase().trim();
-          return namaG === myResort || resortG === myResort;
-      });
+      // 1. FILTERING DATA
+      const myGerejaList = (data.gereja || []).filter(g => String(g.Nama_Gereja || g['Nama Gereja']).toLowerCase().trim() === myResort || String(g.Induk_Resort || g.Resort).toLowerCase().trim() === myResort);
+      let myMajelisList = (data.majelis || []).filter(m => String(m.Nama_Gereja || m['Nama Gereja']).toLowerCase().trim() === myResort || String(m.Resort).toLowerCase().trim() === myResort);
 
-      // Saring Personil Majelis (PHR & Pagaran)
-      let myMajelisList = (data.majelis || []).filter(m => {
-          const namaG = String(m.Nama_Gereja || m['Nama Gereja'] || '').toLowerCase().trim();
-          const resortM = String(m.Resort || '').toLowerCase().trim();
-          return namaG === myResort || resortM === myResort;
-      });
-
-      // =========================================================
-      // 2. HITUNG STATISTIK (Hanya untuk Unit yang Tampil)
-      // =========================================================
-      let infoGrj = { Wilayah: '-', No_Register: 'Belum Terdaftar', Total_RT: 0, Total_Jiwa: 0 };
-      
+      // 2. STATISTIK GEREJA & REGISTRASI
+      let infoGrj = { Wilayah: '-', No_Register: 'Belum Terdaftar', Tgl_Berdiri: '-', Total_RT: 0, Total_Jiwa: 0 };
       if (myGerejaList.length > 0) {
-          // Cari data Induk Resort untuk mengambil No Register & Wilayah
-          const grjInduk = myGerejaList.find(g => String(g.Nama_Gereja || g['Nama Gereja'] || '').toLowerCase().trim() === myResort) || myGerejaList[0];
-          
+          const grjInduk = myGerejaList.find(g => String(g.Nama_Gereja || g['Nama Gereja']).toLowerCase().trim() === myResort) || myGerejaList[0];
           infoGrj.Wilayah = grjInduk.Wilayah || '-';
           infoGrj.No_Register = grjInduk.No_Register || grjInduk['No Register'] || 'Belum Terdaftar';
+          infoGrj.Tgl_Berdiri = formatTanggalIndo(grjInduk.Tanggal_Berdiri || grjInduk['Tanggal Berdiri']);
           
-          // Total akumulasi seluruh RT & Jiwa di Resort ini (Induk dijumlahkan dengan Pagaran)
-          myGerejaList.forEach(g => { 
-              infoGrj.Total_RT += parseInt(g.Total_RT) || 0; 
-              infoGrj.Total_Jiwa += parseInt(g.Total_Jiwa) || 0; 
-          });
+          myGerejaList.forEach(g => { infoGrj.Total_RT += parseInt(g.Total_RT) || 0; infoGrj.Total_Jiwa += parseInt(g.Total_Jiwa) || 0; });
       }
 
-      // =========================================================
-      // 3. CETAK KE LAYAR (UPDATE HTML)
-      // =========================================================
-      document.getElementById('lblWilayah').innerText = "Wilayah " + infoGrj.Wilayah;
+      // 3. MENCARI SANG PIMPINAN (Pendeta Resort / Pemimpin Jemaat)
+      let pimpinanResort = "Data Pimpinan Belum Terdaftar";
+      let pdt = myMajelisList.find(m => {
+          let jbt = String(m.Jabatan).toLowerCase();
+          let grj = String(m.Nama_Gereja || '').toLowerCase();
+          return (jbt.includes('pendeta') || jbt.includes('pemimpin')) && (grj.includes('tingkat resort') || grj.includes('phr') || grj === myResort);
+      });
+      // Jika tidak ketemu di PHR, cari sembarang pendeta di resort tersebut
+      if (!pdt) pdt = myMajelisList.find(m => String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')); 
+      
+      if (pdt) pimpinanResort = pdt.Nama_Lengkap + (pdt.Jabatan ? ` <span class="ml-2 px-2 py-0.5 bg-emerald-500 text-white text-[9px] rounded uppercase border border-emerald-400/50">${pdt.Jabatan}</span>` : '');
+
+      // CETAK HEADER KE LAYAR
+      document.getElementById('lblWilayah').innerHTML = `<i class="fas fa-map-marker-alt text-rose-300 mr-1.5"></i> Wilayah ` + infoGrj.Wilayah;
       document.getElementById('lblNoReg').innerText = infoGrj.No_Register;
+      document.getElementById('lblTglBerdiri').innerText = infoGrj.Tgl_Berdiri;
+      document.getElementById('lblPimpinan').innerHTML = pimpinanResort;
       document.getElementById('lblRT').innerText = infoGrj.Total_RT.toLocaleString('id-ID');
       document.getElementById('lblJiwa').innerText = infoGrj.Total_Jiwa.toLocaleString('id-ID');
 
+      // 4. MENGURUTKAN TABEL MAJELIS SECARA HIERARKI
       document.getElementById('lblTotalMajelis').innerText = myMajelisList.length + " Personil";
-      
       const tbodyM = document.getElementById('tblMajelis');
+      
       if (myMajelisList.length === 0) {
-          tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data personil majelis di Resort ini.</td></tr>';
+          tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data personil majelis.</td></tr>';
       } else {
-          // Urutkan majelis berdasarkan Abjad A-Z
-          myMajelisList.sort((a,b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
+          // LOGIKA SORTING CERDAS: 1. Posisi Gereja (PHR duluan), 2. Kasta Jabatan, 3. Abjad Nama
+          myMajelisList.sort((a, b) => {
+              let grjA = String(a.Nama_Gereja || '').toLowerCase();
+              let grjB = String(b.Nama_Gereja || '').toLowerCase();
+              let aIsPHR = grjA.includes('tingkat resort') || grjA.includes('phr') || grjA === myResort;
+              let bIsPHR = grjB.includes('tingkat resort') || grjB.includes('phr') || grjB === myResort;
+
+              if (aIsPHR && !bIsPHR) return -1;
+              if (!aIsPHR && bIsPHR) return 1;
+
+              let diffJbt = dapatkanBobotJabatan(a.Jabatan) - dapatkanBobotJabatan(b.Jabatan);
+              if (diffJbt !== 0) return diffJbt;
+
+              return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap));
+          });
           
-          tbodyM.innerHTML = myMajelisList.map((m, idx) => `
-          <tr class="hover:bg-slate-50 transition-colors">
-              <td class="p-4 text-center font-bold text-slate-400 text-xs w-12">${idx + 1}</td>
-              <td class="p-4 font-bold text-slate-800">${m.Nama_Lengkap||'-'}</td>
-              <td class="p-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-black uppercase tracking-widest border border-indigo-100">${m.Jabatan||'-'}</span></td>
-              <td class="p-4 text-xs font-semibold text-slate-500"><i class="fas fa-church text-slate-300 mr-1.5"></i> ${m.Nama_Gereja||'Tingkat Resort'}</td>
-          </tr>`).join('');
+          // CETAK TABEL
+          tbodyM.innerHTML = myMajelisList.map((m, idx) => {
+              let grjLabel = m.Nama_Gereja || 'Tingkat Resort';
+              let isPHR = String(grjLabel).toLowerCase().includes('tingkat resort') || String(grjLabel).toLowerCase().includes('phr') || String(grjLabel).toLowerCase() === myResort;
+              
+              let iconGrj = isPHR ? '<i class="fas fa-sitemap text-amber-500 mr-2"></i>' : '<i class="fas fa-church text-indigo-400 mr-2"></i>';
+              let bgJbt = isPHR ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-indigo-50 text-indigo-700 border-indigo-100';
+
+              return `
+              <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
+                  <td class="p-4 text-center font-bold text-slate-400 text-xs w-12">${idx + 1}</td>
+                  <td class="p-4 font-bold text-slate-800"><i class="fas fa-user-circle text-slate-300 mr-2 text-[14px] align-middle"></i> ${m.Nama_Lengkap||'-'}</td>
+                  <td class="p-4"><span class="px-2.5 py-1 ${bgJbt} rounded-md text-[9px] font-black uppercase tracking-widest border">${m.Jabatan||'-'}</span></td>
+                  <td class="p-4 text-xs font-bold text-slate-600">${iconGrj} ${isPHR ? 'PHR / Tingkat Resort' : grjLabel}</td>
+              </tr>`;
+          }).join('');
       }
   }
 </script>
