@@ -125,7 +125,19 @@
 
   </main>
 </div>
-
+<!-- WIDGET BANTUAN WA (MENGAMBANG) -->
+  <a href="#" id="waHelpWidget" target="_blank" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex items-center gap-3 group hidden">
+      <!-- Kotak Teks Bantuan (Muncul saat kursor diarahkan) -->
+      <div class="bg-white/95 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-xl border border-slate-100 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0 hidden md:block">
+          <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">Pusat Bantuan</p>
+          <p class="text-xs font-bold text-slate-600">Chat Admin Infokom</p>
+      </div>
+      <!-- Tombol WA Berdetak -->
+      <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-tr from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg shadow-emerald-500/40 hover:scale-110 hover:shadow-emerald-500/60 transition-all relative">
+          <div class="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-40"></div>
+          <i class="fab fa-whatsapp relative z-10 text-3xl md:text-4xl"></i>
+      </div>
+  </a>
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
   const SECRET_API_KEY = "GKPI_HUB_SECURE_2026";
@@ -286,6 +298,21 @@
                   <td class="p-4 text-xs font-bold text-slate-600">${iconGrj} ${isPHR ? 'PHR / Tingkat Resort' : grjLabel}</td>
               </tr>`;
           }).join('');
+      }
+    // =========================================================
+      // 5. ATUR LINK WHATSAPP BANTUAN DINAMIS
+      // =========================================================
+      // ⚠️ GANTI DENGAN NOMOR WA BAPAK (Gunakan 62 tanpa 0 atau +)
+      const nomorWAAdmin = "6282261525903"; 
+      
+      // Buat teks pesan otomatis yang menyertakan nama Resort
+      const namaUnitHuruBesar = myResort.toUpperCase();
+      const teksPesan = `Halo Admin Infokom Pusat,%0A%0ASaya pengurus dari *${namaUnitHuruBesar}*. Izin menyampaikan penyesuaian/pembaruan data majelis/jemaat kami...`;
+      
+      const waWidget = document.getElementById('waHelpWidget');
+      if (waWidget) {
+          waWidget.href = `https://wa.me/${nomorWAAdmin}?text=${teksPesan}`;
+          waWidget.classList.remove('hidden'); // Munculkan tombolnya
       }
   }
 </script>
