@@ -170,51 +170,70 @@
       }).catch(err => Swal.fire('Error', String(err), 'error'));
   }
 
-  function renderData(data) {
-      // 1. Ekstrak Info Gereja dari Array
-      let infoGrj = { Wilayah: '-', No_Register: 'Belum terdaftar', Total_RT: 0, Total_Jiwa: 0 };
+function renderData(data) {
+      if (!USER_RESORT || !USER_RESORT.akses_unit) return;
       
-      if(data.gereja && data.gereja.length > 0) {
-          // Cari spesifik yang namanya persis sama dengan Akses_Unit
-          const targetUnit = String(USER_RESORT.akses_unit).toLowerCase();
-          const grjSpecific = data.gereja.find(g => String(g.Nama_Gereja).toLowerCase() === targetUnit || String(g.Induk_Resort || g.Resort).toLowerCase() === targetUnit);
+      // Ambil nama unit KTP dari user yang login (Contoh: "resort agape mandala")
+      const myResort = String(USER_RESORT.akses_unit).toLowerCase().trim();
+
+      // =========================================================
+      // 1. FILTERING DATA SECARA LOKAL (DOUBLE SECURITY)
+      // Membuang semua data yang bukan milik Resort ini
+      // =========================================================
+      
+      // Saring Gereja (Induk & Pagaran)
+      const myGerejaList = (data.gereja || []).filter(g => {
+          const namaG = String(g.Nama_Gereja || g['Nama Gereja'] || '').toLowerCase().trim();
+          const resortG = String(g.Induk_Resort || g.Resort || '').toLowerCase().trim();
+          return namaG === myResort || resortG === myResort;
+      });
+
+      // Saring Personil Majelis (PHR & Pagaran)
+      let myMajelisList = (data.majelis || []).filter(m => {
+          const namaG = String(m.Nama_Gereja || m['Nama Gereja'] || '').toLowerCase().trim();
+          const resortM = String(m.Resort || '').toLowerCase().trim();
+          return namaG === myResort || resortM === myResort;
+      });
+
+      // =========================================================
+      // 2. HITUNG STATISTIK (Hanya untuk Unit yang Tampil)
+      // =========================================================
+      let infoGrj = { Wilayah: '-', No_Register: 'Belum Terdaftar', Total_RT: 0, Total_Jiwa: 0 };
+      
+      if (myGerejaList.length > 0) {
+          // Cari data Induk Resort untuk mengambil No Register & Wilayah
+          const grjInduk = myGerejaList.find(g => String(g.Nama_Gereja || g['Nama Gereja'] || '').toLowerCase().trim() === myResort) || myGerejaList[0];
           
-          if(grjSpecific) {
-              infoGrj.Wilayah = grjSpecific.Wilayah || '-';
-              infoGrj.No_Register = grjSpecific.No_Register || grjSpecific['No Register'] || 'Data Kosong';
-              
-              // Jika ini Resort, totalkan semua RT/Jiwa di bawahnya
-              if(String(grjSpecific.Tipe_Gereja || grjSpecific.Status_Gereja).toLowerCase().includes('resort')) {
-                 let totR = 0, totJ = 0;
-                 data.gereja.forEach(g => { totR += parseInt(g.Total_RT)||0; totJ += parseInt(g.Total_Jiwa)||0; });
-                 infoGrj.Total_RT = totR; infoGrj.Total_Jiwa = totJ;
-              } else {
-                 infoGrj.Total_RT = parseInt(grjSpecific.Total_RT) || 0;
-                 infoGrj.Total_Jiwa = parseInt(grjSpecific.Total_Jiwa) || 0;
-              }
-          }
+          infoGrj.Wilayah = grjInduk.Wilayah || '-';
+          infoGrj.No_Register = grjInduk.No_Register || grjInduk['No Register'] || 'Belum Terdaftar';
+          
+          // Total akumulasi seluruh RT & Jiwa di Resort ini (Induk dijumlahkan dengan Pagaran)
+          myGerejaList.forEach(g => { 
+              infoGrj.Total_RT += parseInt(g.Total_RT) || 0; 
+              infoGrj.Total_Jiwa += parseInt(g.Total_Jiwa) || 0; 
+          });
       }
 
-      // Cetak Info ke Layar
+      // =========================================================
+      // 3. CETAK KE LAYAR (UPDATE HTML)
+      // =========================================================
       document.getElementById('lblWilayah').innerText = "Wilayah " + infoGrj.Wilayah;
       document.getElementById('lblNoReg').innerText = infoGrj.No_Register;
       document.getElementById('lblRT').innerText = infoGrj.Total_RT.toLocaleString('id-ID');
       document.getElementById('lblJiwa').innerText = infoGrj.Total_Jiwa.toLocaleString('id-ID');
 
-      // 2. Render Tabel Majelis (Sortir Hierarki & Abjad)
-      let listMajelis = data.majelis || [];
-      document.getElementById('lblTotalMajelis').innerText = listMajelis.length + " Personil";
+      document.getElementById('lblTotalMajelis').innerText = myMajelisList.length + " Personil";
       
       const tbodyM = document.getElementById('tblMajelis');
-      if(listMajelis.length === 0) {
-          tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data majelis yang terdaftar.</td></tr>';
+      if (myMajelisList.length === 0) {
+          tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data personil majelis di Resort ini.</td></tr>';
       } else {
-          // Sortir berdasarkan Nama
-          listMajelis.sort((a,b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
+          // Urutkan majelis berdasarkan Abjad A-Z
+          myMajelisList.sort((a,b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
           
-          tbodyM.innerHTML = listMajelis.map((m, idx) => `
+          tbodyM.innerHTML = myMajelisList.map((m, idx) => `
           <tr class="hover:bg-slate-50 transition-colors">
-              <td class="p-4 text-center font-bold text-slate-400 text-xs">${idx + 1}</td>
+              <td class="p-4 text-center font-bold text-slate-400 text-xs w-12">${idx + 1}</td>
               <td class="p-4 font-bold text-slate-800">${m.Nama_Lengkap||'-'}</td>
               <td class="p-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-black uppercase tracking-widest border border-indigo-100">${m.Jabatan||'-'}</span></td>
               <td class="p-4 text-xs font-semibold text-slate-500"><i class="fas fa-church text-slate-300 mr-1.5"></i> ${m.Nama_Gereja||'Tingkat Resort'}</td>
