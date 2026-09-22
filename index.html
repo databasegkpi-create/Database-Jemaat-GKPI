@@ -2285,13 +2285,7 @@ function konfirmasiHapus(id) {
     persiapkanModalCetak();
     document.getElementById('modalCetakData').classList.remove('hidden'); 
   }
-  window.toggleSidebar = function() {
-      const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-          if (sidebar.classList.contains('-translate-x-full')) { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10); } 
-          else { sidebar.classList.add('-translate-x-full'); overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300); }
-      } else { sidebar.classList.toggle('md:-ml-[280px]'); }
-  };
+  
   window.addEventListener('resize', () => { if(window.innerWidth >= 768) { document.getElementById('sidebarOverlay').classList.add('hidden'); } });
 // ========================================================
   // PERBAIKAN FITUR WA BLAST (SINKRON DENGAN FILTER UTAMA)
@@ -2732,50 +2726,6 @@ function konfirmasiHapus(id) {
   window.sortColChecklist = 'status'; 
   window.sortDescChecklist = false;
 
-  // Pastikan sidebar menutup otomatis saat menu diklik (khusus HP)
-  window.switchTab = function(tab) {
-      ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog', 'pageChecklist'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
-      ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog', 'btnChecklist'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
-      
-      if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
-      if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
-      
-      let title = 'Dashboard Pusat'; 
-      if(tab === 'search') title = 'Data Internal'; 
-      if(tab === 'jemaat') title = 'Data Jemaat'; 
-      if(tab === 'admin') title = 'Akses Admin';
-      if(tab === 'log') title = 'Log Aktivitas';
-      if(tab === 'checklist') { 
-          title = 'Check List Input'; 
-          if(typeof window.renderTabelChecklist === 'function') window.renderTabelChecklist(true); 
-      } 
-      
-      safeSetText('pageTitle', title); 
-      if(tab === 'admin') loadListPetugas(); 
-      if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
-
-      // Kembalikan scroll ke paling atas saat pindah menu
-      const scrollArea = document.getElementById('scrollableArea');
-      if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // Eksekusi Auto-Hide
-      if (window.innerWidth < 768) {
-          const sidebar = document.getElementById('sidebar');
-          const overlay = document.getElementById('sidebarOverlay');
-          sidebar.classList.add('-translate-x-full');
-          overlay.classList.add('opacity-0');
-          setTimeout(() => overlay.classList.add('hidden'), 300);
-      }
-  };
-
-  // =========================================================================
-  // PATCH FINAL: MESIN RENDER CHECK LIST KELENGKAPAN (ANTI-BLANK)
-  // =========================================================================
-
-  window.currentPageChecklist = 1; 
-  window.itemsPerChecklistPage = 15;
-  window.sortColChecklist = 'status'; 
-  window.sortDescChecklist = false;
 
   window.sortChecklist = function(col) {
       if (window.sortColChecklist === col) { window.sortDescChecklist = !window.sortDescChecklist; } 
@@ -3103,6 +3053,64 @@ function konfirmasiHapus(id) {
           // apiCall('kirimPesanCS', { pesan: pesan });
 
       }, 1500);
+  };
+
+  window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar'); 
+      const overlay = document.getElementById('sidebarOverlay'); 
+      const isMobile = window.innerWidth < 768;
+      
+      if (isMobile) {
+          if (sidebar.classList.contains('-translate-x-full')) { 
+              sidebar.classList.remove('-translate-x-full'); 
+              overlay.classList.remove('hidden'); 
+              setTimeout(() => overlay.classList.remove('opacity-0'), 10); 
+          } else { 
+              sidebar.classList.add('-translate-x-full'); 
+              overlay.classList.add('opacity-0'); 
+              setTimeout(() => overlay.classList.add('hidden'), 300); 
+          }
+      } else { 
+          sidebar.classList.toggle('md:-ml-[280px]'); 
+      }
+  };
+
+  window.switchTab = function(tab) {
+      // 1. Sembunyikan semua halaman & matikan warna tombol
+      ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog', 'pageChecklist'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
+      ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog', 'btnChecklist'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
+      
+      // 2. Tampilkan halaman & hidupkan warna tombol yang diklik
+      if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
+      if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
+      
+      // 3. Atur Judul Header & Panggil Fungsi Khusus
+      let title = 'Dashboard Pusat'; 
+      if(tab === 'search') title = 'Data Internal'; 
+      if(tab === 'jemaat') title = 'Data Jemaat'; 
+      if(tab === 'admin') title = 'Akses Admin';
+      if(tab === 'log') title = 'Log Aktivitas';
+      if(tab === 'checklist') { 
+          title = 'Check List Input'; 
+          if(typeof window.renderTabelChecklist === 'function') window.renderTabelChecklist(true); 
+      } 
+      
+      safeSetText('pageTitle', title); 
+      if(tab === 'admin') loadListPetugas(); 
+      if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
+
+      // 4. Muluskan Scroll ke Atas saat Ganti Menu
+      const scrollArea = document.getElementById('scrollableArea');
+      if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // 5. Eksekusi Auto-Hide Sidebar (Untuk HP)
+      if (window.innerWidth < 768) {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          sidebar.classList.add('-translate-x-full');
+          overlay.classList.add('opacity-0');
+          setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
   };
 </script>
 </body>
