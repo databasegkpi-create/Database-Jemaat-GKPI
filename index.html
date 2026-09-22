@@ -132,9 +132,19 @@
     .ts-dropdown { border-radius: 0.75rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; margin-top: 4px !important; z-index: 999999 !important; }
     .ts-dropdown .option { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
     .ts-dropdown .option.active, .ts-dropdown .option:hover { background-color: #e0e7ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
+
+    /* --- OPTIMASI SCROLLING & ANTI PULL-TO-REFRESH --- */
+    html, body {
+        overscroll-behavior-y: none !important;
+        scroll-behavior: smooth;
+    }
+    .overflow-y-auto, .custom-scrollbar {
+        -webkit-overflow-scrolling: touch !important; 
+        will-change: scroll-position, transform;
+    }
   </style>
 </head>
-<body class="antialiased">
+<body class="antialiased overscroll-none overflow-hidden touch-pan-y">
 
 <!-- MENU LOGIN -->
 <div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 md:p-6 bg-cover bg-center bg-no-repeat relative" style="background-image: url('https://images.pexels.com/photos/11951543/pexels-photo-11951543.jpeg?auto=compress&cs=tinysrgb&w=1920');">
@@ -1167,14 +1177,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function switchTab(tab) {
-    ['pageHome', 'pageSearch', 'pageJemaat', 'pageAdmin', 'pageLog'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); }); 
-    ['btnHome', 'btnSearch', 'btnJemaat', 'btnAdmin', 'btnLog'].forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('nav-active'); });
-    if(document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden'); 
-    if(document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1))) document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
-    let title = 'Dashboard Pusat'; if(tab === 'search') title = 'Data Internal'; if(tab === 'jemaat') title = 'Data Jemaat'; if(tab === 'admin') title = 'Akses Admin';
-    safeSetText('pageTitle', title); if(tab === 'admin') loadListPetugas(); if(tab === 'home' && leafletMap) setTimeout(() => { leafletMap.invalidateSize(); }, 300);
-  }
 
   function switchDataTab(tabName) {
     ['kontenMajelis', 'kontenIndividu', 'kontenGereja'].forEach(p => { if(document.getElementById(p)) document.getElementById(p).classList.add('hidden'); });
