@@ -11,115 +11,110 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
-    html, body { overscroll-behavior-y: none !important; scroll-behavior: smooth; background-color: #f4f7fb; }
+    html, body { overscroll-behavior-y: none !important; scroll-behavior: smooth; background-color: #f8fafc; }
     body::before {
         content: ""; position: fixed; inset: 0;
         background-image: url('https://lh3.googleusercontent.com/d/1Pu8OgBaZUCEARI4yL2rM1tLnY7GfJUv3');
-        background-size: cover; background-position: center; opacity: 0.15; z-index: -1; pointer-events: none;
+        background-size: cover; background-position: center; opacity: 0.1; z-index: -1; pointer-events: none;
     }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-    .nav-active { background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); color: #4f46e5 !important; font-weight: 800; border-left: 4px solid #4f46e5; }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .overflow-y-auto { -webkit-overflow-scrolling: touch !important; will-change: scroll-position, transform; }
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .animate-zoom { animation: zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   </style>
 </head>
-<body class="antialiased overscroll-none overflow-hidden touch-pan-y">
+<body class="antialiased text-slate-800">
 
-<!-- HALAMAN LOGIN KHUSUS RESORT -->
-<div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 md:p-6 relative">
-  <div class="w-full max-w-md glass-card rounded-[2rem] p-8 shadow-2xl relative z-10 border border-slate-100">
+<!-- HALAMAN LOGIN -->
+<div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 relative z-10">
+  <div class="w-full max-w-md glass-card rounded-[2rem] p-8 shadow-2xl border border-slate-200 animate-zoom">
     <div class="text-center mb-8">
-      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-20 h-20 mx-auto mb-4 drop-shadow-lg">
-      <h2 class="text-2xl font-black text-slate-800 tracking-tight">Portal Resort GKPI</h2>
-      <p class="text-indigo-600 font-bold text-xs mt-2 uppercase tracking-widest bg-indigo-50 inline-block px-3 py-1 rounded-full border border-indigo-100">Akses Eksklusif Pengurus</p>
+      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" class="w-20 h-20 mx-auto mb-4 drop-shadow-md">
+      <h2 class="text-2xl font-black text-slate-800 tracking-tight">Portal Informasi</h2>
+      <p class="text-indigo-600 font-bold text-xs mt-2 uppercase tracking-widest bg-indigo-50 inline-block px-3 py-1 rounded-full border border-indigo-100">Khusus Akses Resort / Jemaat</p>
     </div>
     <form onsubmit="handleLoginResort(event)" class="space-y-5">
-      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Kode Resort (Username)</label>
-      <div class="relative"><i class="fas fa-church absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="user" required class="w-full py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-sm text-slate-700"></div></div>
-      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Password Akses</label>
+      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Username (Kode Unit)</label>
+      <div class="relative"><i class="fas fa-church absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" id="user" required autocomplete="off" class="w-full py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-sm text-slate-700"></div></div>
+      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Password</label>
       <div class="relative"><i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="password" id="pass" required class="w-full py-3.5 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-sm text-slate-700"></div></div>
-      <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-indigo-200 hover:-translate-y-0.5 active:scale-95 transition-all mt-4">Login ke Dashboard</button>
+      <button type="submit" id="btnLogin" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all mt-4"><i class="fas fa-sign-in-alt mr-2"></i> Akses Portal</button>
     </form>
   </div>
 </div>
 
-<!-- DASHBOARD UTAMA RESORT -->
-<div id="mainApp" class="hidden h-screen flex overflow-hidden relative">
+<!-- PORTAL UTAMA (SINGLE PAGE) -->
+<div id="mainApp" class="hidden min-h-screen flex flex-col relative z-10">
   
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="w-[280px] shrink-0 h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200/70 flex flex-col shadow-lg z-20">
-    <div class="p-6 border-b border-slate-100 flex items-center gap-4">
-      <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" class="w-10 h-10">
-      <div><h1 class="font-black text-lg text-slate-800 leading-tight truncate w-40" id="sbResortName">Nama Resort</h1><span class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">Portal Cabang</span></div>
+  <!-- NAVBAR ATAS -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" class="w-10 h-10 drop-shadow-sm">
+        <div>
+            <h1 class="font-black text-lg text-slate-800 leading-none">GKPI Hub</h1>
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Portal Informasi Resmi</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+          <button onclick="loadDataResort(true)" class="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-600 hover:text-white transition-all shadow-sm"><i class="fas fa-sync-alt"></i></button>
+          <button onclick="handleLogout()" class="w-10 h-10 flex items-center justify-center bg-rose-50 text-rose-600 rounded-full hover:bg-rose-500 hover:text-white transition-all shadow-sm"><i class="fas fa-power-off"></i></button>
+      </div>
     </div>
-    <nav class="flex-1 p-4 space-y-2">
-      <button onclick="switchTab('home')" id="btnHome" class="nav-active w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm hover:bg-slate-50 transition-colors"><i class="fas fa-layer-group w-5 text-center"></i> Beranda Utama</button>
-      <button onclick="switchTab('majelis')" id="btnMajelis" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm hover:bg-slate-50 transition-colors"><i class="fas fa-id-badge w-5 text-center"></i> Personil Majelis</button>
-      <button onclick="switchTab('jemaat')" id="btnJemaat" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-500 font-semibold text-sm hover:bg-slate-50 transition-colors"><i class="fas fa-users-cog w-5 text-center"></i> Database Jemaat</button>
-    </nav>
-    <div class="p-5 border-t border-slate-100">
-      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-colors"><i class="fas fa-sign-out-alt"></i> Keluar</button>
-    </div>
-  </aside>
+  </header>
 
-  <!-- KONTEN KANAN -->
-  <main class="flex-1 flex flex-col h-full overflow-hidden relative">
-    <header class="bg-white/80 backdrop-blur-md px-8 py-5 border-b border-slate-200/50 flex justify-between items-center shadow-sm z-10">
-      <h2 id="pageTitle" class="text-xl font-black text-slate-800 tracking-tight">Beranda Utama</h2>
-      <button onclick="loadDataResort(true)" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 uppercase tracking-wide"><i class="fas fa-sync-alt"></i> Sinkronisasi Data</button>
-    </header>
-    
-    <div class="flex-1 overflow-y-auto overscroll-contain transform-gpu p-8 custom-scrollbar bg-transparent">
+  <!-- KONTEN -->
+  <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 animate-zoom">
       
-      <!-- HALAMAN HOME -->
-      <div id="pageHome" class="space-y-6 animate-fade">
-        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-3xl p-8 shadow-lg text-white flex justify-between items-center">
-            <div>
-                <p class="text-indigo-100 font-bold uppercase tracking-widest text-xs mb-2">Tinjauan Data Saat Ini</p>
-                <h2 class="text-3xl font-black" id="heroResortName">Memuat...</h2>
-            </div>
-            <i class="fas fa-church text-6xl opacity-20"></i>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unit Gereja/Pagaran</p><h4 id="statGereja" class="text-4xl font-black text-slate-800">0</h4></div>
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Personil Majelis Aktif</p><h4 id="statMajelis" class="text-4xl font-black text-slate-800">0</h4></div>
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Keluarga Jemaat</p><h4 id="statJemaat" class="text-4xl font-black text-slate-800">0</h4></div>
-        </div>
-        <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 text-center">
-            <i class="fas fa-lock text-4xl text-emerald-400 mb-4"></i>
-            <h3 class="font-bold text-slate-700 text-lg mb-2">Data Anda Diamankan Sistem Pusat</h3>
-            <p class="text-slate-500 text-sm">Anda hanya dapat melihat dan memantau data yang berada di bawah naungan Resort Anda. Jika ada perubahan data, silakan koordinasikan dengan Sekretaris Jemaat atau Admin Pusat.</p>
-        </div>
-      </div>
-
-      <!-- HALAMAN MAJELIS -->
-      <div id="pageMajelis" class="hidden space-y-6 animate-fade">
-          <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div class="p-5 bg-slate-50 border-b border-slate-100"><h3 class="font-bold text-slate-700"><i class="fas fa-id-badge text-indigo-500 mr-2"></i> Daftar Personil Majelis</h3></div>
-              <div class="p-0 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap</th><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">Jabatan</th><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">Gereja / Penempatan</th></tr></thead><tbody id="tblMajelis" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+      <!-- KARTU IDENTITAS GEREJA -->
+      <div class="bg-gradient-to-br from-indigo-700 to-blue-800 rounded-[2rem] p-8 md:p-10 shadow-xl mb-8 relative overflow-hidden text-white">
+          <i class="fas fa-place-of-worship absolute -right-4 -bottom-4 text-9xl opacity-10"></i>
+          <div class="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-6">
+              <div>
+                  <span id="lblWilayah" class="bg-white/20 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/30 inline-block mb-4">Wilayah -</span>
+                  <h2 id="lblNamaUnit" class="text-3xl md:text-5xl font-black tracking-tight mb-2">Memuat Data...</h2>
+                  <p class="text-indigo-100 text-sm font-medium flex items-center gap-2"><i class="fas fa-file-signature text-indigo-300"></i> No. Register: <span id="lblNoReg" class="font-bold text-white">Belum ada</span></p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex gap-6 shrink-0">
+                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1">Total RT</p><p id="lblRT" class="text-2xl font-black">0</p></div>
+                  <div class="w-px bg-white/20"></div>
+                  <div class="text-center"><p class="text-[10px] uppercase font-bold text-indigo-200 tracking-widest mb-1">Total Jiwa</p><p id="lblJiwa" class="text-2xl font-black">0</p></div>
+              </div>
           </div>
       </div>
 
-      <!-- HALAMAN JEMAAT -->
-      <div id="pageJemaat" class="hidden space-y-6 animate-fade">
-          <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div class="p-5 bg-slate-50 border-b border-slate-100"><h3 class="font-bold text-slate-700"><i class="fas fa-users-cog text-emerald-500 mr-2"></i> Database Kepala Keluarga</h3></div>
-              <div class="p-0 overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">No KK</th><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">Nama Kepala Keluarga</th><th class="p-4 text-[10px] font-bold text-slate-500 uppercase">Unit Gereja</th></tr></thead><tbody id="tblJemaat" class="divide-y divide-slate-100 text-sm"></tbody></table></div>
+      <!-- TABEL DAFTAR MAJELIS -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+              <h3 class="font-black text-slate-800 text-lg flex items-center gap-2"><i class="fas fa-id-badge text-indigo-500"></i> Susunan Personil Majelis</h3>
+              <span id="lblTotalMajelis" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold shadow-sm">0 Personil</span>
+          </div>
+          <div class="overflow-x-auto">
+              <table class="w-full text-left whitespace-nowrap">
+                  <thead class="bg-white border-b border-slate-100">
+                      <tr>
+                          <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center">No</th>
+                          <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Lengkap</th>
+                          <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jabatan</th>
+                          <th class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Penempatan</th>
+                      </tr>
+                  </thead>
+                  <tbody id="tblMajelis" class="divide-y divide-slate-100 text-sm">
+                      <tr><td colspan="4" class="p-8 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i> Mengambil data dari pusat...</td></tr>
+                  </tbody>
+              </table>
           </div>
       </div>
 
-    </div>
   </main>
 </div>
 
 <script>
-  // SAMAKAN URL & KEY DENGAN APLIKASI UTAMA
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOnaTcwjyY1QYxs_gpKSCePhIAmyfyWWZG_J-0XILWUTLPm4hnlHw5tJjCczChM3LE/exec";
   const SECRET_API_KEY = "GKPI_HUB_SECURE_2026";
   
   let USER_RESORT = null;
-  let DATA_RESORT = { majelis: [], gereja: [], jemaat: [] };
 
   async function apiCall(action, payload = {}) {
       payload.api_key = SECRET_API_KEY; 
@@ -140,75 +135,91 @@
       apiCall('checkLogin', {username: u, password: p}).then(res => { 
           if (res.status === 'success') { 
               if(String(res.role).toLowerCase() !== 'resort') {
-                  Swal.fire('Akses Ditolak', 'Akun ini bukan milik Resort. Silakan login melalui link utama.', 'error');
+                  Swal.fire('Akses Ditolak', 'Gunakan portal utama untuk Admin.', 'error');
+              } else if (!res.akses_unit || res.akses_unit === 'ALL' || res.akses_unit === 'undefined') {
+                  Swal.fire('Error Database', 'Admin Pusat belum mengatur KODE AKSES UNIT untuk akun Anda di database.', 'error');
               } else {
                   USER_RESORT = res; localStorage.setItem('gkpi_resort_session', JSON.stringify(res)); 
                   showDashboard(); loadDataResort(true);
               }
-          } else { Swal.fire('Gagal Login', 'Kode Resort atau Password salah!', 'error'); }
-          btn.innerHTML = 'Login ke Dashboard'; btn.disabled = false;
-      }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; });
+          } else { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); }
+          btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Akses Portal'; btn.disabled = false;
+      }).catch(err => { Swal.fire('Error', String(err), 'error'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Akses Portal'; });
   }
 
   function handleLogout() {
-      localStorage.removeItem('gkpi_resort_session');
-      localStorage.removeItem('gkpi_resort_data');
-      location.reload();
+      localStorage.removeItem('gkpi_resort_session'); localStorage.removeItem('gkpi_resort_data'); location.reload();
   }
 
   function showDashboard() {
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
-      document.getElementById('sbResortName').innerText = USER_RESORT.akses_unit;
-      document.getElementById('heroResortName').innerText = USER_RESORT.akses_unit;
-  }
-
-  function switchTab(tab) {
-      ['pageHome', 'pageMajelis', 'pageJemaat'].forEach(p => document.getElementById(p).classList.add('hidden'));
-      ['btnHome', 'btnMajelis', 'btnJemaat'].forEach(b => document.getElementById(b).classList.remove('nav-active'));
-      document.getElementById('page' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
-      document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
-      let title = "Beranda Utama"; if(tab==='majelis') title="Personil Majelis"; if(tab==='jemaat') title="Database Jemaat";
-      document.getElementById('pageTitle').innerText = title;
+      document.getElementById('lblNamaUnit').innerText = USER_RESORT.akses_unit;
   }
 
   async function loadDataResort(forceRefresh = false) {
       if (!forceRefresh) {
           const cached = await localforage.getItem('gkpi_resort_data');
-          if (cached) { DATA_RESORT = cached; renderData(); return; }
+          if (cached) { renderData(cached); return; }
       }
+      Swal.fire({ title: 'Menarik Data dari Pusat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       
-      Swal.fire({ title: 'Menarik Data Resort...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      
-      // Minta data ke server, WAJIB sertakan "KTP" Resort
       apiCall('getAppData', { role: USER_RESORT.role, akses_unit: USER_RESORT.akses_unit }).then(res => {
-          DATA_RESORT = res;
           localforage.setItem('gkpi_resort_data', res);
-          renderData();
-          Swal.close();
+          renderData(res); Swal.close();
       }).catch(err => Swal.fire('Error', String(err), 'error'));
   }
 
-  function renderData() {
-      // 1. Render Home Stats
-      document.getElementById('statGereja').innerText = DATA_RESORT.gereja.length;
-      document.getElementById('statMajelis').innerText = DATA_RESORT.majelis.length;
+  function renderData(data) {
+      // 1. Ekstrak Info Gereja dari Array
+      let infoGrj = { Wilayah: '-', No_Register: 'Belum terdaftar', Total_RT: 0, Total_Jiwa: 0 };
       
-      // Hitung KK unik
-      let setKK = new Set();
-      DATA_RESORT.jemaat.forEach(j => { if(j.No_KK) setKK.add(String(j.No_KK).trim()); });
-      document.getElementById('statJemaat').innerText = setKK.size;
+      if(data.gereja && data.gereja.length > 0) {
+          // Cari spesifik yang namanya persis sama dengan Akses_Unit
+          const targetUnit = String(USER_RESORT.akses_unit).toLowerCase();
+          const grjSpecific = data.gereja.find(g => String(g.Nama_Gereja).toLowerCase() === targetUnit || String(g.Induk_Resort || g.Resort).toLowerCase() === targetUnit);
+          
+          if(grjSpecific) {
+              infoGrj.Wilayah = grjSpecific.Wilayah || '-';
+              infoGrj.No_Register = grjSpecific.No_Register || grjSpecific['No Register'] || 'Data Kosong';
+              
+              // Jika ini Resort, totalkan semua RT/Jiwa di bawahnya
+              if(String(grjSpecific.Tipe_Gereja || grjSpecific.Status_Gereja).toLowerCase().includes('resort')) {
+                 let totR = 0, totJ = 0;
+                 data.gereja.forEach(g => { totR += parseInt(g.Total_RT)||0; totJ += parseInt(g.Total_Jiwa)||0; });
+                 infoGrj.Total_RT = totR; infoGrj.Total_Jiwa = totJ;
+              } else {
+                 infoGrj.Total_RT = parseInt(grjSpecific.Total_RT) || 0;
+                 infoGrj.Total_Jiwa = parseInt(grjSpecific.Total_Jiwa) || 0;
+              }
+          }
+      }
 
-      // 2. Render Tabel Majelis
+      // Cetak Info ke Layar
+      document.getElementById('lblWilayah').innerText = "Wilayah " + infoGrj.Wilayah;
+      document.getElementById('lblNoReg').innerText = infoGrj.No_Register;
+      document.getElementById('lblRT').innerText = infoGrj.Total_RT.toLocaleString('id-ID');
+      document.getElementById('lblJiwa').innerText = infoGrj.Total_Jiwa.toLocaleString('id-ID');
+
+      // 2. Render Tabel Majelis (Sortir Hierarki & Abjad)
+      let listMajelis = data.majelis || [];
+      document.getElementById('lblTotalMajelis').innerText = listMajelis.length + " Personil";
+      
       const tbodyM = document.getElementById('tblMajelis');
-      tbodyM.innerHTML = DATA_RESORT.majelis.map(m => `<tr><td class="p-4 font-bold text-slate-800">${m.Nama_Lengkap||'-'}</td><td class="p-4"><span class="px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-bold">${m.Jabatan||'-'}</span></td><td class="p-4 text-xs font-semibold text-slate-500">${m.Nama_Gereja||'Tingkat Resort'}</td></tr>`).join('');
-      if(DATA_RESORT.majelis.length===0) tbodyM.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400">Data Kosong</td></tr>';
-
-      // 3. Render Tabel Jemaat (Hanya KK)
-      const tbodyJ = document.getElementById('tblJemaat');
-      const kkList = DATA_RESORT.jemaat.filter(j => String(j.Status_Keluarga).toLowerCase() === 'kepala keluarga');
-      tbodyJ.innerHTML = kkList.map(j => `<tr><td class="p-4 font-mono font-bold text-slate-500 text-xs">${j.No_KK||'-'}</td><td class="p-4 font-bold text-slate-800">${j.Nama_Lengkap||'-'}</td><td class="p-4 text-xs font-semibold text-slate-500">${j.Nama_Gereja||'-'}</td></tr>`).join('');
-      if(kkList.length===0) tbodyJ.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400">Data Kosong</td></tr>';
+      if(listMajelis.length === 0) {
+          tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data majelis yang terdaftar.</td></tr>';
+      } else {
+          // Sortir berdasarkan Nama
+          listMajelis.sort((a,b) => String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
+          
+          tbodyM.innerHTML = listMajelis.map((m, idx) => `
+          <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 text-center font-bold text-slate-400 text-xs">${idx + 1}</td>
+              <td class="p-4 font-bold text-slate-800">${m.Nama_Lengkap||'-'}</td>
+              <td class="p-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-black uppercase tracking-widest border border-indigo-100">${m.Jabatan||'-'}</span></td>
+              <td class="p-4 text-xs font-semibold text-slate-500"><i class="fas fa-church text-slate-300 mr-1.5"></i> ${m.Nama_Gereja||'Tingkat Resort'}</td>
+          </tr>`).join('');
+      }
   }
 </script>
 </body>
