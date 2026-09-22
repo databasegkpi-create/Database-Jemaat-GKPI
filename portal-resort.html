@@ -12,10 +12,12 @@
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
     html, body { overscroll-behavior-y: none !important; scroll-behavior: smooth; background-color: #f8fafc; }
-    body::before {
+   body::before {
         content: ""; position: fixed; inset: 0;
-        background-image: url('https://lh3.googleusercontent.com/d/1Pu8OgBaZUCEARI4yL2rM1tLnY7GfJUv3');
-        background-size: cover; background-position: center; opacity: 0.1; z-index: -1; pointer-events: none;
+        background-image: url('https://images.pexels.com/photos/29211053/pexels-photo-29211053.jpeg');
+        background-size: cover; background-position: center; 
+        opacity: 0.12; /* Transparansi 12% agar mata tetap nyaman saat membaca ribuan baris tabel */
+        z-index: -1; pointer-events: none;
     }
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -27,8 +29,11 @@
 <body class="antialiased text-slate-800">
 
 <!-- HALAMAN LOGIN -->
-<div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 relative z-10">
-  <div class="w-full max-w-md glass-card rounded-[2rem] p-8 shadow-2xl border border-slate-200 animate-zoom">
+<!-- HALAMAN LOGIN -->
+<div id="loginPage" class="h-screen w-full flex items-center justify-center p-4 relative z-10 bg-cover bg-center" style="background-image: url('https://images.pexels.com/photos/29211053/pexels-photo-29211053.jpeg');">
+  
+  <!-- Lapisan Kaca Gelap (Dark Blur Overlay) -->
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
     <div class="text-center mb-8">
       <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" class="w-20 h-20 mx-auto mb-4 drop-shadow-md">
       <h2 class="text-2xl font-black text-slate-800 tracking-tight">Portal Informasi</h2>
