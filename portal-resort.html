@@ -228,7 +228,7 @@
       return d.getDate() + " " + bulan[d.getMonth()] + " " + d.getFullYear();
   }
 
-  function renderData(data) {
+ function renderData(data) {
       if (!USER_RESORT || !USER_RESORT.akses_unit) return;
       const myResort = String(USER_RESORT.akses_unit).toLowerCase().trim();
 
@@ -236,15 +236,26 @@
       const myGerejaList = (data.gereja || []).filter(g => String(g.Nama_Gereja || g['Nama Gereja']).toLowerCase().trim() === myResort || String(g.Induk_Resort || g.Resort).toLowerCase().trim() === myResort);
       let myMajelisList = (data.majelis || []).filter(m => String(m.Nama_Gereja || m['Nama Gereja']).toLowerCase().trim() === myResort || String(m.Resort).toLowerCase().trim() === myResort);
 
-      // 2. STATISTIK GEREJA & REGISTRASI
+      // 2. STATISTIK GEREJA & DETEKSI "JEMAAT KHUSUS"
       let infoGrj = { Wilayah: '-', No_Register: 'Belum Terdaftar', Tgl_Berdiri: '-', Total_RT: 0, Total_Jiwa: 0 };
+      let isJK = false; // Sensor pintar pendeteksi Jemaat Khusus
+
       if (myGerejaList.length > 0) {
           const grjInduk = myGerejaList.find(g => String(g.Nama_Gereja || g['Nama Gereja']).toLowerCase().trim() === myResort) || myGerejaList[0];
+          
+          // Cek apakah ini Jemaat Khusus (dari status di GSheets atau dari namanya)
+          let statusG = String(grjInduk.Status_Gereja || grjInduk.Tipe_Gereja || grjInduk['Status Gereja'] || '').toLowerCase();
+          if (statusG.includes('jemaat khusus') || myResort.includes('jemaat khusus')) {
+              isJK = true;
+          }
+
           infoGrj.Wilayah = grjInduk.Wilayah || '-';
           infoGrj.No_Register = grjInduk.No_Register || grjInduk['No Register'] || 'Belum Terdaftar';
           infoGrj.Tgl_Berdiri = formatTanggalIndo(grjInduk.Tanggal_Berdiri || grjInduk['Tanggal Berdiri']);
           
           myGerejaList.forEach(g => { infoGrj.Total_RT += parseInt(g.Total_RT) || 0; infoGrj.Total_Jiwa += parseInt(g.Total_Jiwa) || 0; });
+      } else if (myResort.includes('jemaat khusus')) {
+          isJK = true;
       }
 
       // 3. MENCARI SANG PIMPINAN (Pendeta Resort / Pemimpin Jemaat)
@@ -252,15 +263,19 @@
       let pdt = myMajelisList.find(m => {
           let jbt = String(m.Jabatan).toLowerCase();
           let grj = String(m.Nama_Gereja || '').toLowerCase();
-          return (jbt.includes('pendeta') || jbt.includes('pemimpin')) && (grj.includes('tingkat resort') || grj.includes('phr') || grj === myResort);
+          // Cari orang dengan jabatan pendeta/pemimpin yang bertugas di unit utama tersebut
+          return (jbt.includes('pendeta') || jbt.includes('pemimpin')) && (grj.includes('tingkat resort') || grj.includes('phr') || grj === myResort || isJK);
       });
-      // Jika tidak ketemu di PHR, cari sembarang pendeta di resort tersebut
+      // Fallback: Jika tidak ketemu, cari siapa saja yang bergelar pendeta/pemimpin di list itu
       if (!pdt) pdt = myMajelisList.find(m => String(m.Jabatan).toLowerCase().includes('pendeta') || String(m.Jabatan).toLowerCase().includes('pemimpin')); 
       
       if (pdt) pimpinanResort = pdt.Nama_Lengkap + (pdt.Jabatan ? ` <span class="ml-2 px-2 py-0.5 bg-emerald-500 text-white text-[9px] rounded uppercase border border-emerald-400/50">${pdt.Jabatan}</span>` : '');
 
-      // CETAK HEADER KE LAYAR
-      document.getElementById('lblWilayah').innerHTML = `<i class="fas fa-map-marker-alt text-rose-300 mr-1.5"></i> Wilayah ` + infoGrj.Wilayah;
+      // CETAK HEADER KE LAYAR (Otomatis ganti tulisan berdasarkan jenis unit)
+      let badgeUnit = isJK ? 'JEMAAT KHUSUS' : 'RESORT INDUK';
+      let warnaBadge = isJK ? 'text-purple-300' : 'text-rose-300';
+      
+      document.getElementById('lblWilayah').innerHTML = `<i class="fas fa-map-marker-alt ${warnaBadge} mr-1.5"></i> ${badgeUnit} • Wilayah ` + infoGrj.Wilayah;
       document.getElementById('lblNoReg').innerText = infoGrj.No_Register;
       document.getElementById('lblTglBerdiri').innerText = infoGrj.Tgl_Berdiri;
       document.getElementById('lblPimpinan').innerHTML = pimpinanResort;
@@ -274,7 +289,7 @@
       if (myMajelisList.length === 0) {
           tbodyM.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-100 rounded-xl m-4">Belum ada data personil majelis.</td></tr>';
       } else {
-          // LOGIKA SORTING CERDAS: 1. Posisi Gereja (PHR duluan), 2. Kasta Jabatan, 3. Abjad Nama
+          // LOGIKA SORTING
           myMajelisList.sort((a, b) => {
               let grjA = String(a.Nama_Gereja || '').toLowerCase();
               let grjB = String(b.Nama_Gereja || '').toLowerCase();
@@ -290,37 +305,37 @@
               return String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap));
           });
           
-          // CETAK TABEL
+          // CETAK TABEL (Berubah otomatis menyesuaikan Resort vs Jemaat Khusus)
           tbodyM.innerHTML = myMajelisList.map((m, idx) => {
-              let grjLabel = m.Nama_Gereja || 'Tingkat Resort';
+              let grjLabel = m.Nama_Gereja || (isJK ? myResort : 'Tingkat Resort');
               let isPHR = String(grjLabel).toLowerCase().includes('tingkat resort') || String(grjLabel).toLowerCase().includes('phr') || String(grjLabel).toLowerCase() === myResort;
               
-              let iconGrj = isPHR ? '<i class="fas fa-sitemap text-amber-500 mr-2"></i>' : '<i class="fas fa-church text-indigo-400 mr-2"></i>';
-              let bgJbt = isPHR ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-indigo-50 text-indigo-700 border-indigo-100';
+              // Kustomisasi warna & ikon
+              let iconGrj = isPHR ? (isJK ? '<i class="fas fa-church text-purple-500 mr-2"></i>' : '<i class="fas fa-sitemap text-amber-500 mr-2"></i>') : '<i class="fas fa-church text-indigo-400 mr-2"></i>';
+              let bgJbt = isPHR ? (isJK ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-amber-50 text-amber-700 border-amber-100') : 'bg-indigo-50 text-indigo-700 border-indigo-100';
+              let teksPenempatan = isPHR ? (isJK ? 'Jemaat Khusus' : 'PHR / Tingkat Resort') : grjLabel;
 
               return `
               <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
                   <td class="p-4 text-center font-bold text-slate-400 text-xs w-12">${idx + 1}</td>
                   <td class="p-4 font-bold text-slate-800"><i class="fas fa-user-circle text-slate-300 mr-2 text-[14px] align-middle"></i> ${m.Nama_Lengkap||'-'}</td>
                   <td class="p-4"><span class="px-2.5 py-1 ${bgJbt} rounded-md text-[9px] font-black uppercase tracking-widest border">${m.Jabatan||'-'}</span></td>
-                  <td class="p-4 text-xs font-bold text-slate-600">${iconGrj} ${isPHR ? 'PHR / Tingkat Resort' : grjLabel}</td>
+                  <td class="p-4 text-xs font-bold text-slate-600">${iconGrj} ${teksPenempatan}</td>
               </tr>`;
           }).join('');
       }
-    // =========================================================
+
+      // =========================================================
       // 5. ATUR LINK WHATSAPP BANTUAN DINAMIS
       // =========================================================
-      // ⚠️ GANTI DENGAN NOMOR WA BAPAK (Gunakan 62 tanpa 0 atau +)
       const nomorWAAdmin = "6282261525903"; 
-      
-      // Buat teks pesan otomatis yang menyertakan nama Resort
       const namaUnitHuruBesar = myResort.toUpperCase();
       const teksPesan = `Halo Admin Infokom Pusat,%0A%0ASaya pengurus dari *${namaUnitHuruBesar}*. Izin menyampaikan penyesuaian/pembaruan data majelis/jemaat kami...`;
       
       const waWidget = document.getElementById('waHelpWidget');
       if (waWidget) {
           waWidget.href = `https://wa.me/${nomorWAAdmin}?text=${teksPesan}`;
-          waWidget.classList.remove('hidden'); // Munculkan tombolnya
+          waWidget.classList.remove('hidden'); 
       }
   }
 </script>
