@@ -226,9 +226,9 @@
 <!-- ================= WIDGET LIVE CHAT AI ================= -->
     <div id="chatWidgetContainer" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-end">
       
-      <!-- KOTAK OBROLAN (Disembunyikan secara default) -->
-      <div id="chatBox" class="bg-white w-[320px] md:w-[350px] rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col transition-all duration-300 transform scale-0 origin-bottom-right mb-4 opacity-0 h-[450px]">
-          
+    <!-- KOTAK OBROLAN (Jadikan absolute dan pointer-events-none saat tertutup) -->
+      <div id="chatBox" class="absolute bottom-20 right-0 pointer-events-none bg-white w-[320px] md:w-[350px] rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col transition-all duration-300 transform scale-0 origin-bottom-right opacity-0 h-[450px] z-50">
+        
           <!-- Header Chat -->
           <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center justify-between text-white shrink-0 shadow-md relative z-10">
               <div class="flex items-center gap-3">
@@ -3056,24 +3056,23 @@ function konfirmasiHapus(id) {
       }
   };
 
-  // =========================================================================
-  // LOGIKA SIMULASI LIVE CHAT AI
-  // =========================================================================
-  window.toggleChatBox = function() {
+ window.toggleChatBox = function() {
       const box = document.getElementById('chatBox');
       const trigger = document.getElementById('chatTriggerBtn');
       const icon = trigger.querySelector('i');
       
       if (box.classList.contains('scale-0')) {
-          box.classList.remove('scale-0', 'opacity-0');
-          box.classList.add('scale-100', 'opacity-100');
-          // Ubah icon tombol menjadi panah ke bawah
+          // BUKA CHAT: Tampilkan kotak dan aktifkan klik
+          box.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
+          box.classList.add('scale-100', 'opacity-100', 'pointer-events-auto');
+          
           icon.className = "fas fa-chevron-down relative z-10 text-2xl drop-shadow-md transition-transform duration-300";
           setTimeout(() => document.getElementById('chatInput').focus(), 300);
       } else {
-          box.classList.remove('scale-100', 'opacity-100');
-          box.classList.add('scale-0', 'opacity-0');
-          // Kembalikan ke icon obrolan
+          // TUTUP CHAT: Sembunyikan kotak dan MATIKAN klik agar tidak menghalangi tombol login
+          box.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
+          box.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
+          
           icon.className = "fas fa-comments relative z-10 text-2xl md:text-3xl drop-shadow-md transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110";
       }
   };
