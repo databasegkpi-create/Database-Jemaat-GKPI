@@ -145,81 +145,87 @@
   </style>
 </head>
 <body class="antialiased bg-slate-50 overflow-hidden">
-<!-- MENU LOGIN (SPLIT SCREEN MODERN COMPACT) -->
-<div id="loginPage" class="h-screen w-full flex flex-col p-4 md:p-8 bg-gradient-to-br from-[#f8fafc] via-[#eef2ff] to-[#e2e8f0] relative overflow-y-auto custom-scrollbar">
+
+  <!-- MENU LOGIN (SPLIT SCREEN MODERN COMPACT) -->
+<div id="loginPage" class="fixed inset-0 w-full h-full overflow-y-auto bg-gradient-to-br from-[#e2e8f0] via-[#f8fafc] to-[#c7d2fe] z-50 custom-scrollbar">
   
-  <!-- KARTU UTAMA (Menggunakan m-auto agar selalu di tengah secara proporsional) -->
-  <div class="m-auto w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-zoom min-h-[480px] md:min-h-[520px] relative z-10 shrink-0">
-   
-    <!-- SISI KIRI: GAMBAR (Proporsi sedikit dikecilkan menjadi 5/12) -->
-    <div class="w-full md:w-5/12 h-48 md:h-auto relative shrink-0 border-r border-slate-100">
-      <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.pexels.com/photos/25047802/pexels-photo-25047802.png');"></div>
-      <div class="absolute inset-0 bg-gradient-to-tr from-indigo-900/60 to-blue-600/20 mix-blend-multiply"></div>
+  <!-- WADAH FLEKSIBEL (Agar Card di tengah, Copyright di bawah, dan bisa di-scroll di HP) -->
+  <div class="min-h-full flex flex-col items-center justify-center p-4 md:p-8">
+    
+    <!-- KARTU UTAMA -->
+    <div class="w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-zoom min-h-[480px] md:min-h-[520px] relative z-10 shrink-0 mt-4 md:mt-8 mb-8">
       
-      <div class="absolute bottom-8 left-8 text-white hidden md:block">
-        <h3 class="text-2xl font-black mb-1.5 tracking-tight drop-shadow-md">GKPI Data Hub</h3>
-        <p class="text-xs text-indigo-100 font-medium leading-relaxed drop-shadow">Sistem Informasi Majelis Pusat<br>Gereja Kristen Protestan Indonesia</p>
-      </div>
-    </div>
-
-    <!-- SISI KANAN: FORM LOGIN (Proporsi 7/12 dengan Padding yang lebih ramping) -->
-    <div class="w-full md:w-7/12 p-6 md:p-8 lg:p-10 flex flex-col justify-center bg-white">
-      
-      <!-- Logo & Judul -->
-      <div class="flex items-center gap-3 mb-6">
-        <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-8 h-8 object-contain drop-shadow-sm">
-        <h2 class="text-xl font-black text-indigo-600 tracking-tight">Database Pusat GKPI</h2>
-      </div>
-
-      <h3 class="text-xl font-bold text-slate-800 mb-5">Sign in</h3>
-
-      <div class="space-y-4">
-        <div class="group">
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within:text-indigo-600">Username / ID</label>
-          <input type="text" id="user" onkeypress="if(event.key === 'Enter') handleLogin(event)" class="w-full pb-1.5 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="Ketik username Anda...">
-        </div>
+      <!-- SISI KIRI: GAMBAR -->
+      <div class="w-full md:w-5/12 h-48 md:h-auto relative shrink-0 border-r border-slate-100">
+        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.pexels.com/photos/25047802/pexels-photo-25047802.png');"></div>
+        <div class="absolute inset-0 bg-gradient-to-tr from-indigo-900/60 to-blue-600/20 mix-blend-multiply"></div>
         
-        <div class="group">
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within:text-indigo-600">Password</label>
-          <input type="password" id="pass" onkeypress="if(event.key === 'Enter') handleLogin(event)" class="w-full pb-1.5 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="••••••••••••">
-        </div>
-
-        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 pt-1">
-           <label class="flex items-center gap-2 cursor-pointer select-none hover:text-indigo-600 transition-colors"><input type="checkbox" class="accent-indigo-600 w-3.5 h-3.5 rounded cursor-pointer"> Remember me</label>
-           <a href="#" onclick="Swal.fire('Hubungi Admin', 'Silakan hubungi Admin Infokom untuk mereset password Anda.', 'info')" class="text-indigo-600 hover:text-indigo-800 transition-colors"><i class="fas fa-lock text-[10px] mr-1"></i> Forgot password?</a>
-        </div>
-
-        <div class="flex items-center justify-between pt-3">
-            <span class="text-[11px] font-bold text-slate-400">Secure Access</span>
-            <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-xl active:scale-95 transition-all flex items-center gap-2">
-              Sign in <i class="fas fa-arrow-right text-[10px]"></i>
-            </button>
+        <div class="absolute bottom-8 left-8 text-white hidden md:block">
+          <h3 class="text-2xl font-black mb-1.5 tracking-tight drop-shadow-md">GKPI Data Hub</h3>
+          <p class="text-xs text-indigo-100 font-medium leading-relaxed drop-shadow">Sistem Informasi Majelis Pusat<br>Gereja Kristen Protestan Indonesia</p>
         </div>
       </div>
 
-      <!-- TAUTAN PINTASAN BAWAH -->
-      <div class="mt-8 pt-5 border-t border-slate-100">
-        <p class="text-[9px] text-center font-bold text-slate-400 uppercase tracking-widest mb-3">Akses Pintu Lainnya</p>
-        <div class="grid grid-cols-2 gap-2.5">
-           <a href="portal-resort.html" target="_blank" rel="noopener noreferrer" class="flex flex-col md:flex-row items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 transition-all text-center group shadow-sm hover:shadow">
-             <i class="fas fa-church text-indigo-400 text-sm group-hover:scale-110 transition-transform"></i>
-             <span class="text-[9px] md:text-[10px] font-bold">Dashboard Resort</span>
-           </a>
-           <a href="form-daerah.html" target="_blank" rel="noopener noreferrer" class="flex flex-col md:flex-row items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-all text-center group shadow-sm hover:shadow">
-             <i class="fas fa-edit text-emerald-400 text-sm group-hover:scale-110 transition-transform"></i>
-             <span class="text-[9px] md:text-[10px] font-bold">Portal Input Data</span>
-           </a>
+      <!-- SISI KANAN: FORM LOGIN -->
+      <div class="w-full md:w-7/12 p-6 md:p-8 lg:p-10 flex flex-col justify-center bg-white">
+        
+        <!-- Logo & Judul -->
+        <div class="flex items-center gap-3 mb-6">
+          <img src="https://lh3.googleusercontent.com/d/1g-FutTprQkPGFSZ94neWMBLWKJEkpGfF" alt="Logo GKPI" class="w-8 h-8 object-contain drop-shadow-sm">
+          <h2 class="text-xl font-black text-indigo-600 tracking-tight">Database Pusat GKPI</h2>
+        </div>
+
+        <h3 class="text-xl font-bold text-slate-800 mb-5">Sign in</h3>
+
+        <div class="space-y-4">
+          <div class="group">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within:text-indigo-600">Username / ID</label>
+            <input type="text" id="user" onkeypress="if(event.key === 'Enter') handleLogin(event)" class="w-full pb-1.5 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="Ketik username Anda...">
+          </div>
+          
+          <div class="group">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within:text-indigo-600">Password</label>
+            <input type="password" id="pass" onkeypress="if(event.key === 'Enter') handleLogin(event)" class="w-full pb-1.5 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="••••••••••••">
+          </div>
+
+          <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 pt-1">
+             <label class="flex items-center gap-2 cursor-pointer select-none hover:text-indigo-600 transition-colors"><input type="checkbox" class="accent-indigo-600 w-3.5 h-3.5 rounded cursor-pointer"> Remember me</label>
+             <a href="#" onclick="Swal.fire('Hubungi Admin', 'Silakan hubungi Admin Infokom untuk mereset password Anda.', 'info')" class="text-indigo-600 hover:text-indigo-800 transition-colors"><i class="fas fa-lock text-[10px] mr-1"></i> Forgot password?</a>
+          </div>
+
+          <div class="flex items-center justify-between pt-3">
+              <span class="text-[11px] font-bold text-slate-400">Secure Access</span>
+              <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-xl active:scale-95 transition-all flex items-center gap-2 z-50 relative">
+                Sign in <i class="fas fa-arrow-right text-[10px] pointer-events-none"></i>
+              </button>
+          </div>
+        </div>
+
+        <!-- TAUTAN PINTASAN BAWAH -->
+        <div class="mt-8 pt-5 border-t border-slate-100">
+          <p class="text-[9px] text-center font-bold text-slate-400 uppercase tracking-widest mb-3">Akses Pintu Lainnya</p>
+          <div class="grid grid-cols-2 gap-2.5">
+             <a href="portal-resort.html" target="_blank" rel="noopener noreferrer" class="flex flex-col md:flex-row items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 transition-all text-center group shadow-sm hover:shadow relative z-50">
+               <i class="fas fa-church text-indigo-400 text-sm group-hover:scale-110 transition-transform"></i>
+               <span class="text-[9px] md:text-[10px] font-bold">Dashboard Resort</span>
+             </a>
+             <a href="form-daerah.html" target="_blank" rel="noopener noreferrer" class="flex flex-col md:flex-row items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-all text-center group shadow-sm hover:shadow relative z-50">
+               <i class="fas fa-edit text-emerald-400 text-sm group-hover:scale-110 transition-transform"></i>
+               <span class="text-[9px] md:text-[10px] font-bold">Portal Input Data</span>
+             </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- COPYRIGHT FOOTER DI BAWAH KARTU -->
-  <div class="mt-6 text-center text-slate-400 text-[10px] font-bold tracking-widest uppercase relative z-10 drop-shadow-sm">
-      © 2026 Copyright by <span class="text-indigo-600 font-black">Diovery</span>. All Rights Reserved.
-  </div>
+    <!-- COPYRIGHT FOOTER -->
+    <div class="mt-auto pb-4 text-center text-slate-500 text-[10px] font-bold tracking-widest uppercase relative z-10 drop-shadow-sm shrink-0">
+        © 2026 Copyright by <span class="text-indigo-600 font-black">Diovery</span>. All Rights Reserved.
+    </div>
 
+  </div>
 </div>
+  
 <!-- ================= WIDGET LIVE CHAT AI ================= -->
     <div id="chatWidgetContainer" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-end">
       
