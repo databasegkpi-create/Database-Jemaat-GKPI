@@ -193,12 +193,15 @@
            <a href="#" onclick="Swal.fire('Hubungi Admin', 'Silakan hubungi Admin Infokom untuk mereset password Anda.', 'info')" class="text-indigo-600 hover:text-indigo-800 transition-colors"><i class="fas fa-lock text-[10px] mr-1"></i> Forgot password?</a>
         </div>
 
-        <!-- TOMBOL ONCLICK MURNI -->
-        <div class="flex items-center justify-between pt-4">
+       <!-- TOMBOL SIGN IN (INI YANG HARUS DIKLIK) -->
+        <div class="flex items-center justify-between pt-6">
             <span class="text-xs font-bold text-slate-400">Secure Access</span>
-            <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-xl active:scale-95 transition-all flex items-center gap-3">
-              Sign in <i class="fas fa-arrow-right text-xs"></i>
+            
+            <!-- Menggunakan type="button" dan onclick langsung ke Javascript -->
+            <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center gap-3 z-50 relative">
+              Sign in <i class="fas fa-arrow-right text-xs pointer-events-none"></i>
             </button>
+            
         </div>
       </div>
 
