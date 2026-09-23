@@ -192,6 +192,7 @@
         </div>
 
         <!-- Tombol Sign In (Anti-Block) -->
+    
         <div class="flex items-center justify-between pt-4 relative z-50">
             <span class="text-xs font-bold text-slate-400">Secure Access</span>
             <button type="submit" id="btnLogin" class="relative z-50 cursor-pointer bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(79,70,229,0.6)] hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-3">
@@ -1059,40 +1060,53 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateDarkModeIcon() { const btn = document.getElementById('btnDarkMode'); const icon = btn.querySelector('i'); if(document.documentElement.classList.contains('dark')) { icon.className = 'fas fa-sun text-amber-400'; } else { icon.className = 'fas fa-moon'; } }
 
 function handleLogin(e) {
+    // Pastikan default form submission dicegah
     if(e && e.preventDefault) e.preventDefault(); 
     
     const u = document.getElementById('user').value.trim(); 
     const p = document.getElementById('pass').value.trim(); 
     const btn = document.getElementById('btnLogin');
-    const originalText = btn.innerHTML; // Menyimpan bentuk asli tombol
     
-    // Cek jika kosong, munculkan Pop-Up Elegan
+    // Simpan teks asli jika tombol ada
+    const originalText = btn ? btn.innerHTML : 'Sign in <i class="fas fa-arrow-right text-xs pointer-events-none"></i>';
+    
+    // Validasi Kosong
     if (!u || !p) {
-        Swal.fire('Perhatian!', 'Username dan Password tidak boleh kosong.', 'warning');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Perhatian!',
+            text: 'Username dan Password tidak boleh kosong.',
+            confirmButtonColor: '#4f46e5'
+        });
         return;
     }
 
-    // Jika terisi, jalankan loading
-    btn.disabled = true; 
-    safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
+    // Jika elemen tombol ditemukan, ubah statusnya
+    if (btn) {
+        btn.disabled = true; 
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...';
+    }
     
     apiCall('checkLogin', {username: u, password: p}).then(res => { 
         if (res.status === 'success') { 
             USER_NOW = res; 
             localStorage.setItem('si_majelis_user', JSON.stringify(res)); 
-            apiCall('catatLogEvent', { aksi: "LOGIN", sumber: "Sistem Auth", detail: "Akun berhasil masuk: " + res.nama }).catch(e=>{});
-            showMainApp(); loadData(); 
+            
+            // Catat log (jangan hentikan proses jika gagal)
+            apiCall('catatLogEvent', { aksi: "LOGIN", sumber: "Sistem Auth", detail: "Akun berhasil masuk: " + res.nama }).catch(e=>{ console.log("Gagal catat log"); });
+            
+            showMainApp(); 
+            loadData(); 
         } else if (res.status === 'fail') { 
             Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); 
-            btn.disabled = false; btn.innerHTML = originalText; 
-        } 
-        else { 
+            if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
+        } else { 
             Swal.fire('Error Server', res.message || 'Database Petugas bermasalah.', 'error'); 
-            btn.disabled = false; btn.innerHTML = originalText; 
+            if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
         }
       }).catch(err => { 
           Swal.fire('Error Koneksi', String(err), 'error'); 
-          btn.disabled = false; btn.innerHTML = originalText; 
+          if(btn) { btn.disabled = false; btn.innerHTML = originalText; }
       });
   }
 
