@@ -176,16 +176,14 @@
 
       <!-- FORM LOGIN -->
       <form onsubmit="handleLogin(event)" class="space-y-6 relative z-50">
-        <!-- Input Username -->
-        <div class="relative group/input">
+       <div class="relative group/input">
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within/input:text-indigo-600">Username / ID</label>
-          <input type="text" id="user" required class="w-full pb-2 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="Ketik username Anda...">
+          <input type="text" id="user" class="w-full pb-2 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="Ketik username Anda...">
         </div>
         
-        <!-- Input Password -->
         <div class="relative group/input">
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within/input:text-indigo-600">Password</label>
-          <input type="password" id="pass" required class="w-full pb-2 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="••••••••••••">
+          <input type="password" id="pass" class="w-full pb-2 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="••••••••••••">
         </div>
 
         <div class="flex justify-between items-center text-xs font-bold text-slate-500 pt-2">
@@ -1060,20 +1058,42 @@ document.addEventListener('DOMContentLoaded', () => {
   function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('gkpi_dark_mode', document.documentElement.classList.contains('dark')); updateDarkModeIcon(); }
   function updateDarkModeIcon() { const btn = document.getElementById('btnDarkMode'); const icon = btn.querySelector('i'); if(document.documentElement.classList.contains('dark')) { icon.className = 'fas fa-sun text-amber-400'; } else { icon.className = 'fas fa-moon'; } }
 
-  function handleLogin(e) {
+function handleLogin(e) {
     if(e && e.preventDefault) e.preventDefault(); 
-    const u = document.getElementById('user').value; const p = document.getElementById('pass').value; const btn = document.getElementById('btnLogin');
-    btn.disabled = true; safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
+    
+    const u = document.getElementById('user').value.trim(); 
+    const p = document.getElementById('pass').value.trim(); 
+    const btn = document.getElementById('btnLogin');
+    const originalText = btn.innerHTML; // Menyimpan bentuk asli tombol
+    
+    // Cek jika kosong, munculkan Pop-Up Elegan
+    if (!u || !p) {
+        Swal.fire('Perhatian!', 'Username dan Password tidak boleh kosong.', 'warning');
+        return;
+    }
+
+    // Jika terisi, jalankan loading
+    btn.disabled = true; 
+    safeSetHTML('btnLogin', '<i class="fas fa-circle-notch fa-spin mr-2"></i> MEMERIKSA...');
+    
     apiCall('checkLogin', {username: u, password: p}).then(res => { 
         if (res.status === 'success') { 
             USER_NOW = res; 
-            // PERBAIKAN: Simpan ke localStorage
             localStorage.setItem('si_majelis_user', JSON.stringify(res)); 
             apiCall('catatLogEvent', { aksi: "LOGIN", sumber: "Sistem Auth", detail: "Akun berhasil masuk: " + res.nama }).catch(e=>{});
             showMainApp(); loadData(); 
-        } else if (res.status === 'fail') { Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); } 
-        else { Swal.fire('Error Server', res.message || 'Database Petugas bermasalah.', 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); }
-      }).catch(err => { Swal.fire('Error Koneksi', String(err), 'error'); btn.disabled = false; safeSetHTML('btnLogin', 'MASUK SISTEM'); });
+        } else if (res.status === 'fail') { 
+            Swal.fire('Gagal Login', 'Username atau Password salah!', 'error'); 
+            btn.disabled = false; btn.innerHTML = originalText; 
+        } 
+        else { 
+            Swal.fire('Error Server', res.message || 'Database Petugas bermasalah.', 'error'); 
+            btn.disabled = false; btn.innerHTML = originalText; 
+        }
+      }).catch(err => { 
+          Swal.fire('Error Koneksi', String(err), 'error'); 
+          btn.disabled = false; btn.innerHTML = originalText; 
+      });
   }
 
   function handleLogout() { 
