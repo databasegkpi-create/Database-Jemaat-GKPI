@@ -144,13 +144,13 @@
     }
   </style>
 </head>
-<body class="antialiased overscroll-none overflow-hidden touch-pan-y">
+<body class="antialiased bg-slate-50">
 
 <!-- MENU LOGIN (SPLIT SCREEN MODERN) -->
-<div id="loginPage" class="min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-[#f4f7fb]">
+<div id="loginPage" class="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 py-10 bg-gradient-to-br from-[#f8fafc] via-[#eef2ff] to-[#e2e8f0] relative overflow-y-auto">
   
   <!-- KARTU UTAMA -->
-  <div class="w-full max-w-5xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-zoom min-h-[550px] md:min-h-[600px]">
+  <div class="w-full max-w-5xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-zoom min-h-[550px] md:min-h-[600px] relative z-10 my-auto">
     
     <!-- SISI KIRI: GAMBAR -->
     <div class="w-full md:w-1/2 h-48 md:h-auto relative shrink-0 border-r border-slate-100">
@@ -174,12 +174,9 @@
 
       <h3 class="text-2xl font-bold text-slate-800 mb-8">Sign in</h3>
 
-      <!-- BUKAN TAG FORM, TAPI JAVASCRIPT MURNI AGAR ANTI-BLOCK -->
       <div class="space-y-6">
-        
         <div class="group">
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 transition-colors group-focus-within:text-indigo-600">Username / ID</label>
-          <!-- Ditambahkan event onkeypress agar tetap bisa login pakai tombol Enter -->
           <input type="text" id="user" onkeypress="if(event.key === 'Enter') handleLogin(event)" class="w-full pb-2 border-b-2 border-slate-200 bg-transparent text-sm font-bold text-slate-800 outline-none focus:border-indigo-600 transition-colors placeholder:font-normal placeholder:text-slate-300" placeholder="Ketik username Anda...">
         </div>
         
@@ -193,15 +190,11 @@
            <a href="#" onclick="Swal.fire('Hubungi Admin', 'Silakan hubungi Admin Infokom untuk mereset password Anda.', 'info')" class="text-indigo-600 hover:text-indigo-800 transition-colors"><i class="fas fa-lock text-[10px] mr-1"></i> Forgot password?</a>
         </div>
 
-       <!-- TOMBOL SIGN IN (INI YANG HARUS DIKLIK) -->
-        <div class="flex items-center justify-between pt-6">
+        <div class="flex items-center justify-between pt-4">
             <span class="text-xs font-bold text-slate-400">Secure Access</span>
-            
-            <!-- Menggunakan type="button" dan onclick langsung ke Javascript -->
-            <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center gap-3 z-50 relative">
-              Sign in <i class="fas fa-arrow-right text-xs pointer-events-none"></i>
+            <button type="button" onclick="handleLogin(event)" id="btnLogin" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-xl active:scale-95 transition-all flex items-center gap-3">
+              Sign in <i class="fas fa-arrow-right text-xs"></i>
             </button>
-            
         </div>
       </div>
 
@@ -219,9 +212,14 @@
            </a>
         </div>
       </div>
-
     </div>
   </div>
+
+  <!-- COPYRIGHT FOOTER DI BAWAH KARTU -->
+  <div class="mt-8 text-center text-slate-400 text-[10px] md:text-xs font-bold tracking-widest uppercase relative z-10 drop-shadow-sm">
+      © 2026 Copyright by <span class="text-indigo-600 font-black">Diovery</span>. All Rights Reserved.
+  </div>
+
 </div>
 <!-- ================= WIDGET LIVE CHAT AI ================= -->
     <div id="chatWidgetContainer" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex flex-col items-end">
