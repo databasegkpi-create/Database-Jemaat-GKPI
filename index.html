@@ -1223,46 +1223,66 @@ function handleLogin(e) {
       if (leafletMap !== null) leafletMap.remove();
       if (!document.getElementById('mapWilayah')) return;
       
-      // Titik tengah default Sumatera Utara
       leafletMap = L.map('mapWilayah').setView([2.5, 99.1], 7); 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
 
       let markerCount = 0; let latSum = 0, lngSum = 0;
+
+      // =======================================================
+      // PALET WARNA WILAYAH (1 sampai 12)
+      // Menggunakan kombinasi warna berkelas (Border & Fill)
+      // =======================================================
+      const warnaWilayah = {
+          1: { border: '#e11d48', fill: '#fb7185' }, // W1: Rose (Merah Muda)
+          2: { border: '#ea580c', fill: '#fb923c' }, // W2: Orange (Jingga)
+          3: { border: '#d97706', fill: '#fbbf24' }, // W3: Amber (Kuning Emas)
+          4: { border: '#059669', fill: '#34d399' }, // W4: Emerald (Hijau Zamrud)
+          5: { border: '#0d9488', fill: '#2dd4bf' }, // W5: Teal (Hijau Tosca)
+          6: { border: '#0891b2', fill: '#22d3ee' }, // W6: Cyan (Biru Muda)
+          7: { border: '#2563eb', fill: '#60a5fa' }, // W7: Blue (Biru Laut)
+          8: { border: '#4f46e5', fill: '#818cf8' }, // W8: Indigo (Nila)
+          9: { border: '#7c3aed', fill: '#a78bfa' }, // W9: Violet (Ungu Cerah)
+          10:{ border: '#c026d3', fill: '#e879f9' }, // W10: Fuchsia (Merah Keunguan)
+          11:{ border: '#db2777', fill: '#f472b6' }, // W11: Pink (Merah Jambu)
+          12:{ border: '#475569', fill: '#94a3b8' }  // W12: Slate (Abu-abu Biru)
+      };
       
       DATA_MASTER.gereja.forEach(g => {
-        // Ambil data dan pastikan koma diubah jadi titik
         let rawLat = String(g.Latitude || g.latitude || '').replace(/,/g, '.'); 
         let rawLng = String(g.Longitude || g.longitude || '').replace(/,/g, '.');
         
         let lat = parseFloat(rawLat); 
         let lng = parseFloat(rawLng);
 
-        // FILTER PENGAMAN MUTLAK:
-        // Peta hanya akan digambar JIKA formatnya angka valid DAN berada di kisaran wajar Indonesia
-        // (Latitude antara -15 s/d 15, dan Longitude antara 90 s/d 150)
+        // Pastikan format kordinat wajar
         if (!isNaN(lat) && !isNaN(lng) && lat >= -15 && lat <= 15 && lng >= 90 && lng <= 150) {
-          markerCount++; 
-          latSum += lat; 
-          lngSum += lng;
+          markerCount++; latSum += lat; lngSum += lng;
+          
+          // Ambil angka wilayah dan pilih warnanya
+          let noWilayah = parseInt(String(g.Wilayah).replace(/\D/g, ''));
+          let warna = warnaWilayah[noWilayah] || { border: '#4f46e5', fill: '#3b82f6' }; // Default Biru jika kosong/salah
           
           L.circleMarker([lat, lng], { 
-              color: '#4f46e5', fillColor: '#3b82f6', fillOpacity: 0.8, radius: 8, weight: 2 
+              color: warna.border, 
+              fillColor: warna.fill, 
+              fillOpacity: 0.85, 
+              radius: 8, 
+              weight: 2 
           }).addTo(leafletMap).bindPopup(
               `<div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px;">
-                  <h4 style="font-weight: 800; color: #1e293b; margin: 0; font-size: 13px;">${g.Nama_Gereja||'Unit'}</h4>
-                  <p style="margin: 2px 0 6px 0; font-size: 10px; font-weight: bold; color: #6366f1; text-transform: uppercase;">${g.Induk_Resort || g.Resort || 'JK'} • W-${g.Wilayah||'-'}</p>
+                  <div style="background:${warna.border}; color:white; font-size:9px; font-weight:900; padding:3px 8px; border-radius:6px; display:inline-block; margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Wilayah ${noWilayah || '-'}</div>
+                  <h4 style="font-weight: 800; color: #1e293b; margin: 0 0 3px 0; font-size: 13px; line-height:1.2;">${g.Nama_Gereja||'Unit'}</h4>
+                  <p style="margin: 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">${g.Induk_Resort || g.Resort || 'Jemaat Khusus'}</p>
               </div>`
           );
         }
       });
 
-      // Menghitung ulang titik tengah HANYA berdasarkan koordinat yang valid
       if (markerCount > 0) {
           leafletMap.setView([latSum / markerCount, lngSum / markerCount], markerCount === 1 ? 12 : 7);
       }
     } catch (e) { console.error("Gagal memuat peta:", e); }
   }
-
   function renderHomeStats() {
     let totRT = 0, totJiwa = 0; DATA_MASTER.gereja.forEach(g => { totRT += parseInt(g.Total_RT)||0; totJiwa += parseInt(g.Total_Jiwa)||0; });
     safeSetText('statTotalGereja', DATA_MASTER.gereja.length); safeSetText('statTotalMajelis', DATA_MASTER.majelis.length);
