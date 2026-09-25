@@ -3473,12 +3473,78 @@ function konfirmasiHapus(id) {
       document.getElementById('modalFolderArsip').classList.remove('hidden');
   }
 
+// --- LOGIKA FORM UPLOAD ARSIP BERTINGKAT ---
+
   function bukaModalUploadArsip(preselectResort = '') {
       document.getElementById('arsipJudulBaru').value = '';
-      if(preselectResort) document.getElementById('arsipResortTarget').value = preselectResort;
       document.getElementById('labelUploadArsip').innerText = 'Klik atau Tarik dokumen ke sini';
       fileArsipTerpilih = null;
+
+      // Isi Dropdown Wilayah
+      let htmlW = '<option value="">Pilih Wilayah</option>';
+      for(let i=1; i<=12; i++) { htmlW += `<option value="${i}">WILAYAH ${i}</option>`; }
+      document.getElementById('arsipWilayah').innerHTML = htmlW;
+
+      // Jika tombol ditekan dari dalam folder resort tertentu (Auto-Select)
+      if(preselectResort) {
+          let foundGereja = DATA_MASTER.gereja.find(g => (g.Induk_Resort || g.Resort) === preselectResort || g.Nama_Gereja === preselectResort);
+          if(foundGereja && foundGereja.Wilayah) {
+              document.getElementById('arsipWilayah').value = parseInt(String(foundGereja.Wilayah).replace(/\D/g, ''));
+          }
+      }
+      
+      syncArsipResort(preselectResort);
       document.getElementById('modalUploadArsip').classList.remove('hidden');
+  }
+
+  function syncArsipResort(preselectResort = '') {
+      const w = document.getElementById('arsipWilayah').value || ''; 
+      const cleanW = String(w).trim().toLowerCase();
+      const fr = document.getElementById('arsipResort'); 
+      if(!fr) return; 
+      
+      fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+      const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+      const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+      
+      resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); 
+      khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+      
+      if(preselectResort) {
+          fr.value = preselectResort;
+      }
+      syncArsipGereja();
+  }
+
+  function syncArsipGereja() {
+      const resSelect = document.getElementById('arsipResort'); 
+      const fg = document.getElementById('arsipGerejaTarget'); 
+      const wadah = document.getElementById('wadahArsipGereja');
+      if(!fg || !resSelect) return; 
+      
+      const val = resSelect.value;
+      const tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); 
+      
+      fg.innerHTML = '<option value="">Pilih Unit Gereja</option>'; 
+      
+      // JIKA RESORT: Tampilkan pilihan PHR dan Gereja Pagaran
+      if (tipe === "RESORT" || (!tipe && val)) { 
+          wadah.style.display = 'block';
+          fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-amber-700 bg-amber-50">🏢 DOKUMEN TINGKAT RESORT (PHR)</option>`;
+          DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { 
+              const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
+          }); 
+          fg.required = true;
+      } 
+      // JIKA JEMAAT KHUSUS (JK): Sembunyikan Kotak Ke-3
+      else if (tipe === "JK") { 
+          wadah.style.display = 'none'; 
+          fg.innerHTML = `<option value="${val}">${val}</option>`; 
+          fg.value = val; 
+          fg.required = false;
+      } else { 
+          wadah.style.display = 'block';
+      } 
   }
 
   function simpanDokumenArsip(e) {
@@ -3487,7 +3553,10 @@ function konfirmasiHapus(id) {
       
       const judul = document.getElementById('arsipJudulBaru').value;
       const kategori = document.getElementById('arsipKategoriBaru').value;
-      const resort = document.getElementById('arsipResortTarget').value;
+      const resort = document.getElementById('arsipResort').value;
+      
+      // Ambil gereja tujuan (jika Resort, ambil nama gereja. Jika JK, ambil nama resortnya)
+      const gerejaTarget = document.getElementById('arsipGerejaTarget').value || resort;
       const btn = document.getElementById('btnSimpanArsip');
       
       btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
@@ -3504,12 +3573,17 @@ function konfirmasiHapus(id) {
               if (res.status === 'success') {
                   // Tambahkan data ke memori lokal
                   DATA_ARSIP.push({
-                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
+                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, unit_gereja: gerejaTarget, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
                   });
                   
                   closeModal('modalUploadArsip');
                   Swal.fire('Berhasil!', 'Dokumen berhasil tersimpan di Lemari Resort.', 'success');
                   renderRakArsip(); // Render ulang rak agar badge angka bertambah
+                  
+                  // Jika upload dilakukan saat sedang membuka folder resort, update isinya
+                  if(!document.getElementById('modalFolderArsip').classList.contains('hidden')) {
+                      bukaFolderResort(resort);
+                  }
               } else {
                   Swal.fire('Gagal Unggah', res.message, 'error');
               }
