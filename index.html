@@ -1222,17 +1222,45 @@ function handleLogin(e) {
     try {
       if (leafletMap !== null) leafletMap.remove();
       if (!document.getElementById('mapWilayah')) return;
-      leafletMap = L.map('mapWilayah').setView([2.5, 99.1], 7); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
+      
+      // Titik tengah default Sumatera Utara
+      leafletMap = L.map('mapWilayah').setView([2.5, 99.1], 7); 
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
+
       let markerCount = 0; let latSum = 0, lngSum = 0;
+      
       DATA_MASTER.gereja.forEach(g => {
-        let lat = parseFloat(String(g.Latitude || g.latitude || '').replace(',', '.')); let lng = parseFloat(String(g.Longitude || g.longitude || '').replace(',', '.'));
-        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-          markerCount++; latSum += lat; lngSum += lng;
-          L.circleMarker([lat, lng], { color: '#4f46e5', fillColor: '#3b82f6', fillOpacity: 0.8, radius: 8, weight: 2 }).addTo(leafletMap).bindPopup(`<div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px;"><h4 style="font-weight: 800; color: #1e293b; margin: 0; font-size: 13px;">${g.Nama_Gereja||'Unit'}</h4><p style="margin: 2px 0 6px 0; font-size: 10px; font-weight: bold; color: #6366f1; text-transform: uppercase;">${g.Induk_Resort || g.Resort || 'JK'} • W-${g.Wilayah||'-'}</p></div>`);
+        // Ambil data dan pastikan koma diubah jadi titik
+        let rawLat = String(g.Latitude || g.latitude || '').replace(/,/g, '.'); 
+        let rawLng = String(g.Longitude || g.longitude || '').replace(/,/g, '.');
+        
+        let lat = parseFloat(rawLat); 
+        let lng = parseFloat(rawLng);
+
+        // FILTER PENGAMAN MUTLAK:
+        // Peta hanya akan digambar JIKA formatnya angka valid DAN berada di kisaran wajar Indonesia
+        // (Latitude antara -15 s/d 15, dan Longitude antara 90 s/d 150)
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -15 && lat <= 15 && lng >= 90 && lng <= 150) {
+          markerCount++; 
+          latSum += lat; 
+          lngSum += lng;
+          
+          L.circleMarker([lat, lng], { 
+              color: '#4f46e5', fillColor: '#3b82f6', fillOpacity: 0.8, radius: 8, weight: 2 
+          }).addTo(leafletMap).bindPopup(
+              `<div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px;">
+                  <h4 style="font-weight: 800; color: #1e293b; margin: 0; font-size: 13px;">${g.Nama_Gereja||'Unit'}</h4>
+                  <p style="margin: 2px 0 6px 0; font-size: 10px; font-weight: bold; color: #6366f1; text-transform: uppercase;">${g.Induk_Resort || g.Resort || 'JK'} • W-${g.Wilayah||'-'}</p>
+              </div>`
+          );
         }
       });
-      if (markerCount > 0) leafletMap.setView([latSum / markerCount, lngSum / markerCount], markerCount === 1 ? 12 : 7);
-    } catch (e) {}
+
+      // Menghitung ulang titik tengah HANYA berdasarkan koordinat yang valid
+      if (markerCount > 0) {
+          leafletMap.setView([latSum / markerCount, lngSum / markerCount], markerCount === 1 ? 12 : 7);
+      }
+    } catch (e) { console.error("Gagal memuat peta:", e); }
   }
 
   function renderHomeStats() {
