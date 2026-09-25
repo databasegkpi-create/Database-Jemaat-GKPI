@@ -3377,57 +3377,86 @@ function konfirmasiHapus(id) {
                        <p class="text-[9px] font-bold text-emerald-600 mt-1 uppercase tracking-widest">Siap Diunggah</p>`;
   }
 
-  function simpanDokumenArsip(e) {
+function simpanDokumenArsip(e) {
       e.preventDefault();
       if (!fileArsipTerpilih) return Swal.fire('Perhatian', 'Pilih file atau foto dokumen terlebih dahulu.', 'warning');
       
       const judul = document.getElementById('arsipJudul').value;
       const kategori = document.getElementById('arsipKategori').value;
+      const unit = document.getElementById('arsipGereja').value;
       const btn = document.getElementById('btnSimpanArsip');
       
-      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH...';
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
       
-      // Simulasi Proses Upload
-      setTimeout(() => {
-          // Membuat objek URL lokal dari file yang diupload (Simulasi Front-End)
-          const objUrl = URL.createObjectURL(fileArsipTerpilih);
-          const tgl = new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
+      // Mengubah file fisik menjadi teks Base64 untuk dikirim ke Google Apps Script
+      const reader = new FileReader();
+      reader.onload = function(event) {
+          const base64Data = event.target.result.split(',')[1]; // Ambil data murninya saja
+          const mimeType = fileArsipTerpilih.type;
           
-          const iconCat = kategori.includes('SK') ? 'fa-file-signature text-blue-500' : (kategori.includes('Sertifikat') ? 'fa-certificate text-amber-500' : 'fa-camera text-emerald-500');
-          
-          const cardHtml = `
-          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group relative animate-zoom cursor-pointer" onclick="bukaPreviewArsip('${objUrl}', '${judul}', '${kategori}', '${tgl}')">
-              <div class="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                  <img src="${objUrl}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500">
-                  <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
-                      <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full text-slate-800 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"><i class="fas fa-search-plus"></i></div>
-                  </div>
-              </div>
-              <div class="p-3">
-                  <div class="flex items-start gap-2 mb-1">
-                      <i class="fas ${iconCat} text-[10px] mt-0.5"></i>
-                      <h4 class="text-xs font-bold text-slate-800 leading-tight line-clamp-2">${judul}</h4>
-                  </div>
-                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${tgl}</p>
-              </div>
-          </div>`;
-          
-          const grid = document.getElementById('arsipGridContainer');
-          if(grid.innerHTML.includes('Belum ada dokumen')) grid.innerHTML = '';
-          
-          grid.insertAdjacentHTML('afterbegin', cardHtml);
-          
-          Swal.fire('Berhasil!', 'Dokumen berhasil diarsipkan ke sistem.', 'success');
-          e.target.reset(); fileArsipTerpilih = null;
-          btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Unggah Dokumen';
-          
-          // Kembalikan tampilan kotak upload ke semula
-          document.getElementById('fileUploadArsip').parentElement.innerHTML = `
-              <div class="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-all mb-3"><i class="fas fa-cloud-upload-alt text-2xl"></i></div>
-              <p class="text-xs font-bold text-slate-600">Klik atau Tarik file ke sini</p>
-              <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
-              <input type="file" id="fileUploadArsip" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">`;
-      }, 1500);
+          // Bersihkan nama file agar tidak ada spasi yang error di sistem
+          const cleanJudul = judul.replace(/[^a-zA-Z0-9]/g, '_');
+          const fileName = cleanJudul + "_" + fileArsipTerpilih.name;
+
+          // Bungkus data untuk dikirim
+          const payload = {
+              fileName: fileName,
+              mimeType: mimeType,
+              fileData: base64Data,
+              kategori: kategori,
+              unit: unit
+          };
+
+          // Kirim ke Google Apps Script (Memanggil fungsi 'uploadArsip' yang baru kita buat)
+          apiCall('uploadArsip', payload).then(res => {
+              if (res.status === 'success') {
+                  const tgl = new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
+                  const iconCat = kategori.includes('SK') ? 'fa-file-signature text-blue-500' : (kategori.includes('Sertifikat') ? 'fa-certificate text-amber-500' : 'fa-camera text-emerald-500');
+                  
+                  // Tampilkan langsung di layar setelah berhasil masuk ke Drive
+                  const cardHtml = `
+                  <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group relative animate-zoom cursor-pointer" onclick="bukaPreviewArsip('${res.url}', '${judul}', '${kategori}', '${tgl}')">
+                      <div class="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                          <img src="${res.url}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500">
+                          <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
+                              <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full text-slate-800 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"><i class="fas fa-search-plus"></i></div>
+                          </div>
+                      </div>
+                      <div class="p-3">
+                          <div class="flex items-start gap-2 mb-1">
+                              <i class="fas ${iconCat} text-[10px] mt-0.5"></i>
+                              <h4 class="text-xs font-bold text-slate-800 leading-tight line-clamp-2">${judul}</h4>
+                          </div>
+                          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${tgl}</p>
+                      </div>
+                  </div>`;
+                  
+                  const grid = document.getElementById('arsipGridContainer');
+                  if(grid.innerHTML.includes('Belum ada dokumen')) grid.innerHTML = '';
+                  grid.insertAdjacentHTML('afterbegin', cardHtml);
+                  
+                  Swal.fire('Berhasil!', 'Dokumen telah diunggah dan dibuatkan folder otomatis di Google Drive.', 'success');
+                  e.target.reset(); fileArsipTerpilih = null;
+                  
+                  // Kembalikan kotak upload ke posisi semula
+                  document.getElementById('fileUploadArsip').parentElement.innerHTML = `
+                      <div class="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-all mb-3"><i class="fas fa-cloud-upload-alt text-2xl"></i></div>
+                      <p class="text-xs font-bold text-slate-600">Klik atau Tarik file ke sini</p>
+                      <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
+                      <input type="file" id="fileUploadArsip" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">`;
+
+              } else {
+                  Swal.fire('Gagal Unggah', res.message, 'error');
+              }
+          }).catch(err => {
+              Swal.fire('Koneksi Error', String(err), 'error');
+          }).finally(() => {
+              btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Unggah Dokumen';
+          });
+      };
+      
+      // Jalankan proses pembacaan file
+      reader.readAsDataURL(fileArsipTerpilih);
   }
 
   function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
