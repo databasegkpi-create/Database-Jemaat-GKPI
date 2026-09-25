@@ -655,73 +655,34 @@
         </div>
 
 <!-- ========================================== -->
-        <!-- HALAMAN E-ARSIP & GALERI MULTIMEDIA -->
+        <!-- HALAMAN E-ARSIP (KONSEP RAK/FOLDER) -->
         <!-- ========================================== -->
-        <div id="pageArsip" class="hidden space-y-6 animate-fade">
+        <div id="pageArsip" class="hidden space-y-6 animate-fade flex-1 flex flex-col">
           
-          <div class="mb-2">
-            <h2 class="text-xl font-black text-slate-800"><i class="fas fa-folder-open text-amber-500 mr-2"></i>E-Arsip & Galeri Multimedia</h2>
-            <p class="text-xs text-slate-500 mt-1 font-medium">Manajemen dokumen fisik, Surat Keputusan (SK), sertifikat, dan dokumentasi acara.</p>
+          <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-3xl soft-shadow border border-slate-100">
+            <div>
+              <h2 class="text-xl font-black text-slate-800 flex items-center"><i class="fas fa-archive text-amber-500 mr-3 text-2xl"></i> Ruang Arsip Digital</h2>
+              <p class="text-xs text-slate-500 mt-1 font-medium">Rak penyimpanan Izin, SK, dan Dokumen per Resort/Unit.</p>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="relative w-full md:w-64">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="cariRakArsip" onkeyup="cariFolderArsip()" placeholder="Cari Lemari Resort..." class="w-full py-3 pl-11 pr-4 bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-amber-500 rounded-xl text-xs font-bold text-slate-700 transition-all shadow-inner">
+                </div>
+                <button onclick="bukaModalUploadArsip()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-amber-200 transition-all flex items-center gap-2 shrink-0">
+                    <i class="fas fa-cloud-upload-alt text-sm"></i> <span class="hidden md:inline">Unggah Arsip</span>
+                </button>
+            </div>
           </div>
 
-          <!-- KOTAK UPLOAD DOKUMEN -->
-          <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 flex flex-col md:flex-row gap-6 items-start">
-              <div class="w-full md:w-1/3">
-                  <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 hover:bg-amber-50 hover:border-amber-300 transition-all p-6 text-center cursor-pointer group flex flex-col items-center justify-center h-48 relative" onclick="document.getElementById('fileUploadArsip').click()">
-                      <div class="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-all mb-3"><i class="fas fa-cloud-upload-alt text-2xl"></i></div>
-                      <p class="text-xs font-bold text-slate-600">Klik atau Tarik file ke sini</p>
-                      <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
-                      <input type="file" id="fileUploadArsip" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
-                  </div>
-              </div>
-              <form onsubmit="simpanDokumenArsip(event)" class="w-full md:w-2/3 space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Judul Dokumen</label><input type="text" id="arsipJudul" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700 placeholder:font-normal" placeholder="Contoh: SK Pengangkatan Pendeta..."></div>
-                      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Kategori</label><select id="arsipKategori" required class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700"><option value="Surat Keputusan (SK)">Surat Keputusan (SK)</option><option value="Sertifikat Tanah/Aset">Sertifikat Tanah/Aset</option><option value="Surat Edaran">Surat Edaran</option><option value="Dokumentasi Acara">Dokumentasi Acara</option><option value="Lainnya">Lainnya</option></select></div>
-                      <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Terkait Unit / Gereja</label><select id="arsipGereja" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700"><option value="Tingkat Sinode">Tingkat Sinode / Pusat</option></select></div>
-                      <div class="space-y-1.5 flex flex-col justify-end">
-                          <button type="submit" id="btnSimpanArsip" class="w-full bg-slate-800 text-white p-3 rounded-xl font-bold uppercase tracking-widest text-xs shadow-md hover:bg-slate-900 transition-all flex items-center justify-center gap-2 h-[46px]"><i class="fas fa-save"></i> Unggah Dokumen</button>
-                      </div>
-                  </div>
-              </form>
-          </div>
-
-          <!-- GRID GALERI DOKUMEN -->
-          <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 min-h-[400px]">
-              <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-slate-100 pb-4">
-                  <div class="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
-                      <button onclick="filterGaleriArsip('Semua')" class="px-4 py-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Semua</button>
-                      <button onclick="filterGaleriArsip('SK')" class="px-4 py-2 bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">SK</button>
-                      <button onclick="filterGaleriArsip('Aset')" class="px-4 py-2 bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">Aset/Sertifikat</button>
-                  </div>
-                  <div class="relative w-full md:w-64 shrink-0">
-                      <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                      <input type="text" placeholder="Cari arsip..." class="w-full py-2.5 pl-10 pr-4 bg-slate-50 rounded-xl border border-slate-200 outline-none text-xs font-medium focus:ring-2 focus:ring-amber-500">
-                  </div>
-              </div>
-              
-              <!-- Container Grid Foto -->
-              <div id="arsipGridContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  <!-- Data arsip akan digenerate via Javascript -->
+          <!-- GRID RAK FOLDER (Akan diisi oleh Javascript) -->
+          <div class="bg-white p-6 md:p-8 rounded-3xl soft-shadow border border-slate-100 flex-1 overflow-y-auto custom-scrollbar">
+              <div id="rakArsipContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                  <!-- Folder akan muncul di sini -->
               </div>
           </div>
 
         </div>
-          
-        <!-- HALAMAN ADMIN -->
-        <div id="pageAdmin" class="hidden space-y-6 animate-fade">
-          <div class="bg-white p-8 md:p-10 rounded-3xl soft-shadow border border-slate-100 max-w-4xl mx-auto">
-            <div class="flex items-center gap-3 mb-8"><div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-user-shield"></i></div><div><h3 class="text-xl font-extrabold text-slate-800">Manajemen Hak Akses</h3><p class="text-sm text-slate-500 font-medium">Pengaturan Admin dan Petugas</p></div></div>
-            <form onsubmit="handleSavePetugas(event)" class="bg-slate-50 p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5 mb-10"><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Username Login</label><input type="text" name="Username" required class="w-full p-3 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-500 font-medium text-sm"></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Password</label><input type="text" name="Password" required class="w-full p-3 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-500 font-medium text-sm"></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Nama Lengkap</label><input type="text" name="Nama" required class="w-full p-3 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-500 font-medium text-sm"></div><div class="space-y-1"><label class="text-xs font-bold text-slate-500">Level Akses</label><select name="Role" class="w-full p-3 rounded-xl border border-slate-200 bg-white outline-none focus:border-indigo-500 font-medium text-sm"><option value="Admin">Admin (Akses Penuh)</option><option value="Editor">Editor (Bisa Tambah & Edit)</option><option value="Viewer">Viewer (Hanya Lihat Data)</option></select></div><button type="submit" class="md:col-span-2 bg-slate-800 text-white py-3.5 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-slate-900 shadow-md mt-2 transition-all">Simpan Akun Baru</button></form>
-            <h4 class="text-sm font-bold text-slate-700 mb-4">Daftar Petugas Terdaftar</h4><div id="adminTablePetugas" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-          </div>
-        </div>
-
-      </div>
-      <footer class="mt-auto py-5 border-t border-slate-200 text-center text-slate-400 text-[10px] md:text-xs font-bold tracking-widest uppercase bg-slate-50">© 2026 Copyright by <span class="text-indigo-600 font-black">DioVeryyy</span>. All Rights Reserved.</footer>
-    </div>
-  </main>
-</div>
 
 <!-- ================= SELURUH KOTAK POP-UP/MODAL DI BAWAH INI ================= -->
 
@@ -1076,7 +1037,61 @@
         </div>
     </div>
 </div>
-  
+<!-- MODAL ISI FOLDER ARSIP (Saat Rak Diklik) -->
+<div id="modalFolderArsip" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex flex-col items-center justify-center p-4 md:p-8">
+    <div class="bg-white w-full max-w-5xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] relative animate-zoom border border-slate-100">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-6 flex justify-between items-center text-white shrink-0 z-10 shadow-md">
+            <div>
+                <span class="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-2 inline-block shadow-sm">Rak Dokumen Resort</span>
+                <h3 id="judulFolderResort" class="text-2xl font-black flex items-center drop-shadow-md"><i class="fas fa-folder-open mr-3 opacity-90"></i> Nama Resort</h3>
+            </div>
+            <button onclick="closeModal('modalFolderArsip')" class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-full hover:bg-rose-500 transition-colors text-white"><i class="fas fa-times text-lg"></i></button>
+        </div>
+        
+        <div class="flex-1 p-6 md:p-8 bg-slate-50/50 overflow-y-auto custom-scrollbar">
+            <!-- Navigasi Tab Kategori Dokumen -->
+            <div class="flex gap-2 overflow-x-auto pb-4 mb-6 border-b border-slate-200 custom-scrollbar">
+                <button class="px-5 py-2.5 bg-white text-amber-600 border-2 border-amber-500 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap shadow-sm"><i class="fas fa-layer-group mr-2"></i>Semua</button>
+                <button class="px-5 py-2.5 bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap shadow-sm"><i class="fas fa-file-signature mr-2 text-blue-400"></i>SK & Legal</button>
+                <button class="px-5 py-2.5 bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap shadow-sm"><i class="fas fa-map mr-2 text-emerald-400"></i>Surat Tanah</button>
+                <button class="px-5 py-2.5 bg-slate-50 text-slate-500 border border-slate-200 hover:bg-white rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap shadow-sm"><i class="fas fa-building mr-2 text-indigo-400"></i>IMB/Izin Bangunan</button>
+            </div>
+            
+            <!-- Isi Dokumen -->
+            <div id="isiDokumenContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Javascript akan mengisi dokumen di sini -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FORM UPLOAD ARSIP -->
+<div id="modalUploadArsip" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden relative animate-zoom">
+        <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-800 flex items-center"><i class="fas fa-cloud-upload-alt text-amber-500 mr-2"></i> Unggah Dokumen Baru</h3>
+                <p class="text-[11px] text-slate-400 font-bold mt-1 uppercase tracking-widest">Pilih resort tujuan & kategori dokumen</p>
+            </div>
+            <button onclick="closeModal('modalUploadArsip')" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"><i class="fas fa-times"></i></button>
+        </div>
+        <form onsubmit="simpanDokumenArsip(event)" class="p-8 space-y-5 bg-slate-50/50">
+            <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-white hover:bg-amber-50 hover:border-amber-300 transition-all p-8 text-center cursor-pointer group" onclick="document.getElementById('fileUploadArsipBaru').click()">
+                <div class="w-16 h-16 bg-slate-50 rounded-full shadow-inner flex items-center justify-center text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors"><i class="fas fa-file-upload text-3xl"></i></div>
+                <p class="text-sm font-bold text-slate-600" id="labelUploadArsip">Klik atau Tarik dokumen ke sini</p>
+                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
+                <input type="file" id="fileUploadArsipBaru" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Judul Dokumen</label><input type="text" id="arsipJudulBaru" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700 shadow-sm" placeholder="Contoh: SK Panitia Pembangunan"></div>
+                <div class="space-y-1.5"><label class="text-[10px] font-bold text-slate-500 uppercase">Kategori Izin/Surat</label><select id="arsipKategoriBaru" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700 shadow-sm"><option value="Surat Keputusan (SK)">Surat Keputusan (SK)</option><option value="Sertifikat Tanah">Sertifikat Tanah</option><option value="IMB / Izin Bangunan">IMB / Izin Bangunan</option><option value="Laporan Keuangan">Laporan Keuangan</option><option value="Lainnya">Lainnya</option></select></div>
+                <div class="space-y-1.5 md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase">Simpan di Lemari (Resort/JK)</label><select id="arsipResortTarget" required class="w-full p-3.5 rounded-xl bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-slate-700 shadow-sm"></select></div>
+            </div>
+            <button type="submit" id="btnSimpanArsip" class="w-full bg-slate-800 text-white p-4 rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg hover:bg-slate-900 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"><i class="fas fa-cloud-upload-alt text-sm"></i> Mulai Unggah ke Drive</button>
+        </form>
+    </div>
+</div>
+          
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYnIaYGBjpKR8efmRqOGu9FPbydSTh1FeN6im856IWRXdC1QvHDDY8Kp5w3lU0p9T6/exec";
   const SECRET_API_KEY = "GKPI_HUB_SECURE_2026";
@@ -3360,124 +3375,137 @@ function konfirmasiHapus(id) {
       }
   };
 
+// =========================================================================
+  // MESIN E-ARSIP (SISTEM RAK & FOLDER)
   // =========================================================================
-  // MESIN E-ARSIP & GALERI MULTIMEDIA
-  // =========================================================================
-  let fileArsipTerpilih = null;
+  
+  // Data simulasi penyimpan URL (Nantinya diambil dari Google Sheet)
+  let DATA_ARSIP = []; 
 
-  function previewUploadArsip(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      fileArsipTerpilih = file;
+  // Panggil fungsi ini di dalam switchTab('arsip') atau loadData()
+  function renderRakArsip() {
+      const container = document.getElementById('rakArsipContainer');
+      if (!container) return;
+
+      // Kumpulkan daftar Resort unik dari database Gereja
+      const listResort = [...new Set(DATA_MASTER.gereja.map(g => g.Induk_Resort || g.Resort || g.Nama_Gereja).filter(r => r))].sort();
+
+      container.innerHTML = listResort.map(resort => {
+          // Menghitung jumlah dokumen yang dimiliki resort ini
+          let jmlDokumen = DATA_ARSIP.filter(a => a.resort === resort).length;
+          let badge = jmlDokumen > 0 
+                      ? `<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-black">${jmlDokumen} File</span>` 
+                      : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">Kosong</span>`;
+
+          return `
+          <div onclick="bukaFolderResort('${resort}')" class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full text-center">
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-amber-100 to-transparent rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-125 transition-transform"></div>
+              <div class="w-16 h-16 mx-auto bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors shadow-sm">
+                  <i class="fas fa-folder"></i>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800 leading-tight mb-2 flex-1">${resort}</h4>
+              <div class="mt-auto pt-3 border-t border-slate-100">${badge}</div>
+          </div>`;
+      }).join('');
       
-      // Update visual kotak upload
-      const box = event.target.parentElement;
-      box.innerHTML = `<div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 mb-3"><i class="fas fa-check text-2xl"></i></div>
-                       <p class="text-xs font-bold text-slate-800 truncate px-4 w-full">${file.name}</p>
-                       <p class="text-[9px] font-bold text-emerald-600 mt-1 uppercase tracking-widest">Siap Diunggah</p>`;
+      // Isi Dropdown di Modal Upload
+      const optHtml = `<option value="">-- Pilih Lemari Resort Tujuan --</option>` + 
+                      listResort.map(r => `<option value="${r}">${r}</option>`).join('');
+      if(document.getElementById('arsipResortTarget')) document.getElementById('arsipResortTarget').innerHTML = optHtml;
   }
 
-function simpanDokumenArsip(e) {
-      e.preventDefault();
-      if (!fileArsipTerpilih) return Swal.fire('Perhatian', 'Pilih file atau foto dokumen terlebih dahulu.', 'warning');
+  function cariFolderArsip() {
+      const input = document.getElementById('cariRakArsip').value.toLowerCase();
+      const rakCards = document.getElementById('rakArsipContainer').children;
+      for (let i = 0; i < rakCards.length; i++) {
+          let namaResort = rakCards[i].querySelector('h4').innerText.toLowerCase();
+          rakCards[i].style.display = namaResort.includes(input) ? "" : "none";
+      }
+  }
+
+  function bukaFolderResort(resortName) {
+      document.getElementById('judulFolderResort').innerHTML = `<i class="fas fa-folder-open mr-3 opacity-90 text-amber-100"></i> ${resortName}`;
+      const container = document.getElementById('isiDokumenContainer');
       
-      const judul = document.getElementById('arsipJudul').value;
-      const kategori = document.getElementById('arsipKategori').value;
-      const unit = document.getElementById('arsipGereja').value;
+      const fileResortIni = DATA_ARSIP.filter(a => a.resort === resortName);
+      
+      if (fileResortIni.length === 0) {
+          container.innerHTML = `
+          <div class="col-span-full py-16 text-center text-slate-400 font-bold border-2 border-dashed border-slate-300 rounded-2xl bg-white">
+              <i class="fas fa-box-open text-5xl mb-4 text-slate-300"></i><br>
+              Lemari arsip ini masih kosong.<br>
+              <button onclick="closeModal('modalFolderArsip'); setTimeout(()=>bukaModalUploadArsip('${resortName}'), 300)" class="mt-4 bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-700 px-4 py-2 rounded-lg text-xs font-bold uppercase transition-colors">Unggah Dokumen Pertama</button>
+          </div>`;
+      } else {
+          container.innerHTML = fileResortIni.map(file => {
+              const iconCat = file.kategori.includes('SK') ? 'fa-file-signature text-blue-500' : (file.kategori.includes('Tanah') ? 'fa-map text-emerald-500' : 'fa-building text-indigo-500');
+              return `
+              <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group relative cursor-pointer" onclick="bukaPreviewArsip('${file.url}', '${file.judul}', '${file.kategori}', '${file.tgl}')">
+                  <div class="h-28 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                      <img src="${file.url}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500">
+                      <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center">
+                          <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full text-slate-800 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"><i class="fas fa-search-plus"></i></div>
+                      </div>
+                  </div>
+                  <div class="p-3 bg-white">
+                      <div class="flex items-start gap-2 mb-1.5">
+                          <i class="fas ${iconCat} text-[10px] mt-0.5"></i>
+                          <h4 class="text-[11px] font-bold text-slate-800 leading-tight line-clamp-2">${file.judul}</h4>
+                      </div>
+                      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${file.tgl}</p>
+                  </div>
+              </div>`;
+          }).join('');
+      }
+      document.getElementById('modalFolderArsip').classList.remove('hidden');
+  }
+
+  function bukaModalUploadArsip(preselectResort = '') {
+      document.getElementById('arsipJudulBaru').value = '';
+      if(preselectResort) document.getElementById('arsipResortTarget').value = preselectResort;
+      document.getElementById('labelUploadArsip').innerText = 'Klik atau Tarik dokumen ke sini';
+      fileArsipTerpilih = null;
+      document.getElementById('modalUploadArsip').classList.remove('hidden');
+  }
+
+  function simpanDokumenArsip(e) {
+      e.preventDefault();
+      if (!fileArsipTerpilih) return Swal.fire('Perhatian', 'Pilih file dokumen terlebih dahulu.', 'warning');
+      
+      const judul = document.getElementById('arsipJudulBaru').value;
+      const kategori = document.getElementById('arsipKategoriBaru').value;
+      const resort = document.getElementById('arsipResortTarget').value;
       const btn = document.getElementById('btnSimpanArsip');
       
       btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
       
-      // Mengubah file fisik menjadi teks Base64 untuk dikirim ke Google Apps Script
       const reader = new FileReader();
       reader.onload = function(event) {
-          const base64Data = event.target.result.split(',')[1]; // Ambil data murninya saja
-          const mimeType = fileArsipTerpilih.type;
-          
-          // Bersihkan nama file agar tidak ada spasi yang error di sistem
-          const cleanJudul = judul.replace(/[^a-zA-Z0-9]/g, '_');
-          const fileName = cleanJudul + "_" + fileArsipTerpilih.name;
+          const base64Data = event.target.result.split(',')[1];
+          const fileName = judul.replace(/[^a-zA-Z0-9]/g, '_') + "_" + fileArsipTerpilih.name;
 
-          // Bungkus data untuk dikirim
-          const payload = {
-              fileName: fileName,
-              mimeType: mimeType,
-              fileData: base64Data,
-              kategori: kategori,
-              unit: unit
-          };
+          const payload = { fileName: fileName, mimeType: fileArsipTerpilih.type, fileData: base64Data, kategori: kategori, unit: resort };
 
-          // Kirim ke Google Apps Script (Memanggil fungsi 'uploadArsip' yang baru kita buat)
+          // Proses upload API
           apiCall('uploadArsip', payload).then(res => {
               if (res.status === 'success') {
-                  const tgl = new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'});
-                  const iconCat = kategori.includes('SK') ? 'fa-file-signature text-blue-500' : (kategori.includes('Sertifikat') ? 'fa-certificate text-amber-500' : 'fa-camera text-emerald-500');
+                  // Tambahkan data ke memori lokal
+                  DATA_ARSIP.push({
+                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
+                  });
                   
-                  // Tampilkan langsung di layar setelah berhasil masuk ke Drive
-                  const cardHtml = `
-                  <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group relative animate-zoom cursor-pointer" onclick="bukaPreviewArsip('${res.url}', '${judul}', '${kategori}', '${tgl}')">
-                      <div class="h-32 bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                          <img src="${res.url}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500">
-                          <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/30 transition-colors flex items-center justify-center">
-                              <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full text-slate-800 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"><i class="fas fa-search-plus"></i></div>
-                          </div>
-                      </div>
-                      <div class="p-3">
-                          <div class="flex items-start gap-2 mb-1">
-                              <i class="fas ${iconCat} text-[10px] mt-0.5"></i>
-                              <h4 class="text-xs font-bold text-slate-800 leading-tight line-clamp-2">${judul}</h4>
-                          </div>
-                          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">${tgl}</p>
-                      </div>
-                  </div>`;
-                  
-                  const grid = document.getElementById('arsipGridContainer');
-                  if(grid.innerHTML.includes('Belum ada dokumen')) grid.innerHTML = '';
-                  grid.insertAdjacentHTML('afterbegin', cardHtml);
-                  
-                  Swal.fire('Berhasil!', 'Dokumen telah diunggah dan dibuatkan folder otomatis di Google Drive.', 'success');
-                  e.target.reset(); fileArsipTerpilih = null;
-                  
-                  // Kembalikan kotak upload ke posisi semula
-                  document.getElementById('fileUploadArsip').parentElement.innerHTML = `
-                      <div class="w-14 h-14 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-all mb-3"><i class="fas fa-cloud-upload-alt text-2xl"></i></div>
-                      <p class="text-xs font-bold text-slate-600">Klik atau Tarik file ke sini</p>
-                      <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
-                      <input type="file" id="fileUploadArsip" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">`;
-
+                  closeModal('modalUploadArsip');
+                  Swal.fire('Berhasil!', 'Dokumen berhasil tersimpan di Lemari Resort.', 'success');
+                  renderRakArsip(); // Render ulang rak agar badge angka bertambah
               } else {
                   Swal.fire('Gagal Unggah', res.message, 'error');
               }
-          }).catch(err => {
-              Swal.fire('Koneksi Error', String(err), 'error');
-          }).finally(() => {
-              btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Unggah Dokumen';
-          });
+          }).catch(err => Swal.fire('Koneksi Error', String(err), 'error'))
+            .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt text-sm"></i> Mulai Unggah ke Drive'; });
       };
-      
-      // Jalankan proses pembacaan file
       reader.readAsDataURL(fileArsipTerpilih);
   }
-
-  function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
-      document.getElementById('imgArsipPreview').src = imgSrc;
-      document.getElementById('previewArsipTitle').innerText = judul;
-      document.getElementById('previewArsipMeta').innerText = `${kategori} • Diunggah pada: ${tgl}`;
-      document.getElementById('btnDownloadArsip').href = imgSrc;
-      document.getElementById('modalPreviewArsip').classList.remove('hidden');
-  }
-
-  function filterGaleriArsip(kategori) {
-      Swal.fire({ icon: 'info', title: 'Fitur Filter', text: `Filter dokumen berdasarkan "${kategori}" sedang disiapkan koneksinya ke database server.`, timer: 2000, showConfirmButton: false });
-  }
-
-  // Isi default awal saat kosong
-  setTimeout(() => {
-      const grid = document.getElementById('arsipGridContainer');
-      if(grid && grid.children.length === 0) {
-          grid.innerHTML = `<div class="col-span-full p-10 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50"><i class="fas fa-folder-open text-4xl mb-3 text-slate-300"></i><br>Belum ada dokumen yang diarsipkan.</div>`;
-      }
-  }, 1000);
+  
 </script>
 </body>
 </html>
