@@ -3411,20 +3411,21 @@ function konfirmasiHapus(id) {
   // =========================================================================
   
   let DATA_ARSIP = []; 
-  let globalRakResort = []; // Menyimpan master lemari
+  let globalRakResort = []; 
   let currentPageArsip = 1;
-  const itemsPerArsipPage = 15; // Jumlah folder per halaman
+  const itemsPerArsipPage = 15; 
+  let fileArsipTerpilih = null; // Menyimpan file yang akan diunggah
 
   // Dipanggil saat membuka tab Arsip
   function renderRakArsip() {
-      // 1. Isi Dropdown Wilayah (Jika belum terisi)
+      // 1. Isi Dropdown Wilayah 
       if(document.getElementById('filterWilayahArsip') && document.getElementById('filterWilayahArsip').options.length <= 1) {
           let htmlW = '<option value="">Semua Wilayah</option>'; 
           for(let i=1; i<=12; i++) { htmlW += `<option value="${i}">Wilayah ${i}</option>`; }
           document.getElementById('filterWilayahArsip').innerHTML = htmlW;
       }
 
-      // 2. Petakan Resort unik beserta Info Wilayahnya dari Data Master
+      // 2. Petakan Resort unik
       const mapResort = {};
       DATA_MASTER.gereja.forEach(g => {
           let res = String(g.Induk_Resort || g.Resort || g.Nama_Gereja || '').trim();
@@ -3436,33 +3437,29 @@ function konfirmasiHapus(id) {
           }
       });
 
-      // Simpan ke variabel global yang di-sort sesuai abjad
       globalRakResort = Object.values(mapResort).sort((a, b) => a.nama.localeCompare(b.nama));
       
-      // 3. Isi ulang opsi Dropdown Modal Upload
+      // 3. Dropdown Modal Upload
       const optHtml = `<option value="">-- Pilih Lemari Resort Tujuan --</option>` + 
                       globalRakResort.map(r => `<option value="${r.nama}">${r.nama}</option>`).join('');
       if(document.getElementById('arsipResortTarget')) document.getElementById('arsipResortTarget').innerHTML = optHtml;
 
-      // 4. Langsung eksekusi filter dan render ke layar
       filterRakArsip(true); 
   }
 
-  // Fungsi Utama Pemfilteran (Terhubung ke Search Bar dan Dropdown Wilayah)
   function filterRakArsip(resetPage = true) {
-      if (resetPage) currentPageArsip = 1;
+      // Pastikan reset hanya terjadi jika bukan event onchange/onkeyup
+      if (resetPage === true || resetPage instanceof Event) currentPageArsip = 1;
       
       const kataKunci = document.getElementById('cariRakArsip') ? document.getElementById('cariRakArsip').value.toLowerCase() : '';
       const filterWil = document.getElementById('filterWilayahArsip') ? document.getElementById('filterWilayahArsip').value : '';
 
-      // Eksekusi Penyaringan Data
       let rakFiltered = globalRakResort.filter(r => {
           let matchWilayah = !filterWil || String(r.wilayah) === String(filterWil);
           let matchCari = !kataKunci || r.nama.toLowerCase().includes(kataKunci);
           return matchWilayah && matchCari;
       });
 
-      // Logika Paginasi (Pembagian Halaman)
       const totalItems = rakFiltered.length;
       const totalPages = Math.ceil(totalItems / itemsPerArsipPage) || 1;
       if(currentPageArsip > totalPages) currentPageArsip = totalPages;
@@ -3473,14 +3470,12 @@ function konfirmasiHapus(id) {
       const container = document.getElementById('rakArsipContainer');
       if(!container) return;
 
-      // Jika tidak ditemukan hasil
       if (paginatedRak.length === 0) {
           container.innerHTML = `<div class="col-span-full py-16 text-center text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50"><i class="fas fa-folder-open text-4xl mb-3 text-slate-300"></i><br>Lemari Resort Tidak Ditemukan.</div>`;
           document.getElementById('paginationArsip').innerHTML = '';
           return;
       }
 
-      // Render Hasil ke Layar
       container.innerHTML = paginatedRak.map(resortObj => {
           let resort = resortObj.nama;
           let w = resortObj.wilayah;
@@ -3491,12 +3486,9 @@ function konfirmasiHapus(id) {
                       : `<span class="bg-slate-100 text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold">Kosong</span>`;
 
           return `
-          <div onclick="bukaFolderResort('${resort}')" class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full text-center">
+          <div onclick="bukaFolderResort('${resort.replace(/'/g, "\\'")}')" class="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full text-center">
               <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-amber-100 to-transparent rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-125 transition-transform"></div>
-              
-              <!-- Indikator Wilayah di Sudut Kiri Atas Lemari -->
               <div class="absolute top-3 left-3 text-[9px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md border border-slate-100">W-${w}</div>
-              
               <div class="w-16 h-16 mx-auto bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors shadow-sm mt-3">
                   <i class="fas fa-folder"></i>
               </div>
@@ -3508,7 +3500,6 @@ function konfirmasiHapus(id) {
       renderPaginationArsipUI(totalItems);
   }
 
-  // Merender Tombol Paginasi Angka (1, 2, 3...)
   function renderPaginationArsipUI(totalItems) {
       const totalPages = Math.ceil(totalItems / itemsPerArsipPage); 
       const container = document.getElementById('paginationArsip'); 
@@ -3522,11 +3513,9 @@ function konfirmasiHapus(id) {
       container.innerHTML = html + `</div>`;
   }
 
-  // Fungsi saat Paginasi diklik
   function ubahHalamanArsip(page) { 
       currentPageArsip = page; 
       filterRakArsip(false); 
-      // Auto-scroll ke atas rak
       const containerRak = document.getElementById('rakArsipContainer').parentElement;
       if(containerRak) containerRak.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -3534,7 +3523,6 @@ function konfirmasiHapus(id) {
   function bukaFolderResort(resortName) {
       document.getElementById('judulFolderResort').innerHTML = `<i class="fas fa-folder-open mr-3 opacity-90 text-amber-100"></i> ${resortName}`;
       const container = document.getElementById('isiDokumenContainer');
-      
       const fileResortIni = DATA_ARSIP.filter(a => a.resort === resortName);
       
       if (fileResortIni.length === 0) {
@@ -3568,78 +3556,45 @@ function konfirmasiHapus(id) {
       document.getElementById('modalFolderArsip').classList.remove('hidden');
   }
 
-// --- LOGIKA FORM UPLOAD ARSIP BERTINGKAT ---
-
   function bukaModalUploadArsip(preselectResort = '') {
       document.getElementById('arsipJudulBaru').value = '';
-      document.getElementById('labelUploadArsip').innerText = 'Klik atau Tarik dokumen ke sini';
-      fileArsipTerpilih = null;
-
-      // Isi Dropdown Wilayah
-      let htmlW = '<option value="">Pilih Wilayah</option>';
-      for(let i=1; i<=12; i++) { htmlW += `<option value="${i}">WILAYAH ${i}</option>`; }
-      document.getElementById('arsipWilayah').innerHTML = htmlW;
-
-      // Jika tombol ditekan dari dalam folder resort tertentu (Auto-Select)
-      if(preselectResort) {
-          let foundGereja = DATA_MASTER.gereja.find(g => (g.Induk_Resort || g.Resort) === preselectResort || g.Nama_Gereja === preselectResort);
-          if(foundGereja && foundGereja.Wilayah) {
-              document.getElementById('arsipWilayah').value = parseInt(String(foundGereja.Wilayah).replace(/\D/g, ''));
-          }
-      }
+      if(preselectResort) document.getElementById('arsipResortTarget').value = preselectResort;
       
-      syncArsipResort(preselectResort);
+      // Reset Tampilan Kotak Upload
+      document.getElementById('fileUploadArsipBaru').parentElement.innerHTML = `
+          <div class="w-16 h-16 bg-slate-50 rounded-full shadow-inner flex items-center justify-center text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors"><i class="fas fa-file-upload text-3xl"></i></div>
+          <p class="text-sm font-bold text-slate-600" id="labelUploadArsip">Klik atau Tarik dokumen ke sini</p>
+          <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
+          <input type="file" id="fileUploadArsipBaru" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
+      `;
+      
+      fileArsipTerpilih = null;
       document.getElementById('modalUploadArsip').classList.remove('hidden');
   }
 
-  function syncArsipResort(preselectResort = '') {
-      const w = document.getElementById('arsipWilayah').value || ''; 
-      const cleanW = String(w).trim().toLowerCase();
-      const fr = document.getElementById('arsipResort'); 
-      if(!fr) return; 
+  // FUNGSI INI YANG HILANG SEBELUMNYA (Merespons file saat dipilih)
+  function previewUploadArsip(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      fileArsipTerpilih = file;
       
-      fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
-      const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
-      const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
-      
-      resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); 
-      khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
-      
-      if(preselectResort) {
-          fr.value = preselectResort;
-      }
-      syncArsipGereja();
+      // Update visual kotak upload jadi warna Hijau 
+      const box = event.target.parentElement;
+      box.innerHTML = `
+          <div class="w-16 h-16 bg-emerald-100 rounded-full shadow-inner flex items-center justify-center text-emerald-500 mx-auto mb-3 transition-colors"><i class="fas fa-check text-3xl"></i></div>
+          <p class="text-sm font-bold text-slate-800 truncate px-4 w-full" id="labelUploadArsip">${file.name}</p>
+          <p class="text-[10px] font-bold text-emerald-600 mt-1 uppercase tracking-widest">Dokumen Siap Diunggah</p>
+          <input type="file" id="fileUploadArsipBaru" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
+      `;
   }
 
-  function syncArsipGereja() {
-      const resSelect = document.getElementById('arsipResort'); 
-      const fg = document.getElementById('arsipGerejaTarget'); 
-      const wadah = document.getElementById('wadahArsipGereja');
-      if(!fg || !resSelect) return; 
-      
-      const val = resSelect.value;
-      const tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); 
-      
-      fg.innerHTML = '<option value="">Pilih Unit Gereja</option>'; 
-      
-      // JIKA RESORT: Tampilkan pilihan PHR dan Gereja Pagaran
-      if (tipe === "RESORT" || (!tipe && val)) { 
-          wadah.style.display = 'block';
-          fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-amber-700 bg-amber-50">🏢 DOKUMEN TINGKAT RESORT (PHR)</option>`;
-          DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { 
-              const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
-          }); 
-          fg.required = true;
-      } 
-      // JIKA JEMAAT KHUSUS (JK): Sembunyikan Kotak Ke-3
-      else if (tipe === "JK") { 
-          wadah.style.display = 'none'; 
-          fg.innerHTML = `<option value="${val}">${val}</option>`; 
-          fg.value = val; 
-          fg.required = false;
-      } else { 
-          wadah.style.display = 'block';
-      } 
+  // FUNGSI INI JUGA HILANG SEBELUMNYA (Membuka Modal Lightbox Gambar)
+  function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
+      document.getElementById('imgArsipPreview').src = imgSrc;
+      document.getElementById('previewArsipTitle').innerText = judul;
+      document.getElementById('previewArsipMeta').innerText = `${kategori} • Diunggah pada: ${tgl}`;
+      document.getElementById('btnDownloadArsip').href = imgSrc;
+      document.getElementById('modalPreviewArsip').classList.remove('hidden');
   }
 
   function simpanDokumenArsip(e) {
@@ -3648,10 +3603,7 @@ function konfirmasiHapus(id) {
       
       const judul = document.getElementById('arsipJudulBaru').value;
       const kategori = document.getElementById('arsipKategoriBaru').value;
-      const resort = document.getElementById('arsipResort').value;
-      
-      // Ambil gereja tujuan (jika Resort, ambil nama gereja. Jika JK, ambil nama resortnya)
-      const gerejaTarget = document.getElementById('arsipGerejaTarget').value || resort;
+      const resort = document.getElementById('arsipResortTarget').value;
       const btn = document.getElementById('btnSimpanArsip');
       
       btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
@@ -3666,16 +3618,14 @@ function konfirmasiHapus(id) {
           // Proses upload API
           apiCall('uploadArsip', payload).then(res => {
               if (res.status === 'success') {
-                  // Tambahkan data ke memori lokal
                   DATA_ARSIP.push({
-                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, unit_gereja: gerejaTarget, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
+                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
                   });
                   
                   closeModal('modalUploadArsip');
                   Swal.fire('Berhasil!', 'Dokumen berhasil tersimpan di Lemari Resort.', 'success');
-                  renderRakArsip(); // Render ulang rak agar badge angka bertambah
+                  renderRakArsip(); 
                   
-                  // Jika upload dilakukan saat sedang membuka folder resort, update isinya
                   if(!document.getElementById('modalFolderArsip').classList.contains('hidden')) {
                       bukaFolderResort(resort);
                   }
