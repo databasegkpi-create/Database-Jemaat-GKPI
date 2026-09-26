@@ -3432,11 +3432,17 @@ function konfirmasiHapus(id) {
   // MESIN E-ARSIP (SISTEM RAK & FOLDER DENGAN FILTER & PAGINASI)
   // =========================================================================
   
+  // 1. MENGAMBIL DATA DARI MEMORI LOKAL AGAR TIDAK HILANG SAAT DI-REFRESH
   let DATA_ARSIP = []; 
+  try {
+      let savedArsip = localStorage.getItem('gkpi_arsip_db');
+      if(savedArsip) DATA_ARSIP = JSON.parse(savedArsip);
+  } catch(e) {}
+
   let globalRakResort = []; 
   let currentPageArsip = 1;
   const itemsPerArsipPage = 15; 
-  let fileArsipTerpilih = null; // Menyimpan file yang akan diunggah
+  let fileArsipTerpilih = null;
 
   // Dipanggil saat membuka tab Arsip
   function renderRakArsip() {
@@ -3670,14 +3676,17 @@ function konfirmasiHapus(id) {
       `;
   }
 
+  // 2. PERBARUI FUNGSI SIMPAN UNTUK MENGUNCI DATA KE MEMORI
   function simpanDokumenArsip(e) {
       e.preventDefault();
       if (!fileArsipTerpilih) return Swal.fire('Perhatian', 'Pilih file dokumen terlebih dahulu.', 'warning');
       
       const judul = document.getElementById('arsipJudulBaru').value;
       const kategori = document.getElementById('arsipKategoriBaru').value;
-      const resort = document.getElementById('arsipResort').value;
-      const gerejaTarget = document.getElementById('arsipGerejaTarget').value || resort;
+      
+      // Tambahkan .trim() untuk memastikan tidak ada spasi gaib yang merusak data
+      const resort = document.getElementById('arsipResort').value.trim();
+      const gerejaTarget = document.getElementById('arsipGerejaTarget').value.trim() || resort;
       const btn = document.getElementById('btnSimpanArsip');
       
       btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
@@ -3692,9 +3701,13 @@ function konfirmasiHapus(id) {
           // Proses upload API
           apiCall('uploadArsip', payload).then(res => {
               if (res.status === 'success') {
+                  // Masukkan ke array
                   DATA_ARSIP.push({
                       id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, unit_gereja: gerejaTarget, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
                   });
+                  
+                  // KUNCI KE MEMORI PERMANEN BROWSER
+                  localStorage.setItem('gkpi_arsip_db', JSON.stringify(DATA_ARSIP));
                   
                   closeModal('modalUploadArsip');
                   Swal.fire('Berhasil!', 'Dokumen berhasil tersimpan di Lemari Resort.', 'success');
@@ -3711,8 +3724,6 @@ function konfirmasiHapus(id) {
       };
       reader.readAsDataURL(fileArsipTerpilih);
   }
-
-  let currentDownloadUrl = "";
 
   function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
       // Ubah link dari format download (uc?export=view) menjadi format preview pintar iframe
