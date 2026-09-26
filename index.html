@@ -1053,18 +1053,28 @@
   </div>
 </div>
 
-  <!-- MODAL PREVIEW E-ARSIP (LIGHTBOX) -->
-<div id="modalPreviewArsip" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden z-[120] flex items-center justify-center p-4 md:p-8">
-    <button onclick="closeModal('modalPreviewArsip')" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-rose-500 transition-colors z-10"><i class="fas fa-times text-xl"></i></button>
-    <div class="w-full max-w-4xl flex flex-col items-center animate-zoom">
-        <!-- Area Gambar Preview -->
-        <img id="imgArsipPreview" src="" alt="Preview Dokumen" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl mb-4">
-        <!-- Area Keterangan Gambar -->
-        <div class="bg-white/10 backdrop-blur border border-white/20 p-4 rounded-2xl w-full text-center text-white">
-            <h3 id="previewArsipTitle" class="text-lg font-black mb-1">Judul Dokumen</h3>
+<!-- MODAL PREVIEW E-ARSIP (LIGHTBOX AMAN) -->
+<div id="modalPreviewArsip" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden z-[120] flex items-center justify-center p-4 md:p-8">
+    <button onclick="closeModal('modalPreviewArsip')" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-rose-500 transition-colors z-20"><i class="fas fa-times text-xl"></i></button>
+    
+    <div class="w-full max-w-4xl flex flex-col items-center animate-zoom h-full justify-center">
+        <!-- Area Bingkai Preview (Menggunakan iframe agar bisa baca PDF & Gambar) -->
+        <div class="w-full h-[65vh] bg-slate-800 rounded-2xl shadow-2xl mb-4 overflow-hidden relative border border-white/10">
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-0">
+                <i class="fas fa-circle-notch fa-spin text-4xl mb-3"></i>
+                <p class="text-xs font-bold tracking-widest uppercase">Memuat Dokumen...</p>
+            </div>
+            <iframe id="iframeArsipPreview" src="" class="w-full h-full relative z-10 border-0 bg-white"></iframe>
+        </div>
+        
+        <!-- Area Keterangan & Tombol Kunci -->
+        <div class="bg-white/10 backdrop-blur border border-white/20 p-5 rounded-2xl w-full text-center text-white shrink-0 shadow-lg">
+            <h3 id="previewArsipTitle" class="text-lg font-black mb-1 drop-shadow-md">Judul Dokumen</h3>
             <p id="previewArsipMeta" class="text-[10px] font-bold text-white/70 uppercase tracking-widest">Kategori • Diunggah pada: Tanggal</p>
             <div class="mt-4 flex justify-center gap-3">
-                <a id="btnDownloadArsip" href="#" download class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-colors"><i class="fas fa-download mr-2"></i> Unduh Asli</a>
+                <button onclick="downloadAman()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-lock"></i> Unduh Terenkripsi
+                </button>
             </div>
         </div>
     </div>
@@ -3544,7 +3554,7 @@ function konfirmasiHapus(id) {
               return `
               <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group relative cursor-pointer" onclick="bukaPreviewArsip('${file.url}', '${file.judul}', '${file.kategori}', '${file.tgl}')">
                   <div class="h-28 bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                      <img src="${file.url}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500">
+                     <img src="${file.url}" class="object-cover w-full h-full opacity-90 group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://cdn-icons-png.flaticon.com/512/337/337946.png'">
                       <div class="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center">
                           <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full text-slate-800 flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"><i class="fas fa-search-plus"></i></div>
                       </div>
@@ -3700,6 +3710,68 @@ function konfirmasiHapus(id) {
             .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt text-sm"></i> Mulai Unggah ke Drive'; });
       };
       reader.readAsDataURL(fileArsipTerpilih);
+  }
+
+  let currentDownloadUrl = "";
+
+  function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
+      // Ubah link dari format download (uc?export=view) menjadi format preview pintar iframe
+      let previewUrl = imgSrc;
+      if(imgSrc.includes('drive.google.com') && imgSrc.includes('id=')) {
+          let fileId = new URL(imgSrc).searchParams.get('id');
+          previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+      }
+
+      document.getElementById('iframeArsipPreview').src = previewUrl;
+      document.getElementById('previewArsipTitle').innerText = judul;
+      document.getElementById('previewArsipMeta').innerText = `${kategori} • Diunggah pada: ${tgl}`;
+      
+      // Simpan URL aslinya ke memori untuk diunduh nanti setelah PIN benar
+      currentDownloadUrl = imgSrc; 
+      
+      document.getElementById('modalPreviewArsip').classList.remove('hidden');
+  }
+
+  // Fungsi Keamanan Download dengan PIN
+  function downloadAman() {
+      Swal.fire({
+          title: 'Keamanan Dokumen',
+          text: 'Masukkan 6 Digit PIN Otorisasi untuk mengunduh arsip ini:',
+          input: 'password',
+          inputPlaceholder: '••••••',
+          inputAttributes: {
+              autocapitalize: 'off',
+              autocorrect: 'off',
+              maxlength: 6
+          },
+          showCancelButton: true,
+          confirmButtonText: '<i class="fas fa-unlock"></i> Verifikasi',
+          cancelButtonText: 'Batal',
+          confirmButtonColor: '#10b981',
+          inputValidator: (value) => {
+              if (!value) return 'PIN tidak boleh kosong!';
+          }
+      }).then((result) => {
+          if (result.isConfirmed) {
+              // ===========================================
+              // GANTI PIN RAHASIA DI SINI (Contoh: 123456)
+              // ===========================================
+              if (result.value === '123456') { 
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'Akses Diberikan',
+                      text: 'Membuka kunci dokumen...',
+                      timer: 1500,
+                      showConfirmButton: false
+                  });
+                  setTimeout(() => {
+                      window.open(currentDownloadUrl, '_blank');
+                  }, 1200);
+              } else {
+                  Swal.fire('Akses Ditolak', 'PIN Otorisasi yang Anda masukkan salah.', 'error');
+              }
+          }
+      });
   }
   
 </script>
