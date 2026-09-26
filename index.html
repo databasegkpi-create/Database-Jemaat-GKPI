@@ -3556,29 +3556,95 @@ function konfirmasiHapus(id) {
       document.getElementById('modalFolderArsip').classList.remove('hidden');
   }
 
+ // =========================================================================
+  // LOGIKA FORM UPLOAD ARSIP (TERMASUK DROPDOWN BERTINGKAT & PREVIEW FILE)
+  // =========================================================================
+
   function bukaModalUploadArsip(preselectResort = '') {
       document.getElementById('arsipJudulBaru').value = '';
-      if(preselectResort) document.getElementById('arsipResortTarget').value = preselectResort;
-      
-      // Reset Tampilan Kotak Upload
-      document.getElementById('fileUploadArsipBaru').parentElement.innerHTML = `
-          <div class="w-16 h-16 bg-slate-50 rounded-full shadow-inner flex items-center justify-center text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors"><i class="fas fa-file-upload text-3xl"></i></div>
-          <p class="text-sm font-bold text-slate-600" id="labelUploadArsip">Klik atau Tarik dokumen ke sini</p>
-          <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
-          <input type="file" id="fileUploadArsipBaru" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
-      `;
-      
       fileArsipTerpilih = null;
+
+      // 1. Reset Tampilan Kotak Upload
+      const boxUpload = document.getElementById('fileUploadArsipBaru');
+      if (boxUpload) {
+          boxUpload.parentElement.innerHTML = `
+              <div class="w-16 h-16 bg-slate-50 rounded-full shadow-inner flex items-center justify-center text-slate-400 group-hover:text-amber-500 mx-auto mb-3 transition-colors"><i class="fas fa-file-upload text-3xl"></i></div>
+              <p class="text-sm font-bold text-slate-600" id="labelUploadArsip">Klik atau Tarik dokumen ke sini</p>
+              <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Maksimal 5MB (JPG, PNG, PDF)</p>
+              <input type="file" id="fileUploadArsipBaru" class="hidden" accept=".jpg,.jpeg,.png,.pdf" onchange="previewUploadArsip(event)">
+          `;
+      }
+
+      // 2. Isi Dropdown Wilayah (Ini yang membuat dropdown bisa diklik lagi)
+      let htmlW = '<option value="">Pilih Wilayah</option>';
+      for(let i=1; i<=12; i++) { htmlW += `<option value="${i}">WILAYAH ${i}</option>`; }
+      document.getElementById('arsipWilayah').innerHTML = htmlW;
+
+      // 3. Auto-select Wilayah jika unggah dari dalam folder tertentu
+      if(preselectResort) {
+          let foundGereja = DATA_MASTER.gereja.find(g => (g.Induk_Resort || g.Resort) === preselectResort || g.Nama_Gereja === preselectResort);
+          if(foundGereja && foundGereja.Wilayah) {
+              document.getElementById('arsipWilayah').value = parseInt(String(foundGereja.Wilayah).replace(/\D/g, ''));
+          }
+      }
+      
+      // 4. Pancing pengisian dropdown Resort dan Gereja
+      syncArsipResort(preselectResort);
+      
       document.getElementById('modalUploadArsip').classList.remove('hidden');
   }
 
-  // FUNGSI INI YANG HILANG SEBELUMNYA (Merespons file saat dipilih)
+  function syncArsipResort(preselectResort = '') {
+      const w = document.getElementById('arsipWilayah').value || ''; 
+      const cleanW = String(w).trim().toLowerCase();
+      const fr = document.getElementById('arsipResort'); 
+      if(!fr) return; 
+      
+      fr.innerHTML = '<option value="">Pilih Resort / JK</option>'; 
+      const resorts = [...new Set(DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() !== "JEMAAT KHUSUS" && (g.Induk_Resort || g.Resort)).map(g => String(g.Induk_Resort || g.Resort).trim()))].sort(); 
+      const khusus = DATA_MASTER.gereja.filter(g => (!w || String(g.Wilayah).trim().toLowerCase() === cleanW) && String(g.Tipe_Gereja || g.Status_Gereja || '').toUpperCase() === "JEMAAT KHUSUS").map(g => String(g.Nama_Gereja).trim()).sort(); 
+      
+      resorts.forEach(r => { const opt = document.createElement('option'); opt.value = r; opt.text = r; opt.setAttribute('data-tipe', 'RESORT'); fr.appendChild(opt); }); 
+      khusus.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = "JK - " + k; opt.setAttribute('data-tipe', 'JK'); fr.appendChild(opt); }); 
+      
+      if(preselectResort) fr.value = preselectResort;
+      syncArsipGereja();
+  }
+
+  function syncArsipGereja() {
+      const resSelect = document.getElementById('arsipResort'); 
+      const fg = document.getElementById('arsipGerejaTarget'); 
+      const wadah = document.getElementById('wadahArsipGereja');
+      if(!fg || !resSelect) return; 
+      
+      const val = resSelect.value;
+      const tipe = resSelect.options[resSelect.selectedIndex]?.getAttribute('data-tipe'); 
+      
+      fg.innerHTML = '<option value="">Pilih Unit Gereja</option>'; 
+      
+      if (tipe === "RESORT" || (!tipe && val)) { 
+          wadah.style.display = 'block';
+          fg.innerHTML += `<option value="Pengurus Harian Resort (PHR)" class="font-bold text-amber-700 bg-amber-50">🏢 DOKUMEN TINGKAT RESORT (PHR)</option>`;
+          DATA_MASTER.gereja.filter(g => String(g.Induk_Resort || g.Resort || '').trim() === val).forEach(g => { 
+              const opt = document.createElement('option'); opt.value = g.Nama_Gereja; opt.text = g.Nama_Gereja; fg.appendChild(opt); 
+          }); 
+          fg.required = true;
+      } else if (tipe === "JK") { 
+          wadah.style.display = 'none'; 
+          fg.innerHTML = `<option value="${val}">${val}</option>`; 
+          fg.value = val; 
+          fg.required = false;
+      } else { 
+          wadah.style.display = 'block';
+      } 
+  }
+
+  // Fungsi merespons file terpilih (Membuat tombol menjadi Hijau)
   function previewUploadArsip(event) {
       const file = event.target.files[0];
       if (!file) return;
       fileArsipTerpilih = file;
       
-      // Update visual kotak upload jadi warna Hijau 
       const box = event.target.parentElement;
       box.innerHTML = `
           <div class="w-16 h-16 bg-emerald-100 rounded-full shadow-inner flex items-center justify-center text-emerald-500 mx-auto mb-3 transition-colors"><i class="fas fa-check text-3xl"></i></div>
@@ -3588,22 +3654,14 @@ function konfirmasiHapus(id) {
       `;
   }
 
-  // FUNGSI INI JUGA HILANG SEBELUMNYA (Membuka Modal Lightbox Gambar)
-  function bukaPreviewArsip(imgSrc, judul, kategori, tgl) {
-      document.getElementById('imgArsipPreview').src = imgSrc;
-      document.getElementById('previewArsipTitle').innerText = judul;
-      document.getElementById('previewArsipMeta').innerText = `${kategori} • Diunggah pada: ${tgl}`;
-      document.getElementById('btnDownloadArsip').href = imgSrc;
-      document.getElementById('modalPreviewArsip').classList.remove('hidden');
-  }
-
   function simpanDokumenArsip(e) {
       e.preventDefault();
       if (!fileArsipTerpilih) return Swal.fire('Perhatian', 'Pilih file dokumen terlebih dahulu.', 'warning');
       
       const judul = document.getElementById('arsipJudulBaru').value;
       const kategori = document.getElementById('arsipKategoriBaru').value;
-      const resort = document.getElementById('arsipResortTarget').value;
+      const resort = document.getElementById('arsipResort').value;
+      const gerejaTarget = document.getElementById('arsipGerejaTarget').value || resort;
       const btn = document.getElementById('btnSimpanArsip');
       
       btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGUNGGAH KE DRIVE...';
@@ -3619,7 +3677,7 @@ function konfirmasiHapus(id) {
           apiCall('uploadArsip', payload).then(res => {
               if (res.status === 'success') {
                   DATA_ARSIP.push({
-                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
+                      id: res.id, url: res.url, judul: judul, kategori: kategori, resort: resort, unit_gereja: gerejaTarget, tgl: new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})
                   });
                   
                   closeModal('modalUploadArsip');
